@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 	"syscall"
+	"bitbucket.org/shanehanna/sexp"
 )
 
 type Target struct {
@@ -51,7 +52,7 @@ func (d *CommaSeparatedDiscoverer) SetArgs(args []string) {
 	}
 }
 func (d *CommaSeparatedDiscoverer) String() string {
-	return "comma-separated"
+	return "[comma-separated]"
 }
 
 type KnifeSearchDiscoverer struct{}
@@ -170,7 +171,7 @@ var discovererMap = map[string]Discoverer{
 
 type Command interface {
 	Exec(targets []Target, args []string)
-	SetArgs(arg []string)
+	SetArgs(args []interface{})
 }
 
 func LookPathOrAbort(binaryName string) string {
@@ -196,13 +197,13 @@ func (c *SshLoginCommand) Exec(targets []Target, args []string) {
 	fmt.Printf("Executing %s\n", argv)
 	syscall.Exec(binary, argv, os.Environ())
 }
-func (c *SshLoginCommand) SetArgs(args []string) {
+func (c *SshLoginCommand) SetArgs(args []interface{}) {
 	if len(args) > 0 {
 		Abort("%s doesn't take any arguments as %s:arg", c, c)
 	}
 }
 func (c *SshLoginCommand) String() string {
-	return "ssh-login"
+	return "[ssh-login]"
 }
 
 type SshExecCommand struct{}
@@ -227,13 +228,13 @@ func (c *SshExecCommand) Exec(targets []Target, args []string) {
 		cmd.Run()
 	}
 }
-func (c *SshExecCommand) SetArgs(args []string) {
+func (c *SshExecCommand) SetArgs(args []interface{}) {
 	if len(args) > 0 {
 		Abort("%s doesn't take any arguments as %s:arg", c, c)
 	}
 }
 func (c *SshExecCommand) String() string {
-	return "ssh-exec"
+	return "[ssh-exec]"
 }
 
 type SshExecParallelCommand struct{}
@@ -269,13 +270,13 @@ func (c *SshExecParallelCommand) Exec(targets []Target, args []string) {
 		cmd.Wait()
 	}
 }
-func (c *SshExecParallelCommand) SetArgs(args []string) {
+func (c *SshExecParallelCommand) SetArgs(args []interface{}) {
 	if len(args) > 0 {
 		Abort("%s doesn't take any arguments as %s:arg", c, c)
 	}
 }
 func (c *SshExecParallelCommand) String() string {
-	return "ssh-exec-parallel"
+	return "[ssh-exec-parallel]"
 }
 
 type CsshxCommand struct{}
@@ -293,13 +294,13 @@ func (c *CsshxCommand) Exec(targets []Target, args []string) {
 	fmt.Printf("Executing %s\n", argv)
 	syscall.Exec(binary, argv, os.Environ())
 }
-func (c *CsshxCommand) SetArgs(args []string) {
+func (c *CsshxCommand) SetArgs(args []interface{}) {
 	if len(args) > 0 {
 		Abort("%s doesn't take any arguments as %s:arg", c, c)
 	}
 }
 func (c *CsshxCommand) String() string {
-	return "csshx"
+	return "[csshx]"
 }
 
 type TmuxCsshCommand struct{}
@@ -317,13 +318,13 @@ func (c *TmuxCsshCommand) Exec(targets []Target, args []string) {
 	fmt.Printf("Executing %s\n", argv)
 	syscall.Exec(binary, argv, os.Environ())
 }
-func (c *TmuxCsshCommand) SetArgs(args []string) {
+func (c *TmuxCsshCommand) SetArgs(args []interface{}) {
 	if len(args) > 0 {
 		Abort("%s doesn't take any arguments as %s:arg", c, c)
 	}
 }
 func (c *TmuxCsshCommand) String() string {
-	return "tmux-cssh"
+	return "[tmux-cssh]"
 }
 
 type OneOrMore struct {
@@ -341,20 +342,49 @@ func (c *OneOrMore) Exec(targets []Target, args []string) {
 		fmt.Printf("Got one target, using %s\n", c.one)
 		c.one.Exec(targets, args)
 	} else {
-		fmt.Printf("Got more than one targets, using %s\n", c.more)
+		fmt.Printf("Got more than one target, using %s\n", c.more)
 		c.more.Exec(targets, args)
 	}
 }
-func (c *OneOrMore) SetArgs(args []string) {
+func (c *OneOrMore) SetArgs(args []interface{}) {
 	if len(args) != 2 {
 		Abort("one-or-more expects exactly two command names, for example one-or-more:ssh-login:csshx")
 	}
-	c.one = MakeCommand(args[0])
-	c.more = MakeCommand(args[1])
+	c.one = MakeCommandFromSExp(args[0].([]interface{}))
+	c.more = MakeCommandFromSExp(args[1].([]interface{}))
 	fmt.Printf("Will use %s if one target host is found, and %s if more than one target host is found.\n", args[0], args[1])
 }
 func (c *OneOrMore) String() string {
-	return fmt.Sprintf("one-or-more:%s:%s", c.one, c.more)
+	return fmt.Sprintf("[one-or-more %s %s]", c.one, c.more)
+}
+
+type IfArgs struct {
+	withArgs  Command
+	withoutArgs Command
+}
+
+func (c *IfArgs) Exec(targets []Target, args []string) {
+	if c.withArgs == nil || c.withoutArgs == nil {
+		Abort(fmt.Sprint(&c))
+	}
+	if len(args) < 1 {
+		fmt.Printf("Got no args, using %s\n", c.withoutArgs)
+		c.withoutArgs.Exec(targets, args)
+	} else {
+		fmt.Printf("Got args, using %s\n", c.withArgs)
+		c.withArgs.Exec(targets, args)
+	}
+}
+func (c *IfArgs) SetArgs(args []interface{}) {
+	if len(args) != 2 {
+		Abort("%s expects exactly two command names, for example %s:ssh-login:ssh-exec", c, c)
+	}
+	c.withArgs = MakeCommandFromSExp(args[0].([]interface{}))
+	c.withoutArgs = MakeCommandFromSExp(args[1].([]interface{}))
+	fmt.Printf("Will use %s if a command to run is provided, and %s if not.\n", c.withArgs, c.withoutArgs)
+}
+func (c *IfArgs) String() string {
+	return fmt.Sprintf("[if-args %s %s]", c.withArgs, c.withoutArgs)
 }
 
 var commandMap = map[string]Command{
@@ -363,19 +393,27 @@ var commandMap = map[string]Command{
 	"ssh-exec":          &SshExecCommand{},
 	"ssh-exec-parallel": &SshExecParallelCommand{},
 	"tmux-cssh":         &TmuxCsshCommand{},
-	"one-or-more":       &OneOrMore{},
+	"if-one-target":     &OneOrMore{},
+	"if-args":           &IfArgs{},
 }
 
-func MakeCommand(input string) Command {
-	var parts = strings.Split(input, ":")
-	var name = parts[0]
+func MakeCommandByName(name string) Command {
 	if _, ok := commandMap[name]; !ok {
 		// TODO: Fine, what can I use instead, then?
 		Abort(fmt.Sprintf("Command \"%s\" is not known", name))
 	}
-	var command = commandMap[name]
-	if len(parts) > 1 {
-		command.SetArgs(parts[1:])
+	return commandMap[name]
+}
+
+func MakeCommand(input string) Command {
+	var data, _ = sexp.Unmarshal([]byte(input))
+	return MakeCommandFromSExp(data)
+}
+
+func MakeCommandFromSExp(data []interface{}) Command {
+	var command = MakeCommandByName(string(data[0].([]byte)))
+	if len(data) > 1 {
+		command.SetArgs(data[1:])
 	}
 	return command
 }
@@ -404,8 +442,7 @@ func main() {
 	var (
 		DiscovererName     string
 		Discoverer         Discoverer
-		commandName        string
-		commandNameForArgs string
+		commandDefinition string
 		command            Command
 		user               string
 		filterNames        string
@@ -415,8 +452,7 @@ func main() {
 		"Specifies the user to log in as on the remote machine. If empty, it will not be passed to the called SSH tool.")
 	// TODO document what Discoverer mechanisms and command runners are available
 	flag.StringVar(&DiscovererName, "d", "comma-separated", "")
-	flag.StringVar(&commandName, "c", "ssh-login", "")
-	flag.StringVar(&commandNameForArgs, "cc", "", "")
+	flag.StringVar(&commandDefinition, "c", "ssh-login", "")
 	flag.StringVar(&filterNames, "f", "", "")
 	flag.Parse()
 
@@ -431,11 +467,7 @@ func main() {
 		commandArgs = flag.Args()[1:]
 	}
 
-	if len(commandArgs) > 0 && len(commandNameForArgs) > 0 {
-		command = MakeCommand(commandNameForArgs)
-	} else {
-		command = MakeCommand(commandName)
-	}
+	command = MakeCommand(commandDefinition)
 
 	var targets []Target = []Target{}
 	for _, host := range Discoverer.Discover(flag.Arg(0)) {

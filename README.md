@@ -34,7 +34,7 @@ This one alias will
    `ssh-exec-parallel` with `ssh-exec` to run the command on just a single node at a time.
 
 ```sh
-alias s='easyssh -c=one-or-more:ssh-login:tmux-cssh -cc=ssh-exec-parallel -d=first-matching:knife:comma-separated -f=ec2-instance-id'
+alias s='easyssh -c='(if-args (ssh-exec-parallel) (if-one-target (ssh-login) (tmux-cssh)))' -d=first-matching:knife:comma-separated -f=ec2-instance-id'
 # log in to myhost.com
 s myhost.com
 # reload apache on app servers (as root)
