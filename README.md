@@ -26,7 +26,7 @@ This one alias will
    `ssh-exec-parallel` with `ssh-exec` to run the command on just a single node at a time.
 
 ```sh
-alias s='easyssh -c=one-or-more:ssh-login:tmux-cssh -cc=ssh-exec-parallel -d=first-matching:knife:comma-separated -d=first-matching:knife:comma-separated'
+alias s='easyssh -c=one-or-more:ssh-login:tmux-cssh -cc=ssh-exec-parallel -d=first-matching:knife:comma-separated'
 # log in to myhost.com
 s myhost.com
 # reload apache on app servers (as root)
