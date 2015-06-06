@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"syscall"
-	"regexp"
 )
 
 type Target struct {
@@ -98,7 +98,6 @@ func (d *KnifeSearchDiscoverer) String() string {
 	return "knife"
 }
 
-
 type TargetFilter interface {
 	Filter(targets []Target) []Target
 }
@@ -115,11 +114,7 @@ func (d *Ec2InstanceIdFilter) Filter(targets []Target) []Target {
 			var data map[string]interface{}
 			json.Unmarshal(output, &data)
 
-			targets[idx].host = data["Reservations"].
-			([]interface{})[0].
-			(map[string]interface{})["Instances"].
-			([]interface{})[0].
-			(map[string]interface{})["PublicIpAddress"].(string)
+			targets[idx].host = data["Reservations"].([]interface{})[0].(map[string]interface{})["Instances"].([]interface{})[0].(map[string]interface{})["PublicIpAddress"].(string)
 		}
 	}
 	return targets
@@ -128,7 +123,7 @@ func (d *Ec2InstanceIdFilter) String() string {
 	return "ec2-instance-id"
 }
 
-var filterMap = map[string]TargetFilter {
+var filterMap = map[string]TargetFilter{
 	"ec2-instance-id": &Ec2InstanceIdFilter{},
 }
 
