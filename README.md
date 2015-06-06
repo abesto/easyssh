@@ -4,6 +4,12 @@ Do magic like "run this command paralelly on all my machines matching this role 
 
 The syntax is slightly verbose, it's designed to be used in aliases you frequently need.
 
+## Installation
+
+```sh
+go get github.com/abesto/easyssh
+```
+
 ## Simple usage
 ```sh
 # log in with an interactive shell; old-fashioned ssh
