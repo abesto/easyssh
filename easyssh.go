@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"regexp"
 )
 
 type Target struct {
@@ -95,6 +96,49 @@ func (d *KnifeSearchDiscoverer) SetArgs(args []string) {
 }
 func (d *KnifeSearchDiscoverer) String() string {
 	return "knife"
+}
+
+
+type TargetFilter interface {
+	Filter(targets []Target) []Target
+}
+
+type Ec2InstanceIdFilter struct{}
+
+func (d *Ec2InstanceIdFilter) Filter(targets []Target) []Target {
+	var re = regexp.MustCompile("i-[0-9a-f]{8}")
+	for idx, target := range targets {
+		var instanceId = re.FindString(target.host)
+		if len(instanceId) > 0 {
+			var cmd = exec.Command("aws", "ec2", "describe-instances", "--instance-id", instanceId, "--region", "us-east-1")
+			var output, _ = cmd.Output()
+			var data map[string]interface{}
+			json.Unmarshal(output, &data)
+
+			targets[idx].host = data["Reservations"].
+			([]interface{})[0].
+			(map[string]interface{})["Instances"].
+			([]interface{})[0].
+			(map[string]interface{})["PublicIpAddress"].(string)
+		}
+	}
+	return targets
+}
+func (d *Ec2InstanceIdFilter) String() string {
+	return "ec2-instance-id"
+}
+
+var filterMap = map[string]TargetFilter {
+	"ec2-instance-id": &Ec2InstanceIdFilter{},
+}
+
+func ApplyFilters(filterNames string, targets []Target) []Target {
+	for _, filterName := range strings.Split(filterNames, ":") {
+		var filter = filterMap[filterName]
+		targets = filter.Filter(targets)
+		fmt.Printf("Targets after filter %s: %s\n", filter, targets)
+	}
+	return targets
 }
 
 type FirstMatchingDiscoverer struct {
@@ -369,6 +413,7 @@ func main() {
 		commandNameForArgs string
 		command            Command
 		user               string
+		filterNames        string
 	)
 
 	flag.StringVar(&user, "l", "",
@@ -377,6 +422,7 @@ func main() {
 	flag.StringVar(&DiscovererName, "d", "comma-separated", "")
 	flag.StringVar(&commandName, "c", "ssh-login", "")
 	flag.StringVar(&commandNameForArgs, "cc", "", "")
+	flag.StringVar(&filterNames, "f", "", "")
 	flag.Parse()
 
 	if flag.NArg() == 0 {
@@ -404,6 +450,10 @@ func main() {
 		Abort("No targets found")
 	}
 	fmt.Printf("Targets: %s\n", targets)
+
+	if len(filterNames) > 0 {
+		targets = ApplyFilters(filterNames, targets)
+	}
 
 	command.Exec(targets, commandArgs)
 }
