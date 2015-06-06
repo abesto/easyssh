@@ -26,7 +26,7 @@ This one alias will
  * look up your target hosts using `knife search node`, taking the first argument as the search query
  * if that doesn't find anything, it'll assume that you passed in a comma-separated list of hosts in the first argument
  * find any targets that look like they have an EC2 instance id in their name, and convert those to their public IP addresses
-  * Currently region `us-east-1` is hard-coded, tracked in #5
+  * Currently region `us-east-1` is hard-coded, tracked in [#5](https://github.com/abesto/easyssh/issues/5)
  * if there are no further arguments, then
   * if there is just one matched node, then log in
   * if there are more nodes, then it will log in using `tmux-cssh` (you can replace `tmux-cssh` with `csshx` if you want)
