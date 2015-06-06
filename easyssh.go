@@ -1,13 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"syscall"
-	"os/exec"
-	"encoding/json"
 )
 
 type Target struct {
@@ -30,11 +30,13 @@ type Discovery interface {
 }
 
 type IdentityDiscovery struct{}
+
 func (d IdentityDiscovery) Discover(input string) []string {
 	return []string{input}
 }
 
 type KnifeSearchDiscovery struct{}
+
 func (d KnifeSearchDiscovery) Discover(input string) []string {
 	fmt.Printf("Looking up nodes with knife matching %s\n", input)
 
@@ -62,7 +64,7 @@ func (d KnifeSearchDiscovery) Discover(input string) []string {
 
 var discoveryMap = map[string]Discovery{
 	"identity": IdentityDiscovery{},
-	"knife": KnifeSearchDiscovery{},
+	"knife":    KnifeSearchDiscovery{},
 }
 
 type Command interface {
@@ -80,6 +82,7 @@ func Ssh(args []string) (ssh string, argv []string, env []string) {
 }
 
 type SshLoginCommand struct{}
+
 func (c SshLoginCommand) Exec(targets []Target, args []string) {
 	if len(targets) != 1 {
 		Abort(fmt.Sprintf("ssh-login expects exactly one target, got %d: %s", len(targets), targets))
@@ -94,6 +97,7 @@ func (c SshLoginCommand) Exec(targets []Target, args []string) {
 }
 
 type SshExecCommand struct{}
+
 func (c SshExecCommand) Exec(targets []Target, args []string) {
 	if len(targets) < 1 {
 		Abort(fmt.Sprintf("ssh-exec expects at least one target"))
@@ -117,6 +121,7 @@ func (c SshExecCommand) Exec(targets []Target, args []string) {
 }
 
 type SshExecParallelCommand struct{}
+
 func (c SshExecParallelCommand) Exec(targets []Target, args []string) {
 	if len(targets) < 1 {
 		Abort(fmt.Sprintf("ssh-exec expects at least one target"))
@@ -149,8 +154,8 @@ func (c SshExecParallelCommand) Exec(targets []Target, args []string) {
 }
 
 var commandMap = map[string]Command{
-	"ssh-login": SshLoginCommand{},
-	"ssh-exec": SshExecCommand{},
+	"ssh-login":         SshLoginCommand{},
+	"ssh-exec":          SshExecCommand{},
 	"ssh-exec-parallel": SshExecParallelCommand{},
 }
 
