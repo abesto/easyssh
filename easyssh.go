@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -8,7 +9,6 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
-	"bytes"
 )
 
 type Target struct {
@@ -40,6 +40,7 @@ type Discoverer interface {
 }
 
 type CommaSeparatedDiscoverer struct{}
+
 func (d *CommaSeparatedDiscoverer) Discover(input string) []string {
 	return strings.Split(input, ",")
 }
@@ -53,6 +54,7 @@ func (d *CommaSeparatedDiscoverer) String() string {
 }
 
 type KnifeSearchDiscoverer struct{}
+
 func (d *KnifeSearchDiscoverer) Discover(input string) []string {
 	if !strings.Contains(input, ":") {
 		fmt.Printf("Host lookup string doesn't contain ':', it won't match anything in a knife search node query\n")
@@ -95,9 +97,10 @@ func (d *KnifeSearchDiscoverer) String() string {
 	return "knife"
 }
 
-type FirstMatchingDiscoverer struct{
+type FirstMatchingDiscoverer struct {
 	discoverers []Discoverer
 }
+
 func (d *FirstMatchingDiscoverer) Discover(input string) []string {
 	var hosts []string
 	for _, discoverer := range d.discoverers {
@@ -122,8 +125,8 @@ func (d *FirstMatchingDiscoverer) String() string {
 
 var discovererMap = map[string]Discoverer{
 	"comma-separated": &CommaSeparatedDiscoverer{},
-	"knife":    &KnifeSearchDiscoverer{},
-	"first-matching": &FirstMatchingDiscoverer{},
+	"knife":           &KnifeSearchDiscoverer{},
+	"first-matching":  &FirstMatchingDiscoverer{},
 }
 
 type Command interface {
@@ -140,6 +143,7 @@ func LookPathOrAbort(binaryName string) string {
 }
 
 type SshLoginCommand struct{}
+
 func (c *SshLoginCommand) Exec(targets []Target, args []string) {
 	if len(targets) != 1 {
 		Abort("%s expects exactly one target, got %d: %s", c, len(targets), targets)
@@ -153,7 +157,7 @@ func (c *SshLoginCommand) Exec(targets []Target, args []string) {
 	fmt.Printf("Executing %s\n", argv)
 	syscall.Exec(binary, argv, os.Environ())
 }
-func (c  *SshLoginCommand) SetArgs(args []string) {
+func (c *SshLoginCommand) SetArgs(args []string) {
 	if len(args) > 0 {
 		Abort("%s doesn't take any arguments as %s:arg", c, c)
 	}
@@ -163,6 +167,7 @@ func (c *SshLoginCommand) String() string {
 }
 
 type SshExecCommand struct{}
+
 func (c *SshExecCommand) Exec(targets []Target, args []string) {
 	if len(targets) < 1 {
 		Abort("%s expects at least one target", c)
@@ -183,7 +188,7 @@ func (c *SshExecCommand) Exec(targets []Target, args []string) {
 		cmd.Run()
 	}
 }
-func (c  *SshExecCommand) SetArgs(args []string) {
+func (c *SshExecCommand) SetArgs(args []string) {
 	if len(args) > 0 {
 		Abort("%s doesn't take any arguments as %s:arg", c, c)
 	}
@@ -193,6 +198,7 @@ func (c *SshExecCommand) String() string {
 }
 
 type SshExecParallelCommand struct{}
+
 func (c *SshExecParallelCommand) Exec(targets []Target, args []string) {
 	if len(targets) < 1 {
 		Abort("%s expects at least one target", c)
@@ -224,7 +230,7 @@ func (c *SshExecParallelCommand) Exec(targets []Target, args []string) {
 		cmd.Wait()
 	}
 }
-func (c  *SshExecParallelCommand) SetArgs(args []string) {
+func (c *SshExecParallelCommand) SetArgs(args []string) {
 	if len(args) > 0 {
 		Abort("%s doesn't take any arguments as %s:arg", c, c)
 	}
@@ -234,6 +240,7 @@ func (c *SshExecParallelCommand) String() string {
 }
 
 type CsshxCommand struct{}
+
 func (c *CsshxCommand) Exec(targets []Target, args []string) {
 	if len(targets) < 1 {
 		Abort("%s expects at least one target", c)
@@ -257,6 +264,7 @@ func (c *CsshxCommand) String() string {
 }
 
 type TmuxCsshCommand struct{}
+
 func (c *TmuxCsshCommand) Exec(targets []Target, args []string) {
 	if len(targets) < 1 {
 		Abort("%s expects at least one target", c)
@@ -279,10 +287,11 @@ func (c *TmuxCsshCommand) String() string {
 	return "tmux-cssh"
 }
 
-type OneOrMore struct{
-	one Command
+type OneOrMore struct {
+	one  Command
 	more Command
 }
+
 func (c *OneOrMore) Exec(targets []Target, args []string) {
 	if c.one == nil || c.more == nil {
 		Abort(fmt.Sprint(&c))
@@ -347,19 +356,19 @@ func MakeDiscoverer(input string) Discoverer {
 	return discoverer
 }
 
-func Abort(msg string, args... interface{}) {
-	fmt.Printf(msg + "\n", args...)
+func Abort(msg string, args ...interface{}) {
+	fmt.Printf(msg+"\n", args...)
 	os.Exit(1)
 }
 
 func main() {
 	var (
-		DiscovererName string
-		Discoverer Discoverer
-		commandName   string
+		DiscovererName     string
+		Discoverer         Discoverer
+		commandName        string
 		commandNameForArgs string
-		command       Command
-		user          string
+		command            Command
+		user               string
 	)
 
 	flag.StringVar(&user, "l", "",
