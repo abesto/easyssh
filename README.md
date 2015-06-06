@@ -27,7 +27,9 @@ This one alias will
 
 ```sh
 alias s='easyssh -c=one-or-more:ssh-login:tmux-cssh -cc=ssh-exec-parallel -d=first-matching:knife:comma-separated -d=first-matching:knife:comma-separated'
+# log in to myhost.com
 s myhost.com
+# reload apache on app servers (as root)
 s -l root roles:app /etc/init.d/apache2 reload
 ```
 
@@ -35,5 +37,6 @@ If you frequently log in to servers as root, you can then go:
 
 ```sh
 alias sr='s -l root'
+# reload apache on app servers (as root)
 sr roles:app /etc/init.d/apache2 reload
 ```
