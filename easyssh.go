@@ -38,7 +38,8 @@ func TargetStrings(ts []Target) []string {
 
 type Discoverer interface {
 	Discover(input string) []string
-	SetArgs(args []string)
+	SetArgs(args []interface{})
+	String() string
 }
 
 type CommaSeparatedDiscoverer struct{}
@@ -46,7 +47,7 @@ type CommaSeparatedDiscoverer struct{}
 func (d *CommaSeparatedDiscoverer) Discover(input string) []string {
 	return strings.Split(input, ",")
 }
-func (d *CommaSeparatedDiscoverer) SetArgs(args []string) {
+func (d *CommaSeparatedDiscoverer) SetArgs(args []interface{}) {
 	if len(args) > 0 {
 		Abort("%s takes no configuration, got %s", d, args)
 	}
@@ -90,17 +91,18 @@ func (d *KnifeSearchDiscoverer) Discover(input string) []string {
 
 	return ips
 }
-func (d *KnifeSearchDiscoverer) SetArgs(args []string) {
+func (d *KnifeSearchDiscoverer) SetArgs(args []interface{}) {
 	if len(args) > 0 {
 		Abort("%s takes no configuration, got %s", d, args)
 	}
 }
 func (d *KnifeSearchDiscoverer) String() string {
-	return "knife"
+	return "[knife]"
 }
 
 type TargetFilter interface {
 	Filter(targets []Target) []Target
+	String() string
 }
 
 type Ec2InstanceIdFilter struct{}
@@ -121,7 +123,7 @@ func (d *Ec2InstanceIdFilter) Filter(targets []Target) []Target {
 	return targets
 }
 func (d *Ec2InstanceIdFilter) String() string {
-	return "ec2-instance-id"
+	return "[ec2-instance-id]"
 }
 
 var filterMap = map[string]TargetFilter{
@@ -152,15 +154,19 @@ func (d *FirstMatchingDiscoverer) Discover(input string) []string {
 	}
 	return []string{}
 }
-func (d *FirstMatchingDiscoverer) SetArgs(args []string) {
+func (d *FirstMatchingDiscoverer) SetArgs(args []interface{}) {
 	d.discoverers = []Discoverer{}
-	for _, name := range args {
-		d.discoverers = append(d.discoverers, MakeDiscoverer(name))
+	for _, exp := range args {
+		d.discoverers = append(d.discoverers, MakeDiscovererFromSExp(exp.([]interface{})))
 	}
 	fmt.Printf("Will use the first discoverer returning a non-empty host set from the discoverer list %s\n", d.discoverers)
 }
 func (d *FirstMatchingDiscoverer) String() string {
-	return "first-matching"
+	var strs = []string{}
+	for _, child := range d.discoverers {
+		strs = append(strs, child.String())
+	}
+	return fmt.Sprintf("[first-matching %s]", strings.Join(strs, " "))
 }
 
 var discovererMap = map[string]Discoverer{
@@ -172,6 +178,7 @@ var discovererMap = map[string]Discoverer{
 type Command interface {
 	Exec(targets []Target, args []string)
 	SetArgs(args []interface{})
+	String() string
 }
 
 func LookPathOrAbort(binaryName string) string {
@@ -406,7 +413,10 @@ func MakeCommandByName(name string) Command {
 }
 
 func MakeCommand(input string) Command {
-	var data, _ = sexp.Unmarshal([]byte(input))
+	var data, error = sexp.Unmarshal([]byte(input))
+	if error != nil {
+		Abort(error.Error())
+	}
 	return MakeCommandFromSExp(data)
 }
 
@@ -418,17 +428,29 @@ func MakeCommandFromSExp(data []interface{}) Command {
 	return command
 }
 
-func MakeDiscoverer(input string) Discoverer {
+func MakeDiscovererByName(name string) Discoverer {
 	// TODO DRY with MakeCommand
-	var parts = strings.Split(input, ":")
-	var name = parts[0]
-	if _, ok := discovererMap[name]; !ok {
+	if discoverer, ok := discovererMap[name]; ok {
+		return discoverer
+	} else {
 		// TODO: Fine, what can I use instead, then?
-		Abort(fmt.Sprintf("Discoverer \"%s\" is not known", name))
+		Abort(fmt.Sprintf("Command \"%s\" is not known", name))
+		return discoverer
 	}
-	var discoverer = discovererMap[name]
-	if len(parts) > 1 {
-		discoverer.SetArgs(parts[1:])
+}
+
+func MakeDiscoverer(input string) Discoverer {
+	var data, error = sexp.Unmarshal([]byte(input))
+	if error != nil {
+		Abort(error.Error())
+	}
+	return MakeDiscovererFromSExp(data)
+}
+
+func MakeDiscovererFromSExp(data []interface{}) Discoverer {
+	var discoverer = MakeDiscovererByName(string(data[0].([]byte)))
+	if len(data) > 0 {
+		discoverer.SetArgs(data[1:])
 	}
 	return discoverer
 }
