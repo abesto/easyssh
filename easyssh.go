@@ -13,37 +13,38 @@ import (
 
 func main() {
 	var (
-		DiscovererName    string
-		Discoverer        interfaces.Discoverer
+		discovererDefinition string
+		discoverer interfaces.Discoverer
 		commandDefinition string
 		command           interfaces.Command
 		user              string
-		filterNames       string
+		filterDefinition string
+		filter interfaces.TargetFilter
 	)
 
 	flag.StringVar(&user, "l", "",
 		"Specifies the user to log in as on the remote machine. If empty, it will not be passed to the called SSH tool.")
 	// TODO document what Discoverer mechanisms and command runners are available
-	flag.StringVar(&DiscovererName, "d", "comma-separated", "")
+	flag.StringVar(&discovererDefinition, "d", "comma-separated", "")
 	flag.StringVar(&commandDefinition, "c", "ssh-login", "")
-	flag.StringVar(&filterNames, "f", "", "")
+	flag.StringVar(&filterDefinition, "f", "id", "")
 	flag.Parse()
 
 	if flag.NArg() == 0 {
 		util.Abort("Required argument for target host lookup missing")
 	}
 
-	Discoverer = discoverers.Make(DiscovererName)
-
-	var commandArgs = []string{}
-	if flag.NArg() > 0 {
-		commandArgs = flag.Args()[1:]
-	}
+	discoverer = discoverers.Make(discovererDefinition)
+	fmt.Printf("Discoverer built: %s\n", discoverer)
 
 	command = commands.Make(commandDefinition)
+	fmt.Printf("Command built: %s\n", command)
+
+	filter = filters.Make(filterDefinition)
+	fmt.Printf("Filter built: %s\n", filter)
 
 	var targets []target.Target = []target.Target{}
-	for _, host := range Discoverer.Discover(flag.Arg(0)) {
+	for _, host := range discoverer.Discover(flag.Arg(0)) {
 		targets = append(targets, target.Target{Host: host, User: user})
 	}
 	if len(targets) == 0 {
@@ -51,8 +52,11 @@ func main() {
 	}
 	fmt.Printf("Targets: %s\n", targets)
 
-	if len(filterNames) > 0 {
-		targets = filters.ApplyFilters(filterNames, targets)
+	targets = filter.Filter(targets)
+
+	var commandArgs = []string{}
+	if flag.NArg() > 0 {
+		commandArgs = flag.Args()[1:]
 	}
 
 	command.Exec(targets, commandArgs)
