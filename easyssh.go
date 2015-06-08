@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bitbucket.org/shanehanna/sexp"
 	"bytes"
 	"encoding/json"
 	"flag"
@@ -10,7 +11,6 @@ import (
 	"regexp"
 	"strings"
 	"syscall"
-	"bitbucket.org/shanehanna/sexp"
 )
 
 type Target struct {
@@ -34,6 +34,10 @@ func TargetStrings(ts []Target) []string {
 		strs = append(strs, t.String())
 	}
 	return strs
+}
+
+type HasSetArgs interface {
+	SetArgs(args []interface{})
 }
 
 type Discoverer interface {
@@ -106,7 +110,7 @@ type TargetFilter interface {
 	String() string
 }
 
-type Ec2InstanceIdFilter struct{
+type Ec2InstanceIdFilter struct {
 	region string
 }
 
@@ -129,7 +133,7 @@ func (d *Ec2InstanceIdFilter) Filter(targets []Target) []Target {
 				fmt.Printf("EC2 instance lookup failed for %s (%s) in region %s\n", target.host, instanceId, d.region)
 				continue
 			}
-			targets[idx].host  = reservations.([]interface{})[0].(map[string]interface{})["Instances"].([]interface{})[0].(map[string]interface{})["PublicIpAddress"].(string)
+			targets[idx].host = reservations.([]interface{})[0].(map[string]interface{})["Instances"].([]interface{})[0].(map[string]interface{})["PublicIpAddress"].(string)
 		}
 	}
 	return targets
@@ -204,12 +208,6 @@ func (d *FirstMatchingDiscoverer) String() string {
 		strs = append(strs, child.String())
 	}
 	return fmt.Sprintf("[first-matching %s]", strings.Join(strs, " "))
-}
-
-var discovererMap = map[string]Discoverer{
-	"comma-separated": &CommaSeparatedDiscoverer{},
-	"knife":           &KnifeSearchDiscoverer{},
-	"first-matching":  &FirstMatchingDiscoverer{},
 }
 
 type Command interface {
@@ -403,7 +401,7 @@ func (c *OneOrMore) String() string {
 }
 
 type IfArgs struct {
-	withArgs  Command
+	withArgs    Command
 	withoutArgs Command
 }
 
@@ -431,65 +429,74 @@ func (c *IfArgs) String() string {
 	return fmt.Sprintf("[if-args %s %s]", c.withArgs, c.withoutArgs)
 }
 
-var commandMap = map[string]Command{
-	"ssh-login":         &SshLoginCommand{},
-	"csshx":             &CsshxCommand{},
-	"ssh-exec":          &SshExecCommand{},
-	"ssh-exec-parallel": &SshExecParallelCommand{},
-	"tmux-cssh":         &TmuxCsshCommand{},
-	"if-one-target":     &OneOrMore{},
-	"if-args":           &IfArgs{},
-}
-
-func MakeCommandByName(name string) Command {
-	if _, ok := commandMap[name]; !ok {
-		// TODO: Fine, what can I use instead, then?
+func MakeCommandByName(name string) interface{} {
+	var c Command
+	switch name {
+	case "ssh-login":
+		c = &SshLoginCommand{}
+	case "csshx":
+		c = &CsshxCommand{}
+	case "ssh-exec":
+		c = &SshExecCommand{}
+	case "ssh-exec-parallel":
+		c = &SshExecParallelCommand{}
+	case "tmux-cssh":
+		c = &TmuxCsshCommand{}
+	case "if-one-target":
+		c = &OneOrMore{}
+	case "if-args":
+		c = &IfArgs{}
+	default:
 		Abort(fmt.Sprintf("Command \"%s\" is not known", name))
 	}
-	return commandMap[name]
+	return c
 }
 
-func MakeCommand(input string) Command {
-	var data, error = sexp.Unmarshal([]byte(input))
-	if error != nil {
-		Abort(error.Error())
+func MakeDiscovererByName(name string) interface{} {
+	var d Discoverer
+	switch name {
+	case "comma-separated":
+		d = &CommaSeparatedDiscoverer{}
+	case "knife":
+		d = &KnifeSearchDiscoverer{}
+	case "first-matching":
+		d = &FirstMatchingDiscoverer{}
+	default:
+		Abort("Command \"%s\" is not known", name)
 	}
-	return MakeCommandFromSExp(data)
-}
-
-func MakeCommandFromSExp(data []interface{}) Command {
-	var command = MakeCommandByName(string(data[0].([]byte)))
-	if len(data) > 1 {
-		command.SetArgs(data[1:])
-	}
-	return command
-}
-
-func MakeDiscovererByName(name string) Discoverer {
-	// TODO DRY with MakeCommand
-	if discoverer, ok := discovererMap[name]; ok {
-		return discoverer
-	} else {
-		// TODO: Fine, what can I use instead, then?
-		Abort(fmt.Sprintf("Command \"%s\" is not known", name))
-		return discoverer
-	}
+	return d
 }
 
 func MakeDiscoverer(input string) Discoverer {
+	return MakeFromSExpString(input, MakeDiscovererByName).(Discoverer)
+}
+
+func MakeCommand(input string) Command {
+	return MakeFromSExpString(input, MakeCommandByName).(Command)
+}
+
+func MakeDiscovererFromSExp(data []interface{}) Discoverer {
+	return MakeFromSExp(data, MakeDiscovererByName).(Discoverer)
+}
+
+func MakeCommandFromSExp(data []interface{}) Command {
+	return MakeFromSExp(data, MakeCommandByName).(Command)
+}
+
+func MakeFromSExpString(input string, makeByName func(name string) interface{}) interface{} {
 	var data, error = sexp.Unmarshal([]byte(input))
 	if error != nil {
 		Abort(error.Error())
 	}
-	return MakeDiscovererFromSExp(data)
+	return MakeFromSExp(data, makeByName)
 }
 
-func MakeDiscovererFromSExp(data []interface{}) Discoverer {
-	var discoverer = MakeDiscovererByName(string(data[0].([]byte)))
+func MakeFromSExp(data []interface{}, makeByName func(name string) interface{}) interface{} {
+	var o = makeByName(string(data[0].([]byte))).(HasSetArgs)
 	if len(data) > 0 {
-		discoverer.SetArgs(data[1:])
+		o.SetArgs(data[1:])
 	}
-	return discoverer
+	return o
 }
 
 func Abort(msg string, args ...interface{}) {
@@ -499,12 +506,12 @@ func Abort(msg string, args ...interface{}) {
 
 func main() {
 	var (
-		DiscovererName     string
-		Discoverer         Discoverer
+		DiscovererName    string
+		Discoverer        Discoverer
 		commandDefinition string
-		command            Command
-		user               string
-		filterNames        string
+		command           Command
+		user              string
+		filterNames       string
 	)
 
 	flag.StringVar(&user, "l", "",
