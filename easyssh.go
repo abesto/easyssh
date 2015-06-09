@@ -54,10 +54,6 @@ func main() {
 
 	targets = filter.Filter(targets)
 
-	var command = []string{}
-	if flag.NArg() > 0 {
-		command = flag.Args()[1:]
-	}
-
+	var command = flag.Args()[1:]
 	executor.Exec(targets, command)
 }
