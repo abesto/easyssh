@@ -6,8 +6,11 @@ import (
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
+	"github.com/alexcesaro/log"
+	"github.com/alexcesaro/log/golog"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 )
 
@@ -106,14 +109,8 @@ func (e *sshExec) Exec(targets []target.Target, command []string) {
 	requireCommand(e, command)
 
 	for _, target := range targets {
-		// TODO rewrite to fork/channels + myExec?
 		var binary = util.LookPathOrAbort("ssh")
-		var cmd = exec.Command(binary, append([]string{target.String()}, command...)...)
-
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Env = os.Environ()
-
+		var cmd = makeLoggedCommand(binary, target, append([]string{target.String()}, command...))
 		util.Logger.Infof("Executing %s", cmd.Args)
 		cmd.Run()
 	}
@@ -135,22 +132,17 @@ func (e *sshExecParallel) Exec(targets []target.Target, command []string) {
 	var binary = util.LookPathOrAbort("ssh")
 	var cmds = []*exec.Cmd{}
 	for _, target := range targets {
-		// TODO rewrite to fork/channels + myExec?
-		var cmd = exec.Command(binary, append([]string{target.String()}, command...)...)
-
-		// TODO prefix with target ip, maybe color by node?
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Env = os.Environ()
-
+		var cmd = makeLoggedCommand(binary, target, append([]string{target.String()}, command...))
 		cmds = append(cmds, cmd)
-
-		util.Logger.Infof("Executing %s", cmd.Args)
+		util.Logger.Debugf("Executing %s", cmd.Args)
 		cmd.Start()
 	}
 
 	for _, cmd := range cmds {
-		cmd.Wait()
+		var error = cmd.Wait()
+		if error != nil {
+			util.Logger.Errorf("%s: %s", cmd.Args, error)
+		}
 	}
 }
 func (e *sshExecParallel) SetArgs(args []interface{}) {
@@ -233,4 +225,33 @@ func (e *ifArgs) SetArgs(args []interface{}) {
 }
 func (e *ifArgs) String() string {
 	return fmt.Sprintf("<if-args %s %s>", e.withArgs, e.withoutArgs)
+}
+
+type prefixedLogWriterProxy struct {
+	prefix string
+	logger *golog.Logger
+}
+
+func newPrefixedLogWriterProxy(prefix string, file *os.File) prefixedLogWriterProxy {
+	return prefixedLogWriterProxy{prefix: prefix, logger: golog.New(file, log.Debug)}
+}
+func (w prefixedLogWriterProxy) Write(p []byte) (n int, err error) {
+	var logger = *w.logger
+	var lines = strings.Split(strings.TrimSpace(string(p)), "\n")
+	for _, line := range lines {
+		logger.Notice(w.prefix, line)
+	}
+	return len(p), nil
+}
+
+func makeLoggedCommand(binary string, target target.Target, args []string) *exec.Cmd {
+	var cmd = exec.Command(binary, args...)
+	var prefixStdout = fmt.Sprintf("[%s] (STDOUT)", target)
+	var prefixStderr = fmt.Sprintf("[%s] (STDERR)", target)
+
+	cmd.Stdout = newPrefixedLogWriterProxy(prefixStdout, os.Stdout)
+	cmd.Stderr = newPrefixedLogWriterProxy(prefixStderr, os.Stderr)
+	cmd.Env = os.Environ()
+
+	return cmd
 }
