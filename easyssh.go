@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/abesto/easyssh/discoverers"
 	"github.com/abesto/easyssh/executors"
 	"github.com/abesto/easyssh/filters"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
+	"github.com/alexcesaro/log/stdlog"
 )
 
 func main() {
@@ -30,18 +30,16 @@ func main() {
 	flag.StringVar(&filterDefinition, "f", "(id)", "")
 	flag.Parse()
 
+	util.Logger = stdlog.GetFromFlags()
+	var logger = util.Logger
+
 	if flag.NArg() == 0 {
 		util.Abort("Required argument for target host lookup missing")
 	}
 
 	discoverer = discoverers.Make(discovererDefinition)
-	fmt.Printf("Discoverer built: %s\n", discoverer)
-
 	executor = executors.Make(executorDefinition)
-	fmt.Printf("Executor built: %s\n", executor)
-
 	filter = filters.Make(filterDefinition)
-	fmt.Printf("Filter built: %s\n", filter)
 
 	var targets []target.Target = []target.Target{}
 	for _, host := range discoverer.Discover(flag.Arg(0)) {
@@ -50,9 +48,10 @@ func main() {
 	if len(targets) == 0 {
 		util.Abort("No targets found")
 	}
-	fmt.Printf("Targets: %s\n", targets)
 
+	logger.Debugf("Targets before filters: %s", targets)
 	targets = filter.Filter(targets)
+	logger.Infof("Targets: %s", targets)
 
 	var command = flag.Args()[1:]
 	executor.Exec(targets, command)

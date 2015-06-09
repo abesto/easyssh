@@ -11,11 +11,14 @@ func MakeFromString(input string, makeByName func(name string) interface{}) inte
 	if error != nil {
 		util.Abort(error.Error())
 	}
-	return Make(data, makeByName)
+	util.Logger.Debugf("MakeFromString %s -> %s", input, data)
+	var result = Make(data, makeByName)
+	return result
 }
 
 func Make(data []interface{}, makeByName func(name string) interface{}) interface{} {
 	var o = makeByName(string(data[0].([]byte))).(interfaces.HasSetArgs)
 	o.SetArgs(data[1:])
+	util.Logger.Debugf("Make %s -> %s", data, o)
 	return o
 }

@@ -47,17 +47,19 @@ func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
 		var instanceId = re.FindString(t.Host)
 		if len(instanceId) > 0 {
 			var cmd = exec.Command("aws", "ec2", "describe-instances", "--instance-id", instanceId, "--region", f.region)
-			fmt.Printf("EC2 Instance lookup: %s\n", cmd.Args)
+			util.Logger.Infof("EC2 Instance lookup: %s", cmd.Args)
 			var output, _ = cmd.Output()
 			var data map[string]interface{}
 			json.Unmarshal(output, &data)
 
 			var reservations = data["Reservations"]
 			if reservations == nil {
-				fmt.Printf("EC2 instance lookup failed for %s (%s) in region %s\n", t.Host, instanceId, f.region)
+				util.Logger.Infof("EC2 instance lookup failed for %s (%s) in region %s", t.Host, instanceId, f.region)
 				continue
 			}
 			targets[idx].Host = reservations.([]interface{})[0].(map[string]interface{})["Instances"].([]interface{})[0].(map[string]interface{})["PublicIpAddress"].(string)
+		} else {
+			util.Logger.Debugf("Target %s looks like it doesn't have EC2 instance ID, skipping lookup for region %s", t, f.region)
 		}
 	}
 	return targets
@@ -69,7 +71,7 @@ func (f *ec2InstanceIdLookup) SetArgs(args []interface{}) {
 	f.region = string(args[0].([]byte))
 }
 func (f *ec2InstanceIdLookup) String() string {
-	return fmt.Sprintf("[ec2-instance-id %s]", f.region)
+	return fmt.Sprintf("<ec2-instance-id %s>", f.region)
 }
 
 type list struct {
@@ -79,7 +81,7 @@ type list struct {
 func (f *list) Filter(targets []target.Target) []target.Target {
 	for _, child := range f.children {
 		targets = child.Filter(targets)
-		fmt.Printf("Targets after filter %s: %s\n", child, targets)
+		util.Logger.Debugf("Targets after filter %s: %s", child, targets)
 	}
 	return targets
 }
@@ -89,7 +91,7 @@ func (f *list) SetArgs(args []interface{}) {
 	}
 }
 func (f *list) String() string {
-	return fmt.Sprintf("[list %s]", f.children)
+	return fmt.Sprintf("<list %s>", f.children)
 }
 
 type id struct{}
@@ -100,5 +102,5 @@ func (f *id) Filter(targets []target.Target) []target.Target {
 func (f *id) SetArgs(args []interface{}) {
 }
 func (f *id) String() string {
-	return "[id]"
+	return "<id>"
 }

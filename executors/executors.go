@@ -78,10 +78,10 @@ func requireArguments(e interfaces.Executor, n int, args []interface{}) {
 	}
 }
 
-func myExec(binaryName string, args... string) {
+func myExec(binaryName string, args ...string) {
 	var binary = util.LookPathOrAbort(binaryName)
 	var argv = append([]string{binary}, args...)
-	fmt.Printf("Executing %s\n", argv)
+	util.Logger.Infof("Executing %s", argv)
 	syscall.Exec(binary, argv, os.Environ())
 }
 
@@ -96,7 +96,7 @@ func (e *sshLogin) SetArgs(args []interface{}) {
 	requireNoArguments(e, args)
 }
 func (e *sshLogin) String() string {
-	return "[ssh-login]"
+	return "<ssh-login>"
 }
 
 type sshExec struct{}
@@ -114,7 +114,7 @@ func (e *sshExec) Exec(targets []target.Target, command []string) {
 		cmd.Stderr = os.Stderr
 		cmd.Env = os.Environ()
 
-		fmt.Printf("Executing %s\n", cmd.Args)
+		util.Logger.Infof("Executing %s", cmd.Args)
 		cmd.Run()
 	}
 }
@@ -122,7 +122,7 @@ func (e *sshExec) SetArgs(args []interface{}) {
 	requireNoArguments(e, args)
 }
 func (e *sshExec) String() string {
-	return "[ssh-exec]"
+	return "<ssh-exec>"
 }
 
 type sshExecParallel struct{}
@@ -131,7 +131,7 @@ func (e *sshExecParallel) Exec(targets []target.Target, command []string) {
 	requireAtLeastOneTarget(e, targets)
 	requireCommand(e, command)
 
-	fmt.Printf("Parallelly executing %s on %s\n", command, targets)
+	util.Logger.Infof("Parallelly executing %s on %s", command, targets)
 	var binary = util.LookPathOrAbort("ssh")
 	var cmds = []*exec.Cmd{}
 	for _, target := range targets {
@@ -145,7 +145,7 @@ func (e *sshExecParallel) Exec(targets []target.Target, command []string) {
 
 		cmds = append(cmds, cmd)
 
-		fmt.Printf("Executing %s\n", cmd.Args)
+		util.Logger.Infof("Executing %s", cmd.Args)
 		cmd.Start()
 	}
 
@@ -157,7 +157,7 @@ func (e *sshExecParallel) SetArgs(args []interface{}) {
 	requireNoArguments(e, args)
 }
 func (e *sshExecParallel) String() string {
-	return "[ssh-exec-parallel]"
+	return "<ssh-exec-parallel>"
 }
 
 type csshx struct{}
@@ -171,7 +171,7 @@ func (e *csshx) SetArgs(args []interface{}) {
 	requireNoArguments(e, args)
 }
 func (e *csshx) String() string {
-	return "[csshx]"
+	return "<csshx>"
 }
 
 type tmuxCssh struct{}
@@ -185,7 +185,7 @@ func (e *tmuxCssh) SetArgs(args []interface{}) {
 	requireNoArguments(e, args)
 }
 func (e *tmuxCssh) String() string {
-	return "[tmux-cssh]"
+	return "<tmux-cssh>"
 }
 
 type oneOrMore struct {
@@ -196,10 +196,10 @@ type oneOrMore struct {
 func (e *oneOrMore) Exec(targets []target.Target, command []string) {
 	requireAtLeastOneTarget(e, targets)
 	if len(targets) == 1 {
-		fmt.Printf("Got one target, using %s\n", e.one)
+		util.Logger.Debugf("Got one target, using %s", e.one)
 		e.one.Exec(targets, command)
 	} else {
-		fmt.Printf("Got more than one target, using %s\n", e.more)
+		util.Logger.Debugf("Got more than one target, using %s", e.more)
 		e.more.Exec(targets, command)
 	}
 }
@@ -207,10 +207,9 @@ func (e *oneOrMore) SetArgs(args []interface{}) {
 	requireArguments(e, 2, args)
 	e.one = makeFromSExp(args[0].([]interface{}))
 	e.more = makeFromSExp(args[1].([]interface{}))
-	fmt.Printf("Will use %s if one target host is found, and %s if more than one target host is found.\n", args[0], args[1])
 }
 func (c *oneOrMore) String() string {
-	return fmt.Sprintf("[one-or-more %s %s]", c.one, c.more)
+	return fmt.Sprintf("<one-or-more %s %s>", c.one, c.more)
 }
 
 type ifArgs struct {
@@ -220,10 +219,10 @@ type ifArgs struct {
 
 func (c *ifArgs) Exec(targets []target.Target, args []string) {
 	if len(args) < 1 {
-		fmt.Printf("Got no args, using %s\n", c.withoutArgs)
+		util.Logger.Debugf("Got no args, using %s", c.withoutArgs)
 		c.withoutArgs.Exec(targets, args)
 	} else {
-		fmt.Printf("Got args, using %s\n", c.withArgs)
+		util.Logger.Debugf("Got args, using %s", c.withArgs)
 		c.withArgs.Exec(targets, args)
 	}
 }
@@ -231,8 +230,7 @@ func (e *ifArgs) SetArgs(args []interface{}) {
 	requireArguments(e, 2, args)
 	e.withArgs = makeFromSExp(args[0].([]interface{}))
 	e.withoutArgs = makeFromSExp(args[1].([]interface{}))
-	fmt.Printf("Will use %s if a command to run is provided, and %s if not.\n", e.withArgs, e.withoutArgs)
 }
 func (e *ifArgs) String() string {
-	return fmt.Sprintf("[if-args %s %s]", e.withArgs, e.withoutArgs)
+	return fmt.Sprintf("<if-args %s %s>", e.withArgs, e.withoutArgs)
 }

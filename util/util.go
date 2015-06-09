@@ -1,13 +1,13 @@
 package util
 
 import (
-	"fmt"
+	"github.com/alexcesaro/log"
 	"os"
 	"os/exec"
 )
 
 func Abort(msg string, args ...interface{}) {
-	fmt.Printf(msg+"\n", args...)
+	Logger.Criticalf(msg, args...)
 	os.Exit(1)
 }
 
@@ -18,3 +18,5 @@ func LookPathOrAbort(binaryName string) string {
 	}
 	return binary
 }
+
+var Logger log.Logger

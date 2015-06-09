@@ -45,18 +45,18 @@ func (d *commaSeparated) SetArgs(args []interface{}) {
 	}
 }
 func (d *commaSeparated) String() string {
-	return "[comma-separated]"
+	return "<comma-separated>"
 }
 
 type knifeSearch struct{}
 
 func (d *knifeSearch) Discover(input string) []string {
 	if !strings.Contains(input, ":") {
-		fmt.Printf("Host lookup string doesn't contain ':', it won't match anything in a knife search node query\n")
+		util.Logger.Debugf("Host lookup string doesn't contain ':', it won't match anything in a knife search node query")
 		return []string{}
 	}
 
-	fmt.Printf("Looking up nodes with knife matching %s\n", input)
+	util.Logger.Infof("Looking up nodes with knife matching %s", input)
 
 	var cmd = exec.Command("knife", "search", "node", "-F", "json", input)
 	var stdout, stderr bytes.Buffer
@@ -89,7 +89,7 @@ func (d *knifeSearch) SetArgs(args []interface{}) {
 	}
 }
 func (d *knifeSearch) String() string {
-	return "[knife]"
+	return "<knife>"
 }
 
 type firstMatching struct {
@@ -99,7 +99,7 @@ type firstMatching struct {
 func (d *firstMatching) Discover(input string) []string {
 	var hosts []string
 	for _, discoverer := range d.discoverers {
-		fmt.Printf("Trying discoverer %s\n", discoverer)
+		util.Logger.Debugf("Trying discoverer %s", discoverer)
 		hosts = discoverer.Discover(input)
 		if len(hosts) > 0 {
 			return hosts
@@ -112,12 +112,11 @@ func (d *firstMatching) SetArgs(args []interface{}) {
 	for _, exp := range args {
 		d.discoverers = append(d.discoverers, makeFromSExp(exp.([]interface{})))
 	}
-	fmt.Printf("Will use the first discoverer returning a non-empty host set from the discoverer list %s\n", d.discoverers)
 }
 func (d *firstMatching) String() string {
 	var strs = []string{}
 	for _, child := range d.discoverers {
 		strs = append(strs, child.String())
 	}
-	return fmt.Sprintf("[first-matching %s]", strings.Join(strs, " "))
+	return fmt.Sprintf("<first-matching %s>", strings.Join(strs, " "))
 }
