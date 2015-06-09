@@ -3,12 +3,12 @@ package filters
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/abesto/easyssh/from_sexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 	"os/exec"
 	"regexp"
-	"github.com/abesto/easyssh/from_sexp"
 )
 
 func Make(input string) interfaces.TargetFilter {
@@ -33,7 +33,6 @@ func makeByName(name string) interface{} {
 	}
 	return f
 }
-
 
 type ec2InstanceIdLookup struct {
 	region string
@@ -76,6 +75,7 @@ func (f *ec2InstanceIdLookup) String() string {
 type list struct {
 	children []interfaces.TargetFilter
 }
+
 func (f *list) Filter(targets []target.Target) []target.Target {
 	for _, child := range f.children {
 		targets = child.Filter(targets)
@@ -92,7 +92,8 @@ func (f *list) String() string {
 	return fmt.Sprintf("[list %s]", f.children)
 }
 
-type id struct {}
+type id struct{}
+
 func (f *id) Filter(targets []target.Target) []target.Target {
 	return targets
 }

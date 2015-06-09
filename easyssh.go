@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/abesto/easyssh/executors"
 	"github.com/abesto/easyssh/discoverers"
+	"github.com/abesto/easyssh/executors"
 	"github.com/abesto/easyssh/filters"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/target"
@@ -14,12 +14,12 @@ import (
 func main() {
 	var (
 		discovererDefinition string
-		discoverer interfaces.Discoverer
-		executorDefinition string
-		executor interfaces.Executor
-		user              string
-		filterDefinition string
-		filter interfaces.TargetFilter
+		discoverer           interfaces.Discoverer
+		executorDefinition   string
+		executor             interfaces.Executor
+		user                 string
+		filterDefinition     string
+		filter               interfaces.TargetFilter
 	)
 
 	flag.StringVar(&user, "l", "",
