@@ -19,4 +19,16 @@ func LookPathOrAbort(binaryName string) string {
 	return binary
 }
 
+func RequireNoArguments(e interface{}, args []interface{}) {
+	if len(args) > 0 {
+		Abort("%s doesn't take any arguments, got %d: %s", e, len(args), args)
+	}
+}
+
+func RequireArguments(e interface{}, n int, args []interface{}) {
+	if len(args) != n {
+		Abort("%s requires exactly %d arguments, got %d: %s", e, n, len(args), args)
+	}
+}
+
 var Logger log.Logger

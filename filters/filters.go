@@ -28,6 +28,8 @@ func makeByName(name string) interface{} {
 		f = &list{}
 	case "id":
 		f = &id{}
+	case "first":
+		f = &first{}
 	default:
 		util.Abort("Filter \"%s\" is not known", name)
 	}
@@ -100,7 +102,23 @@ func (f *id) Filter(targets []target.Target) []target.Target {
 	return targets
 }
 func (f *id) SetArgs(args []interface{}) {
+	util.RequireNoArguments(f, args)
 }
 func (f *id) String() string {
 	return "<id>"
+}
+
+type first struct{}
+
+func (f *first) Filter(targets []target.Target) []target.Target {
+	if len(targets) > 0 {
+		return targets[1:]
+	}
+	return targets
+}
+func (f *first) SetArgs(args []interface{}) {
+	util.RequireNoArguments(f, args)
+}
+func (f *first) String() string {
+	return "<first>"
 }

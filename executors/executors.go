@@ -69,18 +69,6 @@ func requireCommand(e interfaces.Executor, command []string) {
 	}
 }
 
-func requireNoArguments(e interfaces.Executor, args []interface{}) {
-	if len(args) > 0 {
-		util.Abort("%s doesn't take any arguments, got %d: %s", e, len(args), args)
-	}
-}
-
-func requireArguments(e interfaces.Executor, n int, args []interface{}) {
-	if len(args) != n {
-		util.Abort("%s requires exactly %d arguments, got %d: %s", e, n, len(args), args)
-	}
-}
-
 func myExec(binaryName string, args ...string) {
 	var binary = util.LookPathOrAbort(binaryName)
 	var argv = append([]string{binary}, args...)
@@ -96,7 +84,7 @@ func (e *sshLogin) Exec(targets []target.Target, command []string) {
 	myExec("ssh", targets[0].String())
 }
 func (e *sshLogin) SetArgs(args []interface{}) {
-	requireNoArguments(e, args)
+	util.RequireNoArguments(e, args)
 }
 func (e *sshLogin) String() string {
 	return "<ssh-login>"
@@ -116,7 +104,7 @@ func (e *sshExec) Exec(targets []target.Target, command []string) {
 	}
 }
 func (e *sshExec) SetArgs(args []interface{}) {
-	requireNoArguments(e, args)
+	util.RequireNoArguments(e, args)
 }
 func (e *sshExec) String() string {
 	return "<ssh-exec>"
@@ -146,7 +134,7 @@ func (e *sshExecParallel) Exec(targets []target.Target, command []string) {
 	}
 }
 func (e *sshExecParallel) SetArgs(args []interface{}) {
-	requireNoArguments(e, args)
+	util.RequireNoArguments(e, args)
 }
 func (e *sshExecParallel) String() string {
 	return "<ssh-exec-parallel>"
@@ -160,7 +148,7 @@ func (e *csshx) Exec(targets []target.Target, command []string) {
 	myExec("csshx", target.TargetStrings(targets)...)
 }
 func (e *csshx) SetArgs(args []interface{}) {
-	requireNoArguments(e, args)
+	util.RequireNoArguments(e, args)
 }
 func (e *csshx) String() string {
 	return "<csshx>"
@@ -174,7 +162,7 @@ func (e *tmuxCssh) Exec(targets []target.Target, command []string) {
 	myExec("tmux-cssh", target.TargetStrings(targets)...)
 }
 func (e *tmuxCssh) SetArgs(args []interface{}) {
-	requireNoArguments(e, args)
+	util.RequireNoArguments(e, args)
 }
 func (e *tmuxCssh) String() string {
 	return "<tmux-cssh>"
@@ -188,20 +176,20 @@ type oneOrMore struct {
 func (e *oneOrMore) Exec(targets []target.Target, command []string) {
 	requireAtLeastOneTarget(e, targets)
 	if len(targets) == 1 {
-		util.Logger.Debugf("Got one target, using %s", e.one)
+		util.Logger.Debugf("%s got one target, using %s", e, e.one)
 		e.one.Exec(targets, command)
 	} else {
-		util.Logger.Debugf("Got more than one target, using %s", e.more)
+		util.Logger.Debugf("%s got more than one target, using %s", e, e.more)
 		e.more.Exec(targets, command)
 	}
 }
 func (e *oneOrMore) SetArgs(args []interface{}) {
-	requireArguments(e, 2, args)
+	util.RequireArguments(e, 2, args)
 	e.one = makeFromSExp(args[0].([]interface{}))
 	e.more = makeFromSExp(args[1].([]interface{}))
 }
-func (c *oneOrMore) String() string {
-	return fmt.Sprintf("<one-or-more %s %s>", c.one, c.more)
+func (e *oneOrMore) String() string {
+	return fmt.Sprintf("<one-or-more %s %s>", e.one, e.more)
 }
 
 type ifArgs struct {
@@ -209,17 +197,17 @@ type ifArgs struct {
 	withoutArgs interfaces.Executor
 }
 
-func (c *ifArgs) Exec(targets []target.Target, args []string) {
+func (e *ifArgs) Exec(targets []target.Target, args []string) {
 	if len(args) < 1 {
-		util.Logger.Debugf("Got no args, using %s", c.withoutArgs)
-		c.withoutArgs.Exec(targets, args)
+		util.Logger.Debugf("%s got no args, using %s", e, e.withoutArgs)
+		e.withoutArgs.Exec(targets, args)
 	} else {
-		util.Logger.Debugf("Got args, using %s", c.withArgs)
-		c.withArgs.Exec(targets, args)
+		util.Logger.Debugf("%s got args, using %s", e, e.withArgs)
+		e.withArgs.Exec(targets, args)
 	}
 }
 func (e *ifArgs) SetArgs(args []interface{}) {
-	requireArguments(e, 2, args)
+	util.RequireArguments(e, 2, args)
 	e.withArgs = makeFromSExp(args[0].([]interface{}))
 	e.withoutArgs = makeFromSExp(args[1].([]interface{}))
 }
