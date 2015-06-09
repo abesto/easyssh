@@ -78,16 +78,19 @@ func requireArguments(e interfaces.Executor, n int, args []interface{}) {
 	}
 }
 
+func myExec(binaryName string, args... string) {
+	var binary = util.LookPathOrAbort(binaryName)
+	var argv = append([]string{binary}, args...)
+	fmt.Printf("Executing %s\n", argv)
+	syscall.Exec(binary, argv, os.Environ())
+}
+
 type sshLogin struct{}
 
 func (e *sshLogin) Exec(targets []target.Target, command []string) {
 	requireExactlyOneTarget(e, targets)
 	requireNoCommand(e, command)
-
-	var binary = util.LookPathOrAbort("ssh")
-	var argv = []string{binary, targets[0].String()}
-	fmt.Printf("Executing %s\n", argv)
-	syscall.Exec(binary, argv, os.Environ())
+	myExec("ssh", targets[0].String())
 }
 func (e *sshLogin) SetArgs(args []interface{}) {
 	requireNoArguments(e, args)
@@ -103,6 +106,7 @@ func (e *sshExec) Exec(targets []target.Target, command []string) {
 	requireCommand(e, command)
 
 	for _, target := range targets {
+		// TODO rewrite to fork/channels + myExec?
 		var binary = util.LookPathOrAbort("ssh")
 		var cmd = exec.Command(binary, append([]string{target.String()}, command...)...)
 
@@ -131,7 +135,7 @@ func (e *sshExecParallel) Exec(targets []target.Target, command []string) {
 	var binary = util.LookPathOrAbort("ssh")
 	var cmds = []*exec.Cmd{}
 	for _, target := range targets {
-
+		// TODO rewrite to fork/channels + myExec?
 		var cmd = exec.Command(binary, append([]string{target.String()}, command...)...)
 
 		// TODO prefix with target ip, maybe color by node?
@@ -161,11 +165,7 @@ type csshx struct{}
 func (e *csshx) Exec(targets []target.Target, command []string) {
 	requireAtLeastOneTarget(e, targets)
 	requireNoCommand(e, command)
-
-	var binary = util.LookPathOrAbort("csshx")
-	var argv = append([]string{binary}, target.TargetStrings(targets)...)
-	fmt.Printf("Executing %s\n", argv)
-	syscall.Exec(binary, argv, os.Environ())
+	myExec("csshx", target.TargetStrings(targets)...)
 }
 func (e *csshx) SetArgs(args []interface{}) {
 	requireNoArguments(e, args)
@@ -179,11 +179,7 @@ type tmuxCssh struct{}
 func (e *tmuxCssh) Exec(targets []target.Target, command []string) {
 	requireAtLeastOneTarget(e, targets)
 	requireNoCommand(e, command)
-
-	var binary = util.LookPathOrAbort("tmux-cssh")
-	var argv = append([]string{binary}, target.TargetStrings(targets)...)
-	fmt.Printf("Executing %s\n", argv)
-	syscall.Exec(binary, argv, os.Environ())
+	myExec("tmux-cssh", target.TargetStrings(targets)...)
 }
 func (e *tmuxCssh) SetArgs(args []interface{}) {
 	requireNoArguments(e, args)
