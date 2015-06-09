@@ -16,8 +16,6 @@ func MakeFromString(input string, makeByName func(name string) interface{}) inte
 
 func Make(data []interface{}, makeByName func(name string) interface{}) interface{} {
 	var o = makeByName(string(data[0].([]byte))).(interfaces.HasSetArgs)
-	if len(data) > 0 {
-		o.SetArgs(data[1:])
-	}
+	o.SetArgs(data[1:])
 	return o
 }

@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/abesto/easyssh/commands"
+	"github.com/abesto/easyssh/executors"
 	"github.com/abesto/easyssh/discoverers"
 	"github.com/abesto/easyssh/filters"
 	"github.com/abesto/easyssh/interfaces"
@@ -15,8 +15,8 @@ func main() {
 	var (
 		discovererDefinition string
 		discoverer interfaces.Discoverer
-		commandDefinition string
-		command           interfaces.Command
+		executorDefinition string
+		executor interfaces.Executor
 		user              string
 		filterDefinition string
 		filter interfaces.TargetFilter
@@ -25,9 +25,9 @@ func main() {
 	flag.StringVar(&user, "l", "",
 		"Specifies the user to log in as on the remote machine. If empty, it will not be passed to the called SSH tool.")
 	// TODO document what Discoverer mechanisms and command runners are available
-	flag.StringVar(&discovererDefinition, "d", "comma-separated", "")
-	flag.StringVar(&commandDefinition, "c", "ssh-login", "")
-	flag.StringVar(&filterDefinition, "f", "id", "")
+	flag.StringVar(&discovererDefinition, "d", "(comma-separated)", "")
+	flag.StringVar(&executorDefinition, "e", "(ssh-login)", "")
+	flag.StringVar(&filterDefinition, "f", "(id)", "")
 	flag.Parse()
 
 	if flag.NArg() == 0 {
@@ -37,8 +37,8 @@ func main() {
 	discoverer = discoverers.Make(discovererDefinition)
 	fmt.Printf("Discoverer built: %s\n", discoverer)
 
-	command = commands.Make(commandDefinition)
-	fmt.Printf("Command built: %s\n", command)
+	executor = executors.Make(executorDefinition)
+	fmt.Printf("Executor built: %s\n", executor)
 
 	filter = filters.Make(filterDefinition)
 	fmt.Printf("Filter built: %s\n", filter)
@@ -54,10 +54,10 @@ func main() {
 
 	targets = filter.Filter(targets)
 
-	var commandArgs = []string{}
+	var command = []string{}
 	if flag.NArg() > 0 {
-		commandArgs = flag.Args()[1:]
+		command = flag.Args()[1:]
 	}
 
-	command.Exec(targets, commandArgs)
+	executor.Exec(targets, command)
 }

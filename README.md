@@ -21,6 +21,13 @@ easyssh -c='(ssh-exec-parallel)' -d='(knife)' -l=root roles:app /etc/init.d/apac
 ```
 
 ## Recommended alias
+```sh
+easyssh_executor='(if-args (ssh-exec-parallel) (if-one-target (ssh-login) (tmux-cssh)))'
+easyssh_discoverer='(first-matching (knife) (comma-separated))'
+easyssh_filter='(list (ec2-instance-id us-east-1) (ec2-instance-id us-west-1))'
+alias s="easyssh -e='$easyssh_cmd' -d='$easyssh_discoverer' -f='$easyssh_filter'"
+```
+
 This one alias will
 
  * look up your target hosts using `knife search node`, taking the first argument as the search query
@@ -33,10 +40,6 @@ This one alias will
    `ssh-exec-parallel` with `ssh-exec` to run the command on just a single node at a time.
 
 ```sh
-easyssh_cmd='(if-args (ssh-exec-parallel) (if-one-target (ssh-login) (tmux-cssh)))'
-easyssh_discoverer='(first-matching (knife) (comma-separated))'
-easyssh_filter='(list (ec2-instance-id us-east-1) (ec2-instance-id us-west-1))'
-alias s="easyssh -c='$easyssh_cmd' -d='$easyssh_discoverer' -f='$easyssh_filter'"
 # log in to myhost.com
 s myhost.com
 # reload apache on app servers (as root)

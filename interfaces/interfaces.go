@@ -20,8 +20,8 @@ type TargetFilter interface {
 	String() string
 }
 
-type Command interface {
-	Exec(targets []target.Target, args []string)
+type Executor interface {
+	Exec(targets []target.Target, command []string)
 	SetArgs(args []interface{})
 	String() string
 }
