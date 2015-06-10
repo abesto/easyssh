@@ -1,6 +1,6 @@
 # easyssh
 
-`easyssh` is a highly configurable wrapper around `ssh`, `tmux-cssh`, `cssh`, `aws`, `knife` and who knows what else. It's for you if the following makes you excited. You can have a single alias that does this (let's call the alias `s`):
+`easyssh` is a highly configurable wrapper around `ssh`, `tmux-cssh`, `csshx`, `aws`, `knife` and who knows what else. It's for you if the following makes you excited. You can have a single alias that does this (let's call the alias `s`):
 
  * `s myhost.com` logs in to myhost.com
  * `s app.myhost.com,db.myhost.com` logs in to both hosts using `tmux-ssh`
