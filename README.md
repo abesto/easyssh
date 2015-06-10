@@ -1,6 +1,13 @@
 # easyssh
 
-Do magic like "run this command paralelly on all my machines matching this role in Chef" easily!
+`easyssh` is for you if the following makes you excited. You can have a single alias that does this (let's call the alias `s`):
+
+ * `s myhost.com` logs in to myhost.com
+ * `s app.myhost.com,db.myhost.com` logs in to both hosts using `tmux-ssh`
+ * `s -lroot myhost.com /etc/init.d/apache2 reload` reloads apache
+ * `s app.myhost.com,db.myhost.com uptime` runs uptime on both hosts (parallelly, which is interesting if you run longer-running commands)
+ * `s -lroot roles:app /etc/init.d/apache2 reload` parallelly reloads apache on all nodes that have the role `app` in Chef
+ * If you provide a hostname that looks like it includes an EC2 instance id, it uses the `aws` CLI tool to look up the public IP, and uses that.
 
 The syntax is slightly verbose, it's designed to be used in aliases you frequently need.
 
@@ -11,6 +18,9 @@ go get github.com/abesto/easyssh
 ```
 
 ## Simple usage
+
+You probably won't ever do this; it's just a basic demonstration of the syntax.
+
 ```sh
 # log in with an interactive shell; old-fashioned ssh
 easyssh myhost.com
@@ -28,7 +38,7 @@ easyssh_filter='(list (ec2-instance-id us-east-1) (ec2-instance-id us-west-1))'
 alias s="easyssh -e='$easyssh_cmd' -d='$easyssh_discoverer' -f='$easyssh_filter'"
 ```
 
-This one alias will
+This one alias implements the use-case described in the introduction. It will
 
  * look up your target hosts using `knife search node`, taking the first argument as the search query
  * if that doesn't find anything, it'll assume that you passed in a comma-separated list of hosts in the first argument
