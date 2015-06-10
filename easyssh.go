@@ -9,6 +9,8 @@ import (
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 	"github.com/alexcesaro/log/stdlog"
+	"fmt"
+	"strings"
 )
 
 func main() {
@@ -25,7 +27,8 @@ func main() {
 	flag.StringVar(&user, "l", "",
 		"Specifies the user to log in as on the remote machine. If empty, it will not be passed to the called SSH tool.")
 	// TODO document what Discoverer mechanisms and command runners are available
-	flag.StringVar(&discovererDefinition, "d", "(comma-separated)", "")
+	flag.StringVar(&discovererDefinition, "d", "(comma-separated)",
+		fmt.Sprintf("Discoverer definition. Supported discoverers: %s", strings.Join(discoverers.SupportedDiscovererNames(), ", ")))
 	flag.StringVar(&executorDefinition, "e", "(ssh-login)", "")
 	flag.StringVar(&filterDefinition, "f", "(id)", "")
 	flag.Parse()

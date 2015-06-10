@@ -15,20 +15,40 @@ func Make(input string) interfaces.Discoverer {
 	return from_sexp.MakeFromString(input, makeByName).(interfaces.Discoverer)
 }
 
+func SupportedDiscovererNames() []string {
+	var keys = make([]string, len(discovererMakerMap))
+	var i = 0
+	for key, _ := range discovererMakerMap {
+		keys[i] = key
+		i += 1
+	}
+	return keys
+}
+
 func makeFromSExp(data []interface{}) interfaces.Discoverer {
 	return from_sexp.Make(data, makeByName).(interfaces.Discoverer)
 }
 
+const (
+	nameCommaSeparated = "comma-separated"
+	nameKnife = "knife"
+	nameFirstMatching = "first-matching"
+)
+
+var discovererMakerMap = map[string]func()interfaces.Discoverer {
+	nameCommaSeparated: func() interfaces.Discoverer { return &commaSeparated{} },
+	nameKnife: func() interfaces.Discoverer { return &knifeSearch{} },
+	nameFirstMatching: func() interfaces.Discoverer { return &firstMatching{} },
+}
+
 func makeByName(name string) interface{} {
 	var d interfaces.Discoverer
-	switch name {
-	case "comma-separated":
-		d = &commaSeparated{}
-	case "knife":
-		d = &knifeSearch{}
-	case "first-matching":
-		d = &firstMatching{}
-	default:
+	for key, maker := range discovererMakerMap {
+		if key == name {
+			d = maker()
+		}
+	}
+	if d == nil {
 		util.Abort("Command \"%s\" is not known", name)
 	}
 	return d
@@ -45,7 +65,7 @@ func (d *commaSeparated) SetArgs(args []interface{}) {
 	}
 }
 func (d *commaSeparated) String() string {
-	return "<comma-separated>"
+	return fmt.Sprintf("<%s>", nameCommaSeparated)
 }
 
 type knifeSearch struct{}
@@ -89,7 +109,7 @@ func (d *knifeSearch) SetArgs(args []interface{}) {
 	}
 }
 func (d *knifeSearch) String() string {
-	return "<knife>"
+	return fmt.Sprintf("<%s>", nameKnife)
 }
 
 type firstMatching struct {
@@ -118,5 +138,5 @@ func (d *firstMatching) String() string {
 	for _, child := range d.discoverers {
 		strs = append(strs, child.String())
 	}
-	return fmt.Sprintf("<first-matching %s>", strings.Join(strs, " "))
+	return fmt.Sprintf("<%s %s>", nameFirstMatching, strings.Join(strs, " "))
 }
