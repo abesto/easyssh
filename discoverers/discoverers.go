@@ -49,7 +49,7 @@ func makeByName(name string) interface{} {
 		}
 	}
 	if d == nil {
-		util.Abort("Command \"%s\" is not known", name)
+		util.Abort("Discoverer \"%s\" is not known", name)
 	}
 	return d
 }

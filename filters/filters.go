@@ -15,25 +15,45 @@ func Make(input string) interfaces.TargetFilter {
 	return from_sexp.MakeFromString(input, makeByName).(interfaces.TargetFilter)
 }
 
+func SupportedFilterNames() []string {
+	var keys = make([]string, len(filterMakerMap))
+	var i = 0
+	for key, _ := range filterMakerMap {
+		keys[i] = key
+		i += 1
+	}
+	return keys
+}
+
 func makeFromSExp(data []interface{}) interfaces.TargetFilter {
 	return from_sexp.Make(data, makeByName).(interfaces.TargetFilter)
 }
 
+const (
+	nameEc2InstanceId = "ec2-instance-id"
+	nameList = "list"
+	nameId = "id"
+	nameFirst = "first"
+)
+
+var filterMakerMap = map[string]func()interfaces.TargetFilter{
+	nameEc2InstanceId: func() interfaces.TargetFilter { return &ec2InstanceIdLookup{} },
+	nameList: func() interfaces.TargetFilter { return &list{} },
+	nameId: func() interfaces.TargetFilter { return &id{} },
+	nameFirst: func() interfaces.TargetFilter { return &first{} },
+}
+
 func makeByName(name string) interface{} {
-	var f interfaces.TargetFilter
-	switch name {
-	case "ec2-instance-id":
-		f = &ec2InstanceIdLookup{}
-	case "list":
-		f = &list{}
-	case "id":
-		f = &id{}
-	case "first":
-		f = &first{}
-	default:
-		util.Abort("Filter \"%s\" is not known", name)
+	var d interfaces.TargetFilter
+	for key, maker := range filterMakerMap {
+		if key == name {
+			d = maker()
+		}
 	}
-	return f
+	if d == nil {
+		util.Abort("filter \"%s\" is not known", name)
+	}
+	return d
 }
 
 type ec2InstanceIdLookup struct {

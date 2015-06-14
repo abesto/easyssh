@@ -26,11 +26,12 @@ func main() {
 
 	flag.StringVar(&user, "l", "",
 		"Specifies the user to log in as on the remote machine. If empty, it will not be passed to the called SSH tool.")
-	// TODO document what Discoverer mechanisms and command runners are available
 	flag.StringVar(&discovererDefinition, "d", "(comma-separated)",
 		fmt.Sprintf("Discoverer definition. Supported discoverers: %s", strings.Join(discoverers.SupportedDiscovererNames(), ", ")))
-	flag.StringVar(&executorDefinition, "e", "(ssh-login)", "")
-	flag.StringVar(&filterDefinition, "f", "(id)", "")
+	flag.StringVar(&executorDefinition, "e", "(ssh-login)",
+		fmt.Sprintf("Executor definition. Supported executors: %s", strings.Join(executors.SupportedExecutorNames(), ", ")))
+	flag.StringVar(&filterDefinition, "f", "(id)",
+		fmt.Sprintf("Filter definition. Supported filters: %s", strings.Join(filters.SupportedFilterNames(), ", ")))
 	flag.Parse()
 
 	util.Logger = stdlog.GetFromFlags()

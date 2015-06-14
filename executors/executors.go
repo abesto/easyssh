@@ -18,31 +18,51 @@ func Make(input string) interfaces.Executor {
 	return from_sexp.MakeFromString(input, makeByName).(interfaces.Executor)
 }
 
+func SupportedExecutorNames() []string {
+	var keys = make([]string, len(executorMakerMap))
+	var i = 0
+	for key, _ := range executorMakerMap {
+		keys[i] = key
+		i += 1
+	}
+	return keys
+}
+
 func makeFromSExp(data []interface{}) interfaces.Executor {
 	return from_sexp.Make(data, makeByName).(interfaces.Executor)
 }
 
+const (
+	nameSshLogin = "ssh-login"
+	nameCsshx = "knife"
+	nameSshExec = "ssh-exec"
+	nameSshExecParallel = "ssh-exec-parallel"
+	nameTmuxCssh = "tmux-cssh"
+	nameIfOneTarget = "if-one-target"
+	nameIfArgs = "if-args"
+)
+
+var executorMakerMap = map[string]func()interfaces.Executor {
+	nameSshLogin: func() interfaces.Executor { return &sshLogin{} },
+	nameCsshx: func() interfaces.Executor { return &csshx{} },
+	nameSshExec: func() interfaces.Executor { return &sshExec{} },
+	nameSshExecParallel: func() interfaces.Executor { return &sshExecParallel{} },
+	nameTmuxCssh: func() interfaces.Executor { return &tmuxCssh{} },
+	nameIfOneTarget: func() interfaces.Executor { return &oneOrMore{} },
+	nameIfArgs: func() interfaces.Executor { return &ifArgs{} },
+}
+
 func makeByName(name string) interface{} {
-	var c interfaces.Executor
-	switch name {
-	case "ssh-login":
-		c = &sshLogin{}
-	case "csshx":
-		c = &csshx{}
-	case "ssh-exec":
-		c = &sshExec{}
-	case "ssh-exec-parallel":
-		c = &sshExecParallel{}
-	case "tmux-cssh":
-		c = &tmuxCssh{}
-	case "if-one-target":
-		c = &oneOrMore{}
-	case "if-args":
-		c = &ifArgs{}
-	default:
-		util.Abort(fmt.Sprintf("Command \"%s\" is not known", name))
+	var d interfaces.Executor
+	for key, maker := range executorMakerMap {
+		if key == name {
+			d = maker()
+		}
 	}
-	return c
+	if d == nil {
+		util.Abort("Executor \"%s\" is not known", name)
+	}
+	return d
 }
 
 func requireExactlyOneTarget(e interfaces.Executor, targets []target.Target) {
