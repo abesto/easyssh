@@ -10,6 +10,7 @@ import (
 	"github.com/abesto/easyssh/util"
 	"github.com/alexcesaro/log/stdlog"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -24,8 +25,32 @@ func main() {
 		filter               interfaces.TargetFilter
 	)
 
+<<<<<<< HEAD:easyssh.go
+=======
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, `Usage: %s [options] target-definition [command]
+
+Where
+  target-definition is the input to the discoverer(s) defined with -d
+  command, if provided, will be run on the targets
+
+Ideally single alias should cover all your use-cases. For example:
+  smartssh_executor='(if-args (ssh-exec-parallel) (if-one-target (ssh-login) (tmux-cssh)))'
+  smartssh_discoverer='(first-matching (knife) (comma-separated))'
+  smartssh_filter='(list (ec2-instance-id us-east-1) (ec2-instance-id us-west-1))'
+  alias s="%s -e='$smartssh_cmd' -d='$smartssh_discoverer' -f='$smartssh_filter'"
+
+Configuration details:
+  open https://github.com/abesto/smartssh/blob/master/README.md#configuration
+
+Options:
+`, os.Args[0], os.Args[0])
+		flag.PrintDefaults()
+	}
+
+>>>>>>> e7c2d73... gofmt, improved help:smartssh.go
 	flag.StringVar(&user, "l", "",
-		"Specifies the user to log in as on the remote machine. If empty, it will not be passed to the called SSH tool.")
+		"Specifies the user to log in as on the remote machine.")
 	flag.StringVar(&discovererDefinition, "d", "(comma-separated)",
 		fmt.Sprintf("Discoverer definition. Supported discoverers: %s", strings.Join(discoverers.SupportedDiscovererNames(), ", ")))
 	flag.StringVar(&executorDefinition, "e", "(ssh-login)",

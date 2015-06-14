@@ -18,7 +18,7 @@ func Make(input string) interfaces.Discoverer {
 func SupportedDiscovererNames() []string {
 	var keys = make([]string, len(discovererMakerMap))
 	var i = 0
-	for key, _ := range discovererMakerMap {
+	for key := range discovererMakerMap {
 		keys[i] = key
 		i += 1
 	}
@@ -31,14 +31,14 @@ func makeFromSExp(data []interface{}) interfaces.Discoverer {
 
 const (
 	nameCommaSeparated = "comma-separated"
-	nameKnife = "knife"
-	nameFirstMatching = "first-matching"
+	nameKnife          = "knife"
+	nameFirstMatching  = "first-matching"
 )
 
-var discovererMakerMap = map[string]func()interfaces.Discoverer {
+var discovererMakerMap = map[string]func() interfaces.Discoverer{
 	nameCommaSeparated: func() interfaces.Discoverer { return &commaSeparated{} },
-	nameKnife: func() interfaces.Discoverer { return &knifeSearch{} },
-	nameFirstMatching: func() interfaces.Discoverer { return &firstMatching{} },
+	nameKnife:          func() interfaces.Discoverer { return &knifeSearch{} },
+	nameFirstMatching:  func() interfaces.Discoverer { return &firstMatching{} },
 }
 
 func makeByName(name string) interface{} {

@@ -18,7 +18,7 @@ func Make(input string) interfaces.TargetFilter {
 func SupportedFilterNames() []string {
 	var keys = make([]string, len(filterMakerMap))
 	var i = 0
-	for key, _ := range filterMakerMap {
+	for key := range filterMakerMap {
 		keys[i] = key
 		i += 1
 	}
@@ -31,16 +31,16 @@ func makeFromSExp(data []interface{}) interfaces.TargetFilter {
 
 const (
 	nameEc2InstanceId = "ec2-instance-id"
-	nameList = "list"
-	nameId = "id"
-	nameFirst = "first"
+	nameList          = "list"
+	nameId            = "id"
+	nameFirst         = "first"
 )
 
-var filterMakerMap = map[string]func()interfaces.TargetFilter{
+var filterMakerMap = map[string]func() interfaces.TargetFilter{
 	nameEc2InstanceId: func() interfaces.TargetFilter { return &ec2InstanceIdLookup{} },
-	nameList: func() interfaces.TargetFilter { return &list{} },
-	nameId: func() interfaces.TargetFilter { return &id{} },
-	nameFirst: func() interfaces.TargetFilter { return &first{} },
+	nameList:          func() interfaces.TargetFilter { return &list{} },
+	nameId:            func() interfaces.TargetFilter { return &id{} },
+	nameFirst:         func() interfaces.TargetFilter { return &first{} },
 }
 
 func makeByName(name string) interface{} {
