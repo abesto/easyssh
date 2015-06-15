@@ -9,6 +9,7 @@ import (
 	"github.com/abesto/easyssh/util"
 	"os/exec"
 	"regexp"
+	"github.com/eadmund/sexprs"
 )
 
 func Make(input string) interfaces.TargetFilter {
@@ -25,7 +26,7 @@ func SupportedFilterNames() []string {
 	return keys
 }
 
-func makeFromSExp(data []interface{}) interfaces.TargetFilter {
+func makeFromSExp(data sexprs.Sexp) interfaces.TargetFilter {
 	return from_sexp.Make(data, makeByName).(interfaces.TargetFilter)
 }
 
@@ -86,11 +87,11 @@ func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
 	}
 	return targets
 }
-func (f *ec2InstanceIdLookup) SetArgs(args []interface{}) {
+func (f *ec2InstanceIdLookup) SetArgs(args []sexprs.Sexp) {
 	if len(args) != 1 {
 		util.Abort("ec2-instance-id requires exactly one argument, the region name to use for looking up instances")
 	}
-	f.region = string(args[0].([]byte))
+	f.region = args[0].String()
 }
 func (f *ec2InstanceIdLookup) String() string {
 	return fmt.Sprintf("<ec2-instance-id %s>", f.region)
@@ -107,9 +108,9 @@ func (f *list) Filter(targets []target.Target) []target.Target {
 	}
 	return targets
 }
-func (f *list) SetArgs(args []interface{}) {
+func (f *list) SetArgs(args []sexprs.Sexp) {
 	for _, def := range args {
-		f.children = append(f.children, makeFromSExp(def.([]interface{})))
+		f.children = append(f.children, makeFromSExp(def))
 	}
 }
 func (f *list) String() string {
@@ -121,7 +122,7 @@ type id struct{}
 func (f *id) Filter(targets []target.Target) []target.Target {
 	return targets
 }
-func (f *id) SetArgs(args []interface{}) {
+func (f *id) SetArgs(args []sexprs.Sexp) {
 	util.RequireNoArguments(f, args)
 }
 func (f *id) String() string {
@@ -136,7 +137,7 @@ func (f *first) Filter(targets []target.Target) []target.Target {
 	}
 	return targets
 }
-func (f *first) SetArgs(args []interface{}) {
+func (f *first) SetArgs(args []sexprs.Sexp) {
 	util.RequireNoArguments(f, args)
 }
 func (f *first) String() string {

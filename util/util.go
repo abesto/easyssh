@@ -4,6 +4,7 @@ import (
 	"github.com/alexcesaro/log"
 	"os"
 	"os/exec"
+	"github.com/eadmund/sexprs"
 )
 
 func Abort(msg string, args ...interface{}) {
@@ -19,13 +20,13 @@ func LookPathOrAbort(binaryName string) string {
 	return binary
 }
 
-func RequireNoArguments(e interface{}, args []interface{}) {
+func RequireNoArguments(e interface{}, args []sexprs.Sexp) {
 	if len(args) > 0 {
 		Abort("%s doesn't take any arguments, got %d: %s", e, len(args), args)
 	}
 }
 
-func RequireArguments(e interface{}, n int, args []interface{}) {
+func RequireArguments(e interface{}, n int, args []sexprs.Sexp) {
 	if len(args) != n {
 		Abort("%s requires exactly %d arguments, got %d: %s", e, n, len(args), args)
 	}

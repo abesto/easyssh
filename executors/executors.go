@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"github.com/eadmund/sexprs"
 )
 
 func Make(input string) interfaces.Executor {
@@ -28,7 +29,7 @@ func SupportedExecutorNames() []string {
 	return keys
 }
 
-func makeFromSExp(data []interface{}) interfaces.Executor {
+func makeFromSExp(data sexprs.Sexp) interfaces.Executor {
 	return from_sexp.Make(data, makeByName).(interfaces.Executor)
 }
 
@@ -103,7 +104,7 @@ func (e *sshLogin) Exec(targets []target.Target, command []string) {
 	requireNoCommand(e, command)
 	myExec("ssh", targets[0].String())
 }
-func (e *sshLogin) SetArgs(args []interface{}) {
+func (e *sshLogin) SetArgs(args []sexprs.Sexp) {
 	util.RequireNoArguments(e, args)
 }
 func (e *sshLogin) String() string {
@@ -123,7 +124,7 @@ func (e *sshExec) Exec(targets []target.Target, command []string) {
 		cmd.Run()
 	}
 }
-func (e *sshExec) SetArgs(args []interface{}) {
+func (e *sshExec) SetArgs(args []sexprs.Sexp) {
 	util.RequireNoArguments(e, args)
 }
 func (e *sshExec) String() string {
@@ -153,7 +154,7 @@ func (e *sshExecParallel) Exec(targets []target.Target, command []string) {
 		}
 	}
 }
-func (e *sshExecParallel) SetArgs(args []interface{}) {
+func (e *sshExecParallel) SetArgs(args []sexprs.Sexp) {
 	util.RequireNoArguments(e, args)
 }
 func (e *sshExecParallel) String() string {
@@ -167,7 +168,7 @@ func (e *csshx) Exec(targets []target.Target, command []string) {
 	requireNoCommand(e, command)
 	myExec("csshx", target.TargetStrings(targets)...)
 }
-func (e *csshx) SetArgs(args []interface{}) {
+func (e *csshx) SetArgs(args []sexprs.Sexp) {
 	util.RequireNoArguments(e, args)
 }
 func (e *csshx) String() string {
@@ -181,7 +182,7 @@ func (e *tmuxCssh) Exec(targets []target.Target, command []string) {
 	requireNoCommand(e, command)
 	myExec("tmux-cssh", target.TargetStrings(targets)...)
 }
-func (e *tmuxCssh) SetArgs(args []interface{}) {
+func (e *tmuxCssh) SetArgs(args []sexprs.Sexp) {
 	util.RequireNoArguments(e, args)
 }
 func (e *tmuxCssh) String() string {
@@ -203,10 +204,10 @@ func (e *oneOrMore) Exec(targets []target.Target, command []string) {
 		e.more.Exec(targets, command)
 	}
 }
-func (e *oneOrMore) SetArgs(args []interface{}) {
+func (e *oneOrMore) SetArgs(args []sexprs.Sexp) {
 	util.RequireArguments(e, 2, args)
-	e.one = makeFromSExp(args[0].([]interface{}))
-	e.more = makeFromSExp(args[1].([]interface{}))
+	e.one = makeFromSExp(args[0])
+	e.more = makeFromSExp(args[1])
 }
 func (e *oneOrMore) String() string {
 	return fmt.Sprintf("<one-or-more %s %s>", e.one, e.more)
@@ -226,10 +227,10 @@ func (e *ifArgs) Exec(targets []target.Target, args []string) {
 		e.withArgs.Exec(targets, args)
 	}
 }
-func (e *ifArgs) SetArgs(args []interface{}) {
+func (e *ifArgs) SetArgs(args []sexprs.Sexp) {
 	util.RequireArguments(e, 2, args)
-	e.withArgs = makeFromSExp(args[0].([]interface{}))
-	e.withoutArgs = makeFromSExp(args[1].([]interface{}))
+	e.withArgs = makeFromSExp(args[0])
+	e.withoutArgs = makeFromSExp(args[1])
 }
 func (e *ifArgs) String() string {
 	return fmt.Sprintf("<if-args %s %s>", e.withArgs, e.withoutArgs)

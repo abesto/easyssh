@@ -9,6 +9,7 @@ import (
 	"github.com/abesto/easyssh/util"
 	"os/exec"
 	"strings"
+	"github.com/eadmund/sexprs"
 )
 
 func Make(input string) interfaces.Discoverer {
@@ -25,7 +26,7 @@ func SupportedDiscovererNames() []string {
 	return keys
 }
 
-func makeFromSExp(data []interface{}) interfaces.Discoverer {
+func makeFromSExp(data sexprs.Sexp) interfaces.Discoverer {
 	return from_sexp.Make(data, makeByName).(interfaces.Discoverer)
 }
 
@@ -59,7 +60,7 @@ type commaSeparated struct{}
 func (d *commaSeparated) Discover(input string) []string {
 	return strings.Split(input, ",")
 }
-func (d *commaSeparated) SetArgs(args []interface{}) {
+func (d *commaSeparated) SetArgs(args []sexprs.Sexp) {
 	if len(args) > 0 {
 		util.Abort("%s takes no configuration, got %s", d, args)
 	}
@@ -103,7 +104,7 @@ func (d *knifeSearch) Discover(input string) []string {
 
 	return ips
 }
-func (d *knifeSearch) SetArgs(args []interface{}) {
+func (d *knifeSearch) SetArgs(args []sexprs.Sexp) {
 	if len(args) > 0 {
 		util.Abort("%s takes no configuration, got %s", d, args)
 	}
@@ -127,10 +128,10 @@ func (d *firstMatching) Discover(input string) []string {
 	}
 	return []string{}
 }
-func (d *firstMatching) SetArgs(args []interface{}) {
+func (d *firstMatching) SetArgs(args []sexprs.Sexp) {
 	d.discoverers = []interfaces.Discoverer{}
 	for _, exp := range args {
-		d.discoverers = append(d.discoverers, makeFromSExp(exp.([]interface{})))
+		d.discoverers = append(d.discoverers, makeFromSExp(exp))
 	}
 }
 func (d *firstMatching) String() string {

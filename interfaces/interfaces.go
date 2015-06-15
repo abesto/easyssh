@@ -2,26 +2,28 @@ package interfaces
 
 import (
 	"github.com/abesto/easyssh/target"
+	"github.com/eadmund/sexprs"
+	"fmt"
 )
 
 type Discoverer interface {
+	HasSetArgs
+	fmt.Stringer
 	Discover(input string) []string
-	SetArgs(args []interface{})
-	String() string
 }
 
 type HasSetArgs interface {
-	SetArgs(args []interface{})
+	SetArgs(args []sexprs.Sexp)
 }
 
 type TargetFilter interface {
+	HasSetArgs
+	fmt.Stringer
 	Filter(targets []target.Target) []target.Target
-	SetArgs(args []interface{})
-	String() string
 }
 
 type Executor interface {
+	HasSetArgs
+	fmt.Stringer
 	Exec(targets []target.Target, command []string)
-	SetArgs(args []interface{})
-	String() string
 }
