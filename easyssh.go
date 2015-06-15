@@ -25,8 +25,6 @@ func main() {
 		filter               interfaces.TargetFilter
 	)
 
-<<<<<<< HEAD:easyssh.go
-=======
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: %s [options] target-definition [command]
 
@@ -48,7 +46,6 @@ Options:
 		flag.PrintDefaults()
 	}
 
->>>>>>> e7c2d73... gofmt, improved help:smartssh.go
 	flag.StringVar(&user, "l", "",
 		"Specifies the user to log in as on the remote machine.")
 	flag.StringVar(&discovererDefinition, "d", "(comma-separated)",
