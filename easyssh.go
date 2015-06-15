@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/abesto/easyssh/discoverers"
 	"github.com/abesto/easyssh/executors"
 	"github.com/abesto/easyssh/filters"
@@ -9,7 +10,6 @@ import (
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 	"github.com/alexcesaro/log/stdlog"
-	"fmt"
 	"os"
 	"strings"
 )

@@ -93,7 +93,7 @@ func (f *ec2InstanceIdLookup) SetArgs(args []interface{}) {
 	f.region = string(args[0].([]byte))
 }
 func (f *ec2InstanceIdLookup) String() string {
-	return fmt.Sprintf("<ec2-instance-id %s>", f.region)
+	return fmt.Sprintf("<%s %s>", nameEc2InstanceId, f.region)
 }
 
 type list struct {
@@ -113,7 +113,7 @@ func (f *list) SetArgs(args []interface{}) {
 	}
 }
 func (f *list) String() string {
-	return fmt.Sprintf("<list %s>", f.children)
+	return fmt.Sprintf("<%s %s>", nameList, f.children)
 }
 
 type id struct{}
@@ -125,7 +125,7 @@ func (f *id) SetArgs(args []interface{}) {
 	util.RequireNoArguments(f, args)
 }
 func (f *id) String() string {
-	return "<id>"
+	return fmt.Sprintf("<%s>", nameId)
 }
 
 type first struct{}
@@ -140,5 +140,5 @@ func (f *first) SetArgs(args []interface{}) {
 	util.RequireNoArguments(f, args)
 }
 func (f *first) String() string {
-	return "<first>"
+	return fmt.Sprintf("<%s>", nameFirst)
 }

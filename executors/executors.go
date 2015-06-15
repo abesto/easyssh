@@ -48,7 +48,7 @@ var executorMakerMap = map[string]func() interfaces.Executor{
 	nameSshExec:         func() interfaces.Executor { return &sshExec{} },
 	nameSshExecParallel: func() interfaces.Executor { return &sshExecParallel{} },
 	nameTmuxCssh:        func() interfaces.Executor { return &tmuxCssh{} },
-	nameIfOneTarget:     func() interfaces.Executor { return &oneOrMore{} },
+	nameIfOneTarget:     func() interfaces.Executor { return &ifOneTarget{} },
 	nameIfArgs:          func() interfaces.Executor { return &ifArgs{} },
 }
 
@@ -107,7 +107,7 @@ func (e *sshLogin) SetArgs(args []interface{}) {
 	util.RequireNoArguments(e, args)
 }
 func (e *sshLogin) String() string {
-	return "<ssh-login>"
+	return fmt.Sprintf("<%s>", nameSshLogin)
 }
 
 type sshExec struct{}
@@ -127,7 +127,7 @@ func (e *sshExec) SetArgs(args []interface{}) {
 	util.RequireNoArguments(e, args)
 }
 func (e *sshExec) String() string {
-	return "<ssh-exec>"
+	return fmt.Sprintf("<%s>", nameSshExec)
 }
 
 type sshExecParallel struct{}
@@ -157,7 +157,7 @@ func (e *sshExecParallel) SetArgs(args []interface{}) {
 	util.RequireNoArguments(e, args)
 }
 func (e *sshExecParallel) String() string {
-	return "<ssh-exec-parallel>"
+	return fmt.Sprintf("<%s>", nameSshExecParallel)
 }
 
 type csshx struct{}
@@ -171,7 +171,7 @@ func (e *csshx) SetArgs(args []interface{}) {
 	util.RequireNoArguments(e, args)
 }
 func (e *csshx) String() string {
-	return "<csshx>"
+	return fmt.Sprintf("<%s>", nameCsshx)
 }
 
 type tmuxCssh struct{}
@@ -185,15 +185,15 @@ func (e *tmuxCssh) SetArgs(args []interface{}) {
 	util.RequireNoArguments(e, args)
 }
 func (e *tmuxCssh) String() string {
-	return "<tmux-cssh>"
+	return fmt.Sprintf("<%s>", nameTmuxCssh)
 }
 
-type oneOrMore struct {
+type ifOneTarget struct {
 	one  interfaces.Executor
 	more interfaces.Executor
 }
 
-func (e *oneOrMore) Exec(targets []target.Target, command []string) {
+func (e *ifOneTarget) Exec(targets []target.Target, command []string) {
 	requireAtLeastOneTarget(e, targets)
 	if len(targets) == 1 {
 		util.Logger.Debugf("%s got one target, using %s", e, e.one)
@@ -203,13 +203,13 @@ func (e *oneOrMore) Exec(targets []target.Target, command []string) {
 		e.more.Exec(targets, command)
 	}
 }
-func (e *oneOrMore) SetArgs(args []interface{}) {
+func (e *ifOneTarget) SetArgs(args []interface{}) {
 	util.RequireArguments(e, 2, args)
 	e.one = makeFromSExp(args[0].([]interface{}))
 	e.more = makeFromSExp(args[1].([]interface{}))
 }
-func (e *oneOrMore) String() string {
-	return fmt.Sprintf("<one-or-more %s %s>", e.one, e.more)
+func (e *ifOneTarget) String() string {
+	return fmt.Sprintf("<%s %s %s>", nameIfOneTarget, e.one, e.more)
 }
 
 type ifArgs struct {
@@ -232,7 +232,7 @@ func (e *ifArgs) SetArgs(args []interface{}) {
 	e.withoutArgs = makeFromSExp(args[1].([]interface{}))
 }
 func (e *ifArgs) String() string {
-	return fmt.Sprintf("<if-args %s %s>", e.withArgs, e.withoutArgs)
+	return fmt.Sprintf("<%s %s %s>", nameIfArgs, e.withArgs, e.withoutArgs)
 }
 
 type prefixedLogWriterProxy struct {

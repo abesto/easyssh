@@ -1,8 +1,8 @@
 package interfaces
 
 import (
-	"github.com/abesto/easyssh/target"
 	"fmt"
+	"github.com/abesto/easyssh/target"
 )
 
 type Discoverer interface {
