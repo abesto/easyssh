@@ -53,7 +53,7 @@ This one alias implements the use-case described in the introduction.
 easyssh_executor='(if-args (ssh-exec-parallel) (if-one-target (ssh-login) (tmux-cssh)))'
 easyssh_discoverer='(first-matching (knife) (comma-separated))'
 easyssh_filter='(list (ec2-instance-id us-east-1) (ec2-instance-id us-west-1))'
-alias s="easyssh -e='$easyssh_cmd' -d='$easyssh_discoverer' -f='$easyssh_filter'"
+alias s="easyssh -e='$easyssh_executor' -d='$easyssh_discoverer' -f='$easyssh_filter'"
 ```
 
 If you frequently log in to servers as root, you can then go:
