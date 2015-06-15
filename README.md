@@ -27,6 +27,7 @@ The short version, for OSX:
 brew install go
 mkdir ~/.gocode
 echo "export GOPATH=$HOME/.gocode" >> ~/.bashrc
+echo 'export PATH="$GOPATH/bin:$PATH"' >> ~/.bashrc
 ```
 
 After installation you will find the executable in `~/.gocode/bin`.
