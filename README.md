@@ -50,7 +50,7 @@ easyssh -c='(ssh-exec-parallel)' -d='(knife)' -l=root roles:app /etc/init.d/apac
 This one alias implements the use-case described in the introduction.
 
 ```sh
-easyssh_executor='(if-args (ssh-exec-parallel) (if-one-target (ssh-login) (tmux-cssh)))'
+easyssh_executor='(if-command (ssh-exec-parallel) (if-one-target (ssh-login) (tmux-cssh)))'
 easyssh_discoverer='(first-matching (knife) (comma-separated))'
 easyssh_filter='(list (ec2-instance-id us-east-1) (ec2-instance-id us-west-1))'
 alias s="easyssh -e='$easyssh_executor' -d='$easyssh_discoverer' -f='$easyssh_filter'"
@@ -113,4 +113,4 @@ Each definition is an S-Expression; the terms usable in the S-Expressions are de
 | `csshx` | - | >0 | rejects | Uses `csshx` to log in to all the targets |
 | `tmux-cssh` | - | >0 | rejects | Uses `tmux-cssh` to log in to all the targets |
 | `if-one-target` | exactly two executors | >0 | pass-through | If there's one target, it calls the executor in its first argument. Otherwise the executor in its second argument. |
-| `if-args` | exactly two executors | N/A | pass-through | If a command was defined, it calls the executor in its first argument. Otherwise the executor in its second argument. |
+| `if-command` | exactly two executors | N/A | pass-through | Alias: `if-args`. If a command was defined, it calls the executor in its first argument. Otherwise the executor in its second argument. |

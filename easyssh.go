@@ -33,7 +33,7 @@ Where
   command, if provided, will be run on the targets
 
 Ideally single alias should cover all your use-cases. For example:
-  smartssh_executor='(if-args (ssh-exec-parallel) (if-one-target (ssh-login) (tmux-cssh)))'
+  smartssh_executor='(if-command (ssh-exec-parallel) (if-one-target (ssh-login) (tmux-cssh)))'
   smartssh_discoverer='(first-matching (knife) (comma-separated))'
   smartssh_filter='(list (ec2-instance-id us-east-1) (ec2-instance-id us-west-1))'
   alias s="%s -e='$smartssh_executor' -d='$smartssh_discoverer' -f='$smartssh_filter'"

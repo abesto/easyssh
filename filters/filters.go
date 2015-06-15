@@ -12,7 +12,7 @@ import (
 )
 
 func Make(input string) interfaces.TargetFilter {
-	return from_sexp.MakeFromString(input, makeByName).(interfaces.TargetFilter)
+	return from_sexp.MakeFromString(input, nil, makeByName).(interfaces.TargetFilter)
 }
 
 func SupportedFilterNames() []string {
@@ -26,7 +26,7 @@ func SupportedFilterNames() []string {
 }
 
 func makeFromSExp(data []interface{}) interfaces.TargetFilter {
-	return from_sexp.Make(data, makeByName).(interfaces.TargetFilter)
+	return from_sexp.Make(data, nil, makeByName).(interfaces.TargetFilter)
 }
 
 const (

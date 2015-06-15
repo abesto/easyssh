@@ -12,7 +12,7 @@ import (
 )
 
 func Make(input string) interfaces.Discoverer {
-	return from_sexp.MakeFromString(input, makeByName).(interfaces.Discoverer)
+	return from_sexp.MakeFromString(input, nil, makeByName).(interfaces.Discoverer)
 }
 
 func SupportedDiscovererNames() []string {
@@ -26,7 +26,7 @@ func SupportedDiscovererNames() []string {
 }
 
 func makeFromSExp(data []interface{}) interfaces.Discoverer {
-	return from_sexp.Make(data, makeByName).(interfaces.Discoverer)
+	return from_sexp.Make(data, nil, makeByName).(interfaces.Discoverer)
 }
 
 const (

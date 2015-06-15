@@ -15,7 +15,7 @@ import (
 )
 
 func Make(input string) interfaces.Executor {
-	return from_sexp.MakeFromString(input, makeByName).(interfaces.Executor)
+	return from_sexp.MakeFromString(input, aliases, makeByName).(interfaces.Executor)
 }
 
 func SupportedExecutorNames() []string {
@@ -29,7 +29,7 @@ func SupportedExecutorNames() []string {
 }
 
 func makeFromSExp(data []interface{}) interfaces.Executor {
-	return from_sexp.Make(data, makeByName).(interfaces.Executor)
+	return from_sexp.Make(data, aliases, makeByName).(interfaces.Executor)
 }
 
 const (
@@ -39,7 +39,7 @@ const (
 	nameSshExecParallel = "ssh-exec-parallel"
 	nameTmuxCssh        = "tmux-cssh"
 	nameIfOneTarget     = "if-one-target"
-	nameIfArgs          = "if-args"
+	nameIfCommand       = "if-command"
 )
 
 var executorMakerMap = map[string]func() interfaces.Executor{
@@ -49,7 +49,11 @@ var executorMakerMap = map[string]func() interfaces.Executor{
 	nameSshExecParallel: func() interfaces.Executor { return &sshExecParallel{} },
 	nameTmuxCssh:        func() interfaces.Executor { return &tmuxCssh{} },
 	nameIfOneTarget:     func() interfaces.Executor { return &ifOneTarget{} },
-	nameIfArgs:          func() interfaces.Executor { return &ifArgs{} },
+	nameIfCommand:       func() interfaces.Executor { return &ifCommand{} },
+}
+
+var aliases = from_sexp.Aliases {
+	from_sexp.Alias{Name: nameIfCommand, Alias: "if-args"},
 }
 
 func makeByName(name string) interface{} {
@@ -212,27 +216,27 @@ func (e *ifOneTarget) String() string {
 	return fmt.Sprintf("<%s %s %s>", nameIfOneTarget, e.one, e.more)
 }
 
-type ifArgs struct {
-	withArgs    interfaces.Executor
-	withoutArgs interfaces.Executor
+type ifCommand struct {
+	withCommand    interfaces.Executor
+	withoutCommand interfaces.Executor
 }
 
-func (e *ifArgs) Exec(targets []target.Target, args []string) {
+func (e *ifCommand) Exec(targets []target.Target, args []string) {
 	if len(args) < 1 {
-		util.Logger.Debugf("%s got no args, using %s", e, e.withoutArgs)
-		e.withoutArgs.Exec(targets, args)
+		util.Logger.Debugf("%s got no args, using %s", e, e.withoutCommand)
+		e.withoutCommand.Exec(targets, args)
 	} else {
-		util.Logger.Debugf("%s got args, using %s", e, e.withArgs)
-		e.withArgs.Exec(targets, args)
+		util.Logger.Debugf("%s got args, using %s", e, e.withCommand)
+		e.withCommand.Exec(targets, args)
 	}
 }
-func (e *ifArgs) SetArgs(args []interface{}) {
+func (e *ifCommand) SetArgs(args []interface{}) {
 	util.RequireArguments(e, 2, args)
-	e.withArgs = makeFromSExp(args[0].([]interface{}))
-	e.withoutArgs = makeFromSExp(args[1].([]interface{}))
+	e.withCommand = makeFromSExp(args[0].([]interface{}))
+	e.withoutCommand = makeFromSExp(args[1].([]interface{}))
 }
-func (e *ifArgs) String() string {
-	return fmt.Sprintf("<%s %s %s>", nameIfArgs, e.withArgs, e.withoutArgs)
+func (e *ifCommand) String() string {
+	return fmt.Sprintf("<%s %s %s>", nameIfCommand, e.withCommand, e.withoutCommand)
 }
 
 type prefixedLogWriterProxy struct {
