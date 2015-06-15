@@ -29,6 +29,8 @@ mkdir ~/.gocode
 echo "export GOPATH=$HOME/.gocode" >> ~/.bashrc
 ```
 
+After installation you will find the executable in `~/.gocode/bin`.
+
 ## Simple usage
 
 You probably won't ever do this; it's just a basic demonstration of the syntax.
