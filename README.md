@@ -17,6 +17,18 @@ The syntax is slightly verbose, it's designed to be used in aliases you frequent
 go get github.com/abesto/easyssh
 ```
 
+### If you're new to Go
+
+You can follow the official [Getting Started](http://golang.org/doc/install) guide.
+
+The short version, for OSX:
+
+```sh
+brew install go
+mkdir ~/.gocode
+echo "export GOPATH=$HOME/.gocode" >> ~/.bashrc
+```
+
 ## Simple usage
 
 You probably won't ever do this; it's just a basic demonstration of the syntax.
