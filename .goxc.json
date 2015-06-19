@@ -1,0 +1,15 @@
+{
+	"Tasks": [
+		"default",
+		"publish-github"
+	],
+	"BuildConstraints": "linux,!arm windows,darwin,freebsd",
+	"PackageVersion": "0.1-alpha.1",
+	"TaskSettings": {
+		"publish-github": {
+			"owner": "abesto",
+			"repository": "easyssh"
+		}
+	},
+	"ConfigVersion": "0.9"
+}
