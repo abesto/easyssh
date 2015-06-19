@@ -7,11 +7,11 @@ import (
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
+	"io/ioutil"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
-	"io/ioutil"
-	"os"
 )
 
 func Make(input string) interfaces.TargetFilter {
@@ -148,7 +148,7 @@ func (f *first) String() string {
 	return fmt.Sprintf("<%s>", nameFirst)
 }
 
-type external struct{
+type external struct {
 	Command exec.Cmd
 }
 

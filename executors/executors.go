@@ -52,7 +52,7 @@ var executorMakerMap = map[string]func() interfaces.Executor{
 	nameIfCommand:       func() interfaces.Executor { return &ifCommand{} },
 }
 
-var aliases = from_sexp.Aliases {
+var aliases = from_sexp.Aliases{
 	from_sexp.Alias{Name: nameIfCommand, Alias: "if-args"},
 }
 

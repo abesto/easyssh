@@ -71,11 +71,13 @@ func (d *commaSeparated) String() string {
 }
 
 type knifeSearchResultType int
+
 const (
 	PublicIp knifeSearchResultType = iota
 	PublicHostname
 )
-type knifeSearch struct{
+
+type knifeSearch struct {
 	resultType knifeSearchResultType
 }
 

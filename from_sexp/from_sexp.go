@@ -35,9 +35,8 @@ func Make(data []interface{}, aliases Aliases, makeByName func(name string) inte
 }
 
 type Alias struct {
-	Name string
+	Name  string
 	Alias string
 }
 
 type Aliases []Alias
-
