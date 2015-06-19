@@ -92,6 +92,7 @@ Each definition is an S-Expression; the terms usable in the S-Expressions are de
 |-----------|-------------|-------------|
 | `comma-separated` | - | Takes the discoverer argument, splits it at commas, and uses the resulting strings as the target hostnames. |
 | `knife` | - | Passes the discoverer argument to `knife search node`, and returns the public IP addresses provided by Chef as target hostnames. |
+| `knife-hostname` | - | Same as `knife`, except it collects public DNS names instead of IP addresses. |
 | `first-matching` | Any number of discoverers | Runs the discoverers in its argument list in the order they were provided, and uses the first resulting non-empty target list. |
 
 ### Filters
