@@ -25,6 +25,12 @@ func main() {
 		filter               interfaces.TargetFilter
 	)
 
+	defer func() {
+		if err := recover(); err != nil {
+			util.Abort(fmt.Sprintf("%s", err))
+		}
+	}()
+
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: %s [options] target-definition [command]
 

@@ -2,6 +2,7 @@ package util
 
 import (
 	"github.com/alexcesaro/log"
+	"github.com/alexcesaro/log/golog"
 	"os"
 	"os/exec"
 )
@@ -37,4 +38,13 @@ func RequireArgumentsAtLeast(e interface{}, n int, args []interface{}) {
 	}
 }
 
-var Logger log.Logger
+var Logger log.Logger = golog.New(os.Stdout, log.Info)
+
+type CommandMaker interface {
+	Make(name string, args ...string) *exec.Cmd
+}
+type RealCommandMaker struct{}
+
+func (c RealCommandMaker) Make(name string, args ...string) *exec.Cmd {
+	return exec.Command(name, args...)
+}

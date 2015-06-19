@@ -62,18 +62,19 @@ func makeByName(name string) interface{} {
 }
 
 type ec2InstanceIdLookup struct {
-	region string
+	region       string
+	commandMaker util.CommandMaker
 }
 
 func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
 	if f.region == "" {
-		util.Abort("ec2-instance-id requires exactly one argument, the region name to use for looking up instances")
+		panic(fmt.Sprintf("%s requires exactly one argument, the region name to use for looking up instances", nameEc2InstanceId))
 	}
 	var re = regexp.MustCompile("i-[0-9a-f]{8}")
 	for idx, t := range targets {
 		var instanceId = re.FindString(t.Host)
 		if len(instanceId) > 0 {
-			var cmd = exec.Command("aws", "ec2", "describe-instances", "--instance-id", instanceId, "--region", f.region)
+			var cmd = f.commandMaker.Make("aws", "ec2", "describe-instances", "--instance-id", instanceId, "--region", f.region)
 			util.Logger.Infof("EC2 Instance lookup: %s", cmd.Args)
 			var output, _ = cmd.Output()
 			var data map[string]interface{}
@@ -93,7 +94,7 @@ func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
 }
 func (f *ec2InstanceIdLookup) SetArgs(args []interface{}) {
 	if len(args) != 1 {
-		util.Abort("ec2-instance-id requires exactly one argument, the region name to use for looking up instances")
+		panic(fmt.Sprintf("%s requires exactly one argument, the region name to use for looking up instances", nameEc2InstanceId))
 	}
 	f.region = string(args[0].([]byte))
 }
@@ -149,7 +150,8 @@ func (f *first) String() string {
 }
 
 type external struct {
-	Command exec.Cmd
+	command      exec.Cmd
+	commandMaker util.CommandMaker
 }
 
 func (f *external) Filter(targets []target.Target) []target.Target {
@@ -162,10 +164,10 @@ func (f *external) Filter(targets []target.Target) []target.Target {
 		util.Abort(err.Error())
 	}
 	tmpFile.Write([]byte(strings.Join(target.TargetStrings(targets), "\n")))
-	f.Command.Args = append(f.Command.Args, tmpFile.Name())
-	output, err = f.Command.Output()
+	f.command.Args = append(f.command.Args, tmpFile.Name())
+	output, err = f.command.Output()
 	if err != nil {
-		util.Abort("%s failed: %s", f.Command.Args, err)
+		util.Abort("%s failed: %s", f.command.Args, err)
 	}
 	var lines = strings.Split(strings.TrimSpace(string(output)), "\n")
 	var newTargets = make([]target.Target, len(lines))
@@ -182,9 +184,9 @@ func (f *external) SetArgs(args []interface{}) {
 	for i = 0; i < len(args); i++ {
 		strArgs[i] = string(args[i].([]uint8))
 	}
-	f.Command = *exec.Command(strArgs[0], strArgs[1:]...)
-	f.Command.Stdin = os.Stdin
+	f.command = *f.commandMaker.Make(strArgs[0], strArgs[1:]...)
+	f.command.Stdin = os.Stdin
 }
 func (f *external) String() string {
-	return fmt.Sprintf("<%s %s>", nameExternal, f.Command.Args)
+	return fmt.Sprintf("<%s %s>", nameExternal, f.command.Args)
 }
