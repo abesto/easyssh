@@ -165,7 +165,7 @@ func (f *external) Filter(targets []target.Target) []target.Target {
 	f.Command.Args = append(f.Command.Args, tmpFile.Name())
 	output, err = f.Command.Output()
 	if err != nil {
-		util.Abort("%s failed: %s", f, err)
+		util.Abort("%s failed: %s", f.Command.Args, err)
 	}
 	var lines = strings.Split(strings.TrimSpace(string(output)), "\n")
 	var newTargets = make([]target.Target, len(lines))
