@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"syscall"
 )
 
 func Make(input string) interfaces.Executor {
@@ -96,8 +95,13 @@ func requireCommand(e interfaces.Executor, command []string) {
 func myExec(binaryName string, args ...string) {
 	var binary = util.LookPathOrAbort(binaryName)
 	var argv = append([]string{binary}, args...)
+
 	util.Logger.Infof("Executing %s", argv)
-	syscall.Exec(binary, argv, os.Environ())
+	cmd := exec.Command(binary, argv...)
+	err := cmd.Run()
+	if err != nil {
+		util.Abort("%s failed: %s", cmd.Args, err)
+	}
 }
 
 type sshLogin struct{}
