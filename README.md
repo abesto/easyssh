@@ -1,6 +1,7 @@
 # easyssh
 
 [![Build Status](https://travis-ci.org/abesto/easyssh.svg?branch=master)](https://travis-ci.org/abesto/easyssh)
+[![Coverage Status](https://coveralls.io/repos/abesto/easyssh/badge.svg?branch=master)](https://coveralls.io/r/abesto/easyssh?branch=master)
 
 `easyssh` is the culmination of several years of SSH-related aliases. It's a highly configurable wrapper around `ssh`, `tmux-cssh`, `csshx`, `aws`, `knife` and who knows what else. It's for you if the following makes you excited. You can have a single alias that does this (let's call the alias `s`):
 
