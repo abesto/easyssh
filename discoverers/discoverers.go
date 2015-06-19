@@ -32,12 +32,14 @@ func makeFromSExp(data []interface{}) interfaces.Discoverer {
 const (
 	nameCommaSeparated = "comma-separated"
 	nameKnife          = "knife"
+	nameKnifeHostname  = "knife-hostname"
 	nameFirstMatching  = "first-matching"
 )
 
 var discovererMakerMap = map[string]func() interfaces.Discoverer{
 	nameCommaSeparated: func() interfaces.Discoverer { return &commaSeparated{} },
-	nameKnife:          func() interfaces.Discoverer { return &knifeSearch{} },
+	nameKnife:          func() interfaces.Discoverer { return &knifeSearch{PublicIp} },
+	nameKnifeHostname:  func() interfaces.Discoverer { return &knifeSearch{PublicHostname} },
 	nameFirstMatching:  func() interfaces.Discoverer { return &firstMatching{} },
 }
 
@@ -68,7 +70,14 @@ func (d *commaSeparated) String() string {
 	return fmt.Sprintf("<%s>", nameCommaSeparated)
 }
 
-type knifeSearch struct{}
+type knifeSearchResultType int
+const (
+	PublicIp knifeSearchResultType = iota
+	PublicHostname
+)
+type knifeSearch struct{
+	resultType knifeSearchResultType
+}
 
 func (d *knifeSearch) Discover(input string) []string {
 	if !strings.Contains(input, ":") {
@@ -92,10 +101,14 @@ func (d *knifeSearch) Discover(input string) []string {
 	json.Unmarshal(stdout.Bytes(), &data)
 
 	var ips = []string{}
+	fieldName := "public_ipv4"
+	if d.resultType == PublicHostname {
+		fieldName = "public_hostname"
+	}
 	for _, row := range data["rows"].([]interface{}) {
 		var automatic = row.(map[string]interface{})["automatic"].(map[string]interface{})
 		if cloud_v2, ok := automatic["cloud_v2"]; ok && cloud_v2 != nil {
-			ips = append(ips, cloud_v2.(map[string]interface{})["public_ipv4"].(string))
+			ips = append(ips, cloud_v2.(map[string]interface{})[fieldName].(string))
 		} else {
 			ips = append(ips, automatic["ipaddress"].(string))
 		}
