@@ -1,1 +1,1 @@
-package easyssh
+package main
