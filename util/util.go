@@ -31,4 +31,9 @@ func RequireArguments(e interface{}, n int, args []interface{}) {
 	}
 }
 
+func RequireArgumentsAtLeast(e interface{}, n int, args []interface{}) {
+	if len(args) < n {
+		Abort("%s requires at least %d arguments, got %d: %s", e, n, len(args), args)
+	}
+}
 var Logger log.Logger

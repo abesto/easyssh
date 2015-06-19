@@ -3,6 +3,7 @@ package target
 import (
 	"fmt"
 	"github.com/abesto/easyssh/util"
+	"strings"
 )
 
 type Target struct {
@@ -26,4 +27,20 @@ func TargetStrings(ts []Target) []string {
 		strs = append(strs, t.String())
 	}
 	return strs
+}
+
+func FromString(str string) Target {
+	if len(str) == 0 {
+		util.Abort("FromString(str string) Target got an empty string")
+	}
+	var parts = strings.Split(str, "@")
+	var target Target
+	if len(parts) == 1 {
+		target = Target{Host: parts[0]}
+	} else if len(parts) == 2 {
+		target = Target{User: parts[0], Host: parts[1]}
+	} else {
+		util.Abort("FromString(str string) Target got a string containing more than one @ character")
+	}
+	return target
 }

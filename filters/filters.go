@@ -9,6 +9,9 @@ import (
 	"github.com/abesto/easyssh/util"
 	"os/exec"
 	"regexp"
+	"strings"
+	"io/ioutil"
+	"os"
 )
 
 func Make(input string) interfaces.TargetFilter {
@@ -34,6 +37,7 @@ const (
 	nameList          = "list"
 	nameId            = "id"
 	nameFirst         = "first"
+	nameExternal      = "external"
 )
 
 var filterMakerMap = map[string]func() interfaces.TargetFilter{
@@ -41,6 +45,7 @@ var filterMakerMap = map[string]func() interfaces.TargetFilter{
 	nameList:          func() interfaces.TargetFilter { return &list{} },
 	nameId:            func() interfaces.TargetFilter { return &id{} },
 	nameFirst:         func() interfaces.TargetFilter { return &first{} },
+	nameExternal:      func() interfaces.TargetFilter { return &external{} },
 }
 
 func makeByName(name string) interface{} {
@@ -141,4 +146,45 @@ func (f *first) SetArgs(args []interface{}) {
 }
 func (f *first) String() string {
 	return fmt.Sprintf("<%s>", nameFirst)
+}
+
+type external struct{
+	Command exec.Cmd
+}
+
+func (f *external) Filter(targets []target.Target) []target.Target {
+	var err error
+	var output []byte
+	var tmpFile *os.File
+	tmpFile, err = ioutil.TempFile("", "easyssh")
+	defer os.Remove(tmpFile.Name())
+	if err != nil {
+		util.Abort(err.Error())
+	}
+	tmpFile.Write([]byte(strings.Join(target.TargetStrings(targets), "\n")))
+	f.Command.Args = append(f.Command.Args, tmpFile.Name())
+	output, err = f.Command.Output()
+	if err != nil {
+		util.Abort("%s failed: %s", f, err)
+	}
+	var lines = strings.Split(strings.TrimSpace(string(output)), "\n")
+	var newTargets = make([]target.Target, len(lines))
+	var i int
+	for i = 0; i < len(lines); i++ {
+		newTargets[i] = target.FromString(lines[i])
+	}
+	return newTargets
+}
+func (f *external) SetArgs(args []interface{}) {
+	util.RequireArguments(f, 1, args)
+	var strArgs = make([]string, len(args))
+	var i int
+	for i = 0; i < len(args); i++ {
+		strArgs[i] = string(args[i].([]uint8))
+	}
+	f.Command = *exec.Command(strArgs[0], strArgs[1:]...)
+	f.Command.Stdin = os.Stdin
+}
+func (f *external) String() string {
+	return fmt.Sprintf("<%s %s>", nameExternal, f.Command)
 }

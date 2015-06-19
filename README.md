@@ -102,6 +102,7 @@ Each definition is an S-Expression; the terms usable in the S-Expressions are de
 | `first` | - | Drops all targets in the target list, except for the first one. |
 | `ec2-instance-id` | AWS region | For each target in the target list, it looks for an EC2 instance id in the target name. If there is one, it uses `aws` to look up its public IP and replace the target name with that. |
 | `list` | Any number of filters | Applies each filter in its arguments to the target list. |
+| `external` | At least one string | Calls the command specified in the arguments with a file containing the targets before filtering. The command must output the new targets on its STDOUT. For example: `(external percol)` |
 
 ### Executors
 
