@@ -186,5 +186,5 @@ func (f *external) SetArgs(args []interface{}) {
 	f.Command.Stdin = os.Stdin
 }
 func (f *external) String() string {
-	return fmt.Sprintf("<%s %s>", nameExternal, f.Command)
+	return fmt.Sprintf("<%s %s>", nameExternal, f.Command.Args)
 }
