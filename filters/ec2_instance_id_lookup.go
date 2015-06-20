@@ -20,7 +20,7 @@ func (p realEc2InstanceIdParser) Parse(input string) string {
 	return ec2InstanceIdRegex.FindString(input)
 }
 
-type apiResponse struct {
+type ec2DescribeInstanceApiResponse struct {
 	Reservations []struct {
 		Instances []struct {
 			PublicDnsName   string
@@ -52,7 +52,7 @@ func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
 				continue
 			}
 
-			var data apiResponse
+			var data ec2DescribeInstanceApiResponse
 			if err = json.Unmarshal(output, &data); err != nil {
 				panic(fmt.Sprintf("Invalid JSON returned by AWS API.\nError: %s\nJSON follows this line\n%s", err.Error(), output))
 			}
