@@ -94,10 +94,14 @@ func requireCommand(e interfaces.Executor, command []string) {
 
 func myExec(binaryName string, args ...string) {
 	var binary = util.LookPathOrAbort(binaryName)
-	var argv = append([]string{binary}, args...)
 
+	var argv = append([]string{binary}, args...)
 	util.Logger.Infof("Executing %s", argv)
-	cmd := exec.Command(binary, argv...)
+
+	cmd := exec.Command(binary, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
 		util.Abort("%s failed: %s", cmd.Args, err)

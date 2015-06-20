@@ -40,11 +40,33 @@ func RequireArgumentsAtLeast(e interface{}, n int, args []interface{}) {
 
 var Logger log.Logger = golog.New(os.Stdout, log.Info)
 
-type CommandMaker interface {
-	Make(name string, args ...string) *exec.Cmd
+type CommandRunner interface {
+	RunWithStdinGetOutputOrPanic(name string, args []string) []byte
+	RunGetOutputOrPanic(name string, args []string) []byte
+	RunGetOutput(name string, args []string) ([]byte, error)
 }
-type RealCommandMaker struct{}
 
-func (c RealCommandMaker) Make(name string, args ...string) *exec.Cmd {
-	return exec.Command(name, args...)
+type RealCommandRunner struct{}
+
+func outputOrPanic(cmd *exec.Cmd) []byte {
+	Logger.Debugf("Executing: %s", cmd.Args)
+	if output, err := cmd.CombinedOutput(); err == nil {
+		return output
+	} else {
+		panic(err.Error())
+	}
+}
+
+func (c RealCommandRunner) RunWithStdinGetOutputOrPanic(name string, args []string) []byte {
+	cmd := exec.Command(name, args...)
+	cmd.Stdin = os.Stdin
+	return outputOrPanic(cmd)
+}
+
+func (c RealCommandRunner) RunGetOutputOrPanic(name string, args []string) []byte {
+	return outputOrPanic(exec.Command(name, args...))
+}
+
+func (c RealCommandRunner) RunGetOutput(name string, args []string) ([]byte, error) {
+	return exec.Command(name, args...).Output()
 }

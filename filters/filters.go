@@ -1,7 +1,6 @@
 package filters
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/abesto/easyssh/from_sexp"
 	"github.com/abesto/easyssh/interfaces"
@@ -9,8 +8,6 @@ import (
 	"github.com/abesto/easyssh/util"
 	"io/ioutil"
 	"os"
-	"os/exec"
-	"regexp"
 	"strings"
 )
 
@@ -41,11 +38,14 @@ const (
 )
 
 var filterMakerMap = map[string]func() interfaces.TargetFilter{
-	nameEc2InstanceId: func() interfaces.TargetFilter { return &ec2InstanceIdLookup{} },
-	nameList:          func() interfaces.TargetFilter { return &list{} },
-	nameId:            func() interfaces.TargetFilter { return &id{} },
-	nameFirst:         func() interfaces.TargetFilter { return &first{} },
-	nameExternal:      func() interfaces.TargetFilter { return &external{} },
+	nameEc2InstanceId: func() interfaces.TargetFilter {
+		return &ec2InstanceIdLookup{
+			idParser: realEc2InstanceIdParser{}, commandRunner: util.RealCommandRunner{}}
+	},
+	nameList:     func() interfaces.TargetFilter { return &list{} },
+	nameId:       func() interfaces.TargetFilter { return &id{} },
+	nameFirst:    func() interfaces.TargetFilter { return &first{} },
+	nameExternal: func() interfaces.TargetFilter { return &external{} },
 }
 
 func makeByName(name string) interface{} {
@@ -59,47 +59,6 @@ func makeByName(name string) interface{} {
 		util.Abort("filter \"%s\" is not known", name)
 	}
 	return d
-}
-
-type ec2InstanceIdLookup struct {
-	region       string
-	commandMaker util.CommandMaker
-}
-
-func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
-	if f.region == "" {
-		panic(fmt.Sprintf("%s requires exactly one argument, the region name to use for looking up instances", nameEc2InstanceId))
-	}
-	var re = regexp.MustCompile("i-[0-9a-f]{8}")
-	for idx, t := range targets {
-		var instanceId = re.FindString(t.Host)
-		if len(instanceId) > 0 {
-			var cmd = f.commandMaker.Make("aws", "ec2", "describe-instances", "--instance-id", instanceId, "--region", f.region)
-			util.Logger.Infof("EC2 Instance lookup: %s", cmd.Args)
-			var output, _ = cmd.Output()
-			var data map[string]interface{}
-			json.Unmarshal(output, &data)
-
-			var reservations = data["Reservations"]
-			if reservations == nil {
-				util.Logger.Infof("EC2 instance lookup failed for %s (%s) in region %s", t.Host, instanceId, f.region)
-				continue
-			}
-			targets[idx].Host = reservations.([]interface{})[0].(map[string]interface{})["Instances"].([]interface{})[0].(map[string]interface{})["PublicIpAddress"].(string)
-		} else {
-			util.Logger.Debugf("Target %s looks like it doesn't have EC2 instance ID, skipping lookup for region %s", t, f.region)
-		}
-	}
-	return targets
-}
-func (f *ec2InstanceIdLookup) SetArgs(args []interface{}) {
-	if len(args) != 1 {
-		panic(fmt.Sprintf("%s requires exactly one argument, the region name to use for looking up instances", nameEc2InstanceId))
-	}
-	f.region = string(args[0].([]byte))
-}
-func (f *ec2InstanceIdLookup) String() string {
-	return fmt.Sprintf("<%s %s>", nameEc2InstanceId, f.region)
 }
 
 type list struct {
@@ -150,8 +109,8 @@ func (f *first) String() string {
 }
 
 type external struct {
-	command      exec.Cmd
-	commandMaker util.CommandMaker
+	argv          []string
+	commandRunner util.CommandRunner
 }
 
 func (f *external) Filter(targets []target.Target) []target.Target {
@@ -164,11 +123,7 @@ func (f *external) Filter(targets []target.Target) []target.Target {
 		util.Abort(err.Error())
 	}
 	tmpFile.Write([]byte(strings.Join(target.TargetStrings(targets), "\n")))
-	f.command.Args = append(f.command.Args, tmpFile.Name())
-	output, err = f.command.Output()
-	if err != nil {
-		util.Abort("%s failed: %s", f.command.Args, err)
-	}
+	output = f.commandRunner.RunWithStdinGetOutputOrPanic(f.argv[0], append(f.argv[1:], tmpFile.Name()))
 	var lines = strings.Split(strings.TrimSpace(string(output)), "\n")
 	var newTargets = make([]target.Target, len(lines))
 	var i int
@@ -179,14 +134,11 @@ func (f *external) Filter(targets []target.Target) []target.Target {
 }
 func (f *external) SetArgs(args []interface{}) {
 	util.RequireArguments(f, 1, args)
-	var strArgs = make([]string, len(args))
-	var i int
-	for i = 0; i < len(args); i++ {
-		strArgs[i] = string(args[i].([]uint8))
+	f.argv = make([]string, len(args))
+	for i := 0; i < len(args); i++ {
+		f.argv[i] = string(args[i].([]uint8))
 	}
-	f.command = *f.commandMaker.Make(strArgs[0], strArgs[1:]...)
-	f.command.Stdin = os.Stdin
 }
 func (f *external) String() string {
-	return fmt.Sprintf("<%s %s>", nameExternal, f.command.Args)
+	return fmt.Sprintf("<%s %s>", nameExternal, f.argv)
 }

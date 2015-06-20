@@ -27,7 +27,13 @@ func main() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			util.Abort(fmt.Sprintf("%s", err))
+			switch err.(type) {
+			case string:
+				util.Abort(err.(string))
+			default:
+				panic(err)
+			}
+
 		}
 	}()
 
