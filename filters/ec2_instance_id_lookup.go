@@ -20,6 +20,15 @@ func (p realEc2InstanceIdParser) Parse(input string) string {
 	return ec2InstanceIdRegex.FindString(input)
 }
 
+type apiResponse struct {
+	Reservations []struct {
+		Instances []struct {
+			PublicDnsName   string
+			PublicIpAddress string
+		}
+	}
+}
+
 type ec2InstanceIdLookup struct {
 	region        string
 	commandRunner util.CommandRunner
@@ -43,17 +52,16 @@ func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
 				continue
 			}
 
-			var data map[string]interface{}
+			var data apiResponse
 			if err = json.Unmarshal(output, &data); err != nil {
 				panic(fmt.Sprintf("Invalid JSON returned by AWS API.\nError: %s\nJSON follows this line\n%s", err.Error(), output))
 			}
 
-			var reservations = data["Reservations"]
-			if reservations == nil || len(reservations.([]interface{})) == 0 {
+			if data.Reservations == nil || len(data.Reservations) == 0 {
 				util.Logger.Infof("EC2 instance lookup failed for %s (%s) in region %s (Reservations is empty in the received JSON)", t.Host, instanceId, f.region)
 				continue
 			}
-			targets[idx].Host = reservations.([]interface{})[0].(map[string]interface{})["Instances"].([]interface{})[0].(map[string]interface{})["PublicIpAddress"].(string)
+			targets[idx].Host = data.Reservations[0].Instances[0].PublicIpAddress
 		} else {
 			util.Logger.Debugf("Target %s looks like it doesn't have EC2 instance ID, skipping lookup for region %s", t, f.region)
 		}
