@@ -42,10 +42,13 @@ var filterMakerMap = map[string]func() interfaces.TargetFilter{
 		return &ec2InstanceIdLookup{
 			idParser: realEc2InstanceIdParser{}, commandRunner: util.RealCommandRunner{}}
 	},
-	nameList:     func() interfaces.TargetFilter { return &list{} },
-	nameId:       func() interfaces.TargetFilter { return &id{} },
-	nameFirst:    func() interfaces.TargetFilter { return &first{} },
-	nameExternal: func() interfaces.TargetFilter { return &external{} },
+	nameList:  func() interfaces.TargetFilter { return &list{} },
+	nameId:    func() interfaces.TargetFilter { return &id{} },
+	nameFirst: func() interfaces.TargetFilter { return &first{} },
+	nameExternal: func() interfaces.TargetFilter {
+		return &external{
+			commandRunner: util.RealCommandRunner{}}
+	},
 }
 
 func makeByName(name string) interface{} {

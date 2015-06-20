@@ -4,7 +4,7 @@
 		"publish-github"
 	],
 	"BuildConstraints": "linux,!arm windows,darwin,freebsd",
-	"PackageVersion": "0.1-alpha.2",
+	"PackageVersion": "0.1-alpha.3",
 	"TaskSettings": {
 		"publish-github": {
 			"owner": "abesto",
