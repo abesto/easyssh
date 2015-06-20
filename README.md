@@ -16,11 +16,22 @@ The syntax is slightly verbose, it's designed to be used in aliases you frequent
 
 ## Installation
 
+### Releases
+
+These packages are more or less stable. At least _some_ basic functionality works in them, while `HEAD` may be completely broken. This situation will improve as more tests are added.
+
+1. Download, extract the [release](https://github.com/abesto/easyssh/releases) for your platform
+2. Add the `easyssh` executable to your `$PATH`
+3. ???
+4. Profit
+
+### From source
+
 ```sh
 go get github.com/abesto/easyssh
 ```
 
-### If you're new to Go
+#### If you're new to Go
 
 You can follow the official [Getting Started](http://golang.org/doc/install) guide.
 
