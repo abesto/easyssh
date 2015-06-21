@@ -8,6 +8,7 @@
 	"TaskSettings": {
 		"publish-github": {
 			"owner": "abesto",
+			"prerelease": true,
 			"repository": "easyssh"
 		}
 	},
