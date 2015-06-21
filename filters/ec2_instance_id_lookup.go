@@ -34,15 +34,14 @@ type ec2DescribeInstanceApiResponse struct {
 }
 
 type ec2InstanceIdLookup struct {
+	args          []interface{}
 	region        string
 	commandRunner util.CommandRunner
 	idParser      ec2InstanceIdParser
 }
 
 func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
-	if f.region == "" {
-		panic(fmt.Sprintf("%s requires exactly one argument, the region name to use for looking up instances", nameEc2InstanceId))
-	}
+	util.RequireArguments(f, 1, f.args)
 	// TODO: build map by parsed id, do a single query using --instance-ids
 	for idx, t := range targets {
 		instanceId := f.idParser.Parse(t.Host)
@@ -76,9 +75,8 @@ func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
 	return targets
 }
 func (f *ec2InstanceIdLookup) SetArgs(args []interface{}) {
-	if len(args) != 1 {
-		panic(fmt.Sprintf("%s requires exactly one argument, the region name to use for looking up instances", nameEc2InstanceId))
-	}
+	util.RequireArguments(f, 1, args)
+	f.args = args
 	f.region = string(args[0].([]byte))
 }
 func (f *ec2InstanceIdLookup) String() string {

@@ -207,30 +207,30 @@ func TestEc2InstanceIdLookupString(t *testing.T) {
 func TestEc2InstanceIdLookupMakeWithoutArgument(t *testing.T) {
 	withLogAssertions(t, func(l *mockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(ec2-instance-id)", "[ec2-instance-id]")
-		expectPanic(t, "ec2-instance-id requires exactly one argument, the region name to use for looking up instances",
+		expectPanic(t, "<ec2-instance-id > requires exactly 1 argument(s), got 0: []",
 			func() { Make("(ec2-instance-id)") })
 	})
 }
 
 func TestEc2InstanceIdLookupFilterWithoutSetArgs(t *testing.T) {
 	withLogAssertions(t, func(l *mockLogger) {
-		expectPanic(t, "ec2-instance-id requires exactly one argument, the region name to use for looking up instances",
+		expectPanic(t, "<ec2-instance-id > requires exactly 1 argument(s), got 0: []",
 			func() { (&ec2InstanceIdLookup{}).Filter([]target.Target{}) })
 	})
 }
 
 func TestEc2InstanceIdLookupSetTooManyArgs(t *testing.T) {
 	withLogAssertions(t, func(l *mockLogger) {
-		l.When("Debugf", "MakeFromString %s -> %s", "(ec2-instance-id foo bar)", "[ec2-instance-id foo bar]").Times(1)
-		expectPanic(t, "ec2-instance-id requires exactly one argument, the region name to use for looking up instances",
+		l.ExpectDebugf("MakeFromString %s -> %s", "(ec2-instance-id foo bar)", "[ec2-instance-id foo bar]")
+		expectPanic(t, "<ec2-instance-id > requires exactly 1 argument(s), got 2: [foo bar]",
 			func() { Make("(ec2-instance-id foo bar)") })
 	})
 }
 
 func TestEc2InstanceIdLookupSetArgs(t *testing.T) {
 	withLogAssertions(t, func(l *mockLogger) {
-		l.When("Debugf", "MakeFromString %s -> %s", "(ec2-instance-id foo)", "[ec2-instance-id foo]").Times(1)
-		l.When("Debugf", "Make %s -> %s", "[ec2-instance-id foo]", "<ec2-instance-id foo>").Times(1)
+		l.ExpectDebugf("MakeFromString %s -> %s", "(ec2-instance-id foo)", "[ec2-instance-id foo]").Times(1)
+		l.ExpectDebugf("Make %s -> %s", "[ec2-instance-id foo]", "<ec2-instance-id foo>").Times(1)
 		f := Make("(ec2-instance-id foo)").(*ec2InstanceIdLookup)
 		if f.region != "foo" {
 			t.Errorf("Expected region to be foo, was %s", f.region)
@@ -255,7 +255,8 @@ func TestEc2InstanceIdParser(t *testing.T) {
 
 func givenAnEc2InstanceIdLookupWithMockedParserAndRunner(shouldMatch bool) (*mockCommandRunner, *ec2InstanceIdLookup) {
 	r := &mockCommandRunner{}
-	f := &ec2InstanceIdLookup{idParser: dummyEc2InstanceIdParser{shouldMatch}, commandRunner: r, region: "dummy-region"}
+	idParser := dummyEc2InstanceIdParser{shouldMatch}
+	f := &ec2InstanceIdLookup{idParser: idParser, commandRunner: r, region: "dummy-region", args: []interface{}{"dummy-region"}}
 	return r, f
 }
 
@@ -404,8 +405,8 @@ func TestEc2InstanceIdLookupHappyPath(t *testing.T) {
 		}
 
 		for _, c := range cases {
-			l.When("Infof", "EC2 Instance lookup: %s in %s", c.instanceId, f.region)
-			l.When("Debugf", "Response from AWS API: %s", c.json)
+			l.ExpectInfof("EC2 Instance lookup: %s in %s", c.instanceId, f.region)
+			l.ExpectDebugf("Response from AWS API: %s", c.json)
 			if c.json == jsonWithoutReservations() {
 				l.ExpectInfof("EC2 instance lookup failed for %s (%s) in region %s (Reservations is empty in the received JSON)", c.inputHost, c.instanceId, f.region)
 			} else {
