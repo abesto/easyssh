@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"github.com/alexcesaro/log"
 	"github.com/alexcesaro/log/golog"
 	"os"
@@ -8,8 +9,7 @@ import (
 )
 
 func Abort(msg string, args ...interface{}) {
-	Logger.Criticalf(msg, args...)
-	os.Exit(1)
+	panic(fmt.Sprintf(msg, args...))
 }
 
 func LookPathOrAbort(binaryName string) string {
@@ -28,13 +28,13 @@ func RequireNoArguments(e interface{}, args []interface{}) {
 
 func RequireArguments(e interface{}, n int, args []interface{}) {
 	if len(args) != n {
-		Abort("%s requires exactly %d arguments, got %d: %s", e, n, len(args), args)
+		Abort("%s requires exactly %d argument(s), got %d: %s", e, n, len(args), args)
 	}
 }
 
 func RequireArgumentsAtLeast(e interface{}, n int, args []interface{}) {
 	if len(args) < n {
-		Abort("%s requires at least %d arguments, got %d: %s", e, n, len(args), args)
+		Abort("%s requires at least %d argument(s), got %d: %s", e, n, len(args), args)
 	}
 }
 

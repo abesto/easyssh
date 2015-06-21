@@ -7,7 +7,6 @@ import (
 	"github.com/abesto/easyssh/util"
 	"github.com/alexcesaro/log"
 	"github.com/maraino/go-mock"
-	"os"
 	"testing"
 )
 
@@ -179,11 +178,14 @@ func (e dummyError) Error() string {
 }
 
 func expectLogs(t *testing.T, setExpectedCalls func(*mockLogger)) func() {
+	originalLogger := util.Logger
+	util.Logger = &mockLogger{}
 	l := util.Logger.(*mockLogger)
 	l.Reset()
 	setExpectedCalls(l)
 	return func() {
 		verifyMocks(t, l)
+		util.Logger = originalLogger
 	}
 }
 
@@ -191,16 +193,14 @@ func withLogAssertions(t *testing.T, f func(*mockLogger)) {
 	expectLogs(t, f)()
 }
 
-func TestEc2InstanceIdLookupString(t *testing.T) {
+func TestEc2InstanceIdLookupStringViaMake(t *testing.T) {
 	withLogAssertions(t, func(l *mockLogger) {
-		l.ExpectDebugf("MakeFromString %s -> %s", "(ec2-instance-id test-region)", "[ec2-instance-id test-region]")
-		l.ExpectDebugf("Make %s -> %s", "[ec2-instance-id test-region]", "<ec2-instance-id test-region>")
-		f := Make("(ec2-instance-id test-region)")
-		expected := "<ec2-instance-id test-region>"
-		actual := f.String()
-		if actual != expected {
-			t.Errorf("String() output was expected to be %s, was %s", expected, actual)
-		}
+		input := "(ec2-instance-id test-region)"
+		structs := "[ec2-instance-id test-region]"
+		final := "<ec2-instance-id test-region>"
+		l.ExpectDebugf("MakeFromString %s -> %s", input, structs)
+		l.ExpectDebugf("Make %s -> %s", structs, final)
+		Make(input)
 	})
 }
 
@@ -219,7 +219,7 @@ func TestEc2InstanceIdLookupFilterWithoutSetArgs(t *testing.T) {
 	})
 }
 
-func TestEc2InstanceIdLookupSetTooManyArgs(t *testing.T) {
+func TestEc2InstanceIdSetTooManyArgs(t *testing.T) {
 	withLogAssertions(t, func(l *mockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(ec2-instance-id foo bar)", "[ec2-instance-id foo bar]")
 		expectPanic(t, "<ec2-instance-id > requires exactly 1 argument(s), got 2: [foo bar]",
@@ -227,13 +227,16 @@ func TestEc2InstanceIdLookupSetTooManyArgs(t *testing.T) {
 	})
 }
 
-func TestEc2InstanceIdLookupSetArgs(t *testing.T) {
+func TestEc2InstanceIdSetArgs(t *testing.T) {
 	withLogAssertions(t, func(l *mockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(ec2-instance-id foo)", "[ec2-instance-id foo]").Times(1)
 		l.ExpectDebugf("Make %s -> %s", "[ec2-instance-id foo]", "<ec2-instance-id foo>").Times(1)
 		f := Make("(ec2-instance-id foo)").(*ec2InstanceIdLookup)
 		if f.region != "foo" {
 			t.Errorf("Expected region to be foo, was %s", f.region)
+		}
+		if len(f.args) != 1 || fmt.Sprintf("%s", f.args[0]) != "foo" {
+			t.Error(len(f.args), f.args)
 		}
 	})
 }
@@ -417,9 +420,4 @@ func TestEc2InstanceIdLookupHappyPath(t *testing.T) {
 		assertLookupCasesPass(t, r, f, true, cases)
 		verifyMocks(t, r)
 	})
-}
-
-func TestMain(m *testing.M) {
-	util.Logger = &mockLogger{}
-	os.Exit(m.Run())
 }

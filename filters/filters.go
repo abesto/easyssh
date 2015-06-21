@@ -64,26 +64,6 @@ func makeByName(name string) interface{} {
 	return d
 }
 
-type list struct {
-	children []interfaces.TargetFilter
-}
-
-func (f *list) Filter(targets []target.Target) []target.Target {
-	for _, child := range f.children {
-		targets = child.Filter(targets)
-		util.Logger.Debugf("Targets after filter %s: %s", child, targets)
-	}
-	return targets
-}
-func (f *list) SetArgs(args []interface{}) {
-	for _, def := range args {
-		f.children = append(f.children, makeFromSExp(def.([]interface{})))
-	}
-}
-func (f *list) String() string {
-	return fmt.Sprintf("<%s %s>", nameList, f.children)
-}
-
 type id struct{}
 
 func (f *id) Filter(targets []target.Target) []target.Target {
