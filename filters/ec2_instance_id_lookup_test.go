@@ -374,7 +374,6 @@ func assertLookupCasesPass(t *testing.T, r *mockCommandRunner, f *ec2InstanceIdL
 	for _, c := range cases {
 		awsReturns(r, c.instanceId, f.region, c.json, nil).Times(1)
 	}
-	// Filtering changes the targets which got results, but not the rest
 	inputTargets, expectedOutputTargets := makeInputAndOutputTargets(cases, shouldRewrite)
 	assertFilterResults(t, f, inputTargets, expectedOutputTargets)
 }
