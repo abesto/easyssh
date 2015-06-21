@@ -154,7 +154,8 @@ func TestEc2InstanceIdLookupFails(t *testing.T) {
 }
 
 func TestEc2InstanceIdLookupInvalidJson(t *testing.T) {
-	instanceId, r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner() // When the AWS API returns invalid JSON
+	instanceId, r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner()
+	// When the AWS API returns invalid JSON
 	invalidJson := "HAH! not a valid JSON"
 	awsReturns(r, instanceId, f.region, invalidJson, nil).Times(1)
 	// I get a fatal error for filtering
