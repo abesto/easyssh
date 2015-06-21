@@ -1,6 +1,7 @@
 package filters
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/abesto/easyssh/target"
 	"github.com/maraino/go-mock"
@@ -41,6 +42,10 @@ func (r *mockCommandRunner) RunGetOutputOrPanic(name string, args []string) []by
 func (r *mockCommandRunner) RunGetOutput(name string, args []string) ([]byte, error) {
 	ret := r.Called(name, args)
 	return ret.Bytes(0), ret.Error(1)
+}
+
+type hasVerify interface {
+	Verify() (bool, error)
 }
 
 type dummyError struct {
@@ -97,41 +102,77 @@ func TestEc2InstanceIdParser(t *testing.T) {
 	}
 }
 
-func TestEc2InstanceIdLookupFails(t *testing.T) {
-	// Given an ec2InstanceIdLookup with mocked parser and runner
+func givenAnEc2InstanceIdLookupWithMockedParserAndRunner() (string, *mockCommandRunner, *ec2InstanceIdLookup) {
 	instanceId := "dummy-instance-id"
 	r := &mockCommandRunner{}
-	f := ec2InstanceIdLookup{idParser: dummyEc2InstanceIdParser{}, commandRunner: r, region: "dummy-region"}
+	f := &ec2InstanceIdLookup{idParser: dummyEc2InstanceIdParser{}, commandRunner: r, region: "dummy-region"}
+	return instanceId, r, f
+}
+
+func givenTargets(targetStrings ...string) []target.Target {
+	targets := make([]target.Target, len(targetStrings))
+	for i := 0; i < len(targetStrings); i++ {
+		targets[i] = target.FromString(targetStrings[i])
+	}
+	return targets
+}
+
+func awsReturns(r *mockCommandRunner, instanceId string, region string, output string, err error) *mock.MockFunction {
+	return r.When("RunGetOutput", "aws", []string{"ec2", "describe-instances", "--instance-id", instanceId, "--region", region}).Return([]byte(output), err)
+}
+
+func assertFilterResults(t *testing.T, f *ec2InstanceIdLookup, input []target.Target, expectedOutput []target.Target) {
+	actualOutput := f.Filter(input)
+	if len(input) != len(actualOutput) {
+		t.Fail()
+	}
+	for i := 0; i < len(input); i++ {
+		if expectedOutput[0] != actualOutput[0] {
+			t.Errorf("Target %d was expected to be %s, found %s", i, expectedOutput[0], actualOutput[0])
+		}
+	}
+}
+
+func verifyMocks(t *testing.T, mocks ...hasVerify) {
+	for _, m := range mocks {
+		if ok, msg := m.Verify(); !ok {
+			t.Error(msg)
+		}
+	}
+}
+
+func TestEc2InstanceIdLookupFails(t *testing.T) {
+	instanceId, r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner()
 	// When the aws cli tool fails
 	msg := "A client error (InvalidInstanceID.NotFound) occurred when calling the DescribeInstances operation: The instance ID 'i-deadbeef' does not exist"
-	r.When("RunGetOutput", "aws", []string{"ec2", "describe-instances", "--instance-id", instanceId, "--region", f.region}).Return([]byte(msg), dummyError{"test fails aws"}).Times(2)
+	awsReturns(r, instanceId, f.region, msg, dummyError{"test fails aws"}).Times(2)
 	// Filtering doesn't touch the target list
-	targets := []target.Target{target.FromString(instanceId), target.FromString(instanceId)}
-	actualTargets := f.Filter(targets)
-	if len(targets) != len(actualTargets) {
-		t.Fail()
-	}
-	if targets[0] != actualTargets[0] || targets[1] != actualTargets[1] {
-		t.Fail()
-	}
-	if ok, msg := r.Verify(); !ok {
-		t.Error(msg)
-	}
+	targets := givenTargets(instanceId, instanceId)
+	assertFilterResults(t, f, targets, targets)
+	verifyMocks(t, r)
 	// And no panic happened on JSON parsing, even though the CLI tools output was not valid JSON, because we don't even try to parse the output.
 }
 
 func TestEc2InstanceIdLookupInvalidJson(t *testing.T) {
-	// Given an ec2InstanceIdLookup with mocked parser and runner
-	instanceId := "dummy-instance-id"
-	r := &mockCommandRunner{}
-	f := ec2InstanceIdLookup{idParser: dummyEc2InstanceIdParser{}, commandRunner: r, region: "dummy-region"}
-	// When the AWS API returns invalid JSON
+	instanceId, r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner() // When the AWS API returns invalid JSON
 	invalidJson := "HAH! not a valid JSON"
-	r.When("RunGetOutput", "aws", []string{"ec2", "describe-instances", "--instance-id", instanceId, "--region", f.region}).Return([]byte(invalidJson)).Times(1)
+	awsReturns(r, instanceId, f.region, invalidJson, nil).Times(1)
 	// I get a fatal error for filtering
 	expectPanic(t, fmt.Sprintf("Invalid JSON returned by AWS API.\nError: invalid character 'H' looking for beginning of value\nJSON follows this line\n%s", invalidJson),
 		func() { f.Filter([]target.Target{target.FromString(instanceId)}) })
+	verifyMocks(t, r)
 	if ok, msg := r.Verify(); !ok {
 		t.Error(msg)
 	}
+}
+
+func TestEc2InstanceIdLookupEmptyReservations(t *testing.T) {
+	instanceId, r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner()
+	// When the AWS API returns a JSON with empty Reservations
+	json, _ := json.Marshal(ec2DescribeInstanceApiResponse{Reservations: []ec2Reservation{}})
+	awsReturns(r, instanceId, f.region, string(json), nil).Times(2)
+	// Filtering doesn't touch the target list
+	targets := givenTargets(instanceId, instanceId)
+	assertFilterResults(t, f, targets, targets)
+	verifyMocks(t, r)
 }

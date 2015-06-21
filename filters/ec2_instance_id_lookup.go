@@ -20,13 +20,15 @@ func (p realEc2InstanceIdParser) Parse(input string) string {
 	return ec2InstanceIdRegex.FindString(input)
 }
 
-type ec2DescribeInstanceApiResponse struct {
-	Reservations []struct {
-		Instances []struct {
-			PublicDnsName   string
-			PublicIpAddress string
-		}
+type ec2Reservation struct {
+	Instances []struct {
+		PublicDnsName   string
+		PublicIpAddress string
 	}
+}
+
+type ec2DescribeInstanceApiResponse struct {
+	Reservations []ec2Reservation
 }
 
 type ec2InstanceIdLookup struct {
