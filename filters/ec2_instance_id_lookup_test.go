@@ -21,10 +21,16 @@ func expectPanic(t *testing.T, expectedErr interface{}, f func()) {
 	f()
 }
 
-type dummyEc2InstanceIdParser struct{}
+type dummyEc2InstanceIdParser struct {
+	shouldMatch bool
+}
 
 func (p dummyEc2InstanceIdParser) Parse(input string) string {
-	return input
+	if p.shouldMatch {
+		return input
+	} else {
+		return ""
+	}
 }
 
 type mockCommandRunner struct {
@@ -102,9 +108,9 @@ func TestEc2InstanceIdParser(t *testing.T) {
 	}
 }
 
-func givenAnEc2InstanceIdLookupWithMockedParserAndRunner() (*mockCommandRunner, *ec2InstanceIdLookup) {
+func givenAnEc2InstanceIdLookupWithMockedParserAndRunner(shouldMatch bool) (*mockCommandRunner, *ec2InstanceIdLookup) {
 	r := &mockCommandRunner{}
-	f := &ec2InstanceIdLookup{idParser: dummyEc2InstanceIdParser{}, commandRunner: r, region: "dummy-region"}
+	f := &ec2InstanceIdLookup{idParser: dummyEc2InstanceIdParser{shouldMatch}, commandRunner: r, region: "dummy-region"}
 	return r, f
 }
 
@@ -142,7 +148,7 @@ func verifyMocks(t *testing.T, mocks ...hasVerify) {
 
 func TestEc2InstanceIdLookupFails(t *testing.T) {
 	instanceId := "dummy-instance-id"
-	r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner()
+	r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(true)
 	// When the aws cli tool fails
 	msg := "A client error (InvalidInstanceID.NotFound) occurred when calling the DescribeInstances operation: The instance ID 'i-deadbeef' does not exist"
 	awsReturns(r, instanceId, f.region, msg, dummyError{"test fails aws"}).Times(2)
@@ -155,7 +161,7 @@ func TestEc2InstanceIdLookupFails(t *testing.T) {
 
 func TestEc2InstanceIdLookupInvalidJson(t *testing.T) {
 	instanceId := "dummy-instance-id"
-	r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner()
+	r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(true)
 	// When the AWS API returns invalid JSON
 	invalidJson := "HAH! not a valid JSON"
 	awsReturns(r, instanceId, f.region, invalidJson, nil).Times(1)
@@ -196,29 +202,43 @@ func makeLookupCase(inputHost string, publicIp string) lookupCase {
 	return c
 }
 
-func makeInputAndOutputTargets(cases []lookupCase) ([]target.Target, []target.Target) {
+func makeInputAndOutputTargets(cases []lookupCase, shouldRewrite bool) ([]target.Target, []target.Target) {
 	inputTargets := make([]target.Target, len(cases))
 	outputTargets := make([]target.Target, len(cases))
 	for i, c := range cases {
 		inputTargets[i] = target.FromString(c.inputHost)
-		outputTargets[i] = target.FromString(c.publicIp)
+		if shouldRewrite {
+			outputTargets[i] = target.FromString(c.publicIp)
+		} else {
+			outputTargets[i] = target.FromString(c.inputHost)
+		}
 	}
 	return inputTargets, outputTargets
 }
 
-func TestEc2InstanceIdLookupHappyPath(t *testing.T) {
-	r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner()
-	// When the AWS API returns IPs for some lookups, but not others
-	cases := []lookupCase{
-		makeLookupCase("no-hits", ""),
-		makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1"),
-		makeLookupCase("i-12345678", "2.2.2.2"),
-	}
+func assertLookupCasesPass(t *testing.T, r *mockCommandRunner, f *ec2InstanceIdLookup, shouldRewrite bool, cases ...lookupCase) {
 	for _, c := range cases {
 		awsReturns(r, c.inputHost, f.region, c.json, nil).Times(1)
 	}
 	// Filtering changes the targets which got results, but not the rest
-	inputTargets, expectedOutputTargets := makeInputAndOutputTargets(cases)
+	inputTargets, expectedOutputTargets := makeInputAndOutputTargets(cases, shouldRewrite)
 	assertFilterResults(t, f, inputTargets, expectedOutputTargets)
+}
+
+func TestEc2InstanceIdLookupDoesntLookLikeInstanceId(t *testing.T) {
+	r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(false)
+	assertLookupCasesPass(t, r, f, false,
+		makeLookupCase("no-hits", ""),
+		makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1"),
+		makeLookupCase("i-12345678", "2.2.2.2"))
+}
+
+func TestEc2InstanceIdLookupHappyPath(t *testing.T) {
+	r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(true)
+	// When the AWS API returns IPs for some lookups, but not others
+	assertLookupCasesPass(t, r, f, true,
+		makeLookupCase("no-hits", ""),
+		makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1"),
+		makeLookupCase("i-12345678", "2.2.2.2"))
 	verifyMocks(t, r)
 }
