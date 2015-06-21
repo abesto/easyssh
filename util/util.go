@@ -8,33 +8,33 @@ import (
 	"os/exec"
 )
 
-func Abort(msg string, args ...interface{}) {
+func Panicf(msg string, args ...interface{}) {
 	panic(fmt.Sprintf(msg, args...))
 }
 
 func LookPathOrAbort(binaryName string) string {
 	var binary, lookErr = exec.LookPath(binaryName)
 	if lookErr != nil {
-		Abort(lookErr.Error())
+		Panicf(lookErr.Error())
 	}
 	return binary
 }
 
 func RequireNoArguments(e interface{}, args []interface{}) {
 	if len(args) > 0 {
-		Abort("%s doesn't take any arguments, got %d: %s", e, len(args), args)
+		Panicf("%s doesn't take any arguments, got %d: %s", e, len(args), args)
 	}
 }
 
 func RequireArguments(e interface{}, n int, args []interface{}) {
 	if len(args) != n {
-		Abort("%s requires exactly %d argument(s), got %d: %s", e, n, len(args), args)
+		Panicf("%s requires exactly %d argument(s), got %d: %s", e, n, len(args), args)
 	}
 }
 
 func RequireArgumentsAtLeast(e interface{}, n int, args []interface{}) {
 	if len(args) < n {
-		Abort("%s requires at least %d argument(s), got %d: %s", e, n, len(args), args)
+		Panicf("%s requires at least %d argument(s), got %d: %s", e, n, len(args), args)
 	}
 }
 

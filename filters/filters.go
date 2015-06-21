@@ -59,7 +59,7 @@ func makeByName(name string) interface{} {
 		}
 	}
 	if d == nil {
-		util.Abort("filter \"%s\" is not known", name)
+		util.Panicf("filter \"%s\" is not known", name)
 	}
 	return d
 }
@@ -103,7 +103,7 @@ func (f *external) Filter(targets []target.Target) []target.Target {
 	tmpFile, err = ioutil.TempFile("", "easyssh")
 	defer os.Remove(tmpFile.Name())
 	if err != nil {
-		util.Abort(err.Error())
+		util.Panicf(err.Error())
 	}
 	tmpFile.Write([]byte(strings.Join(target.TargetStrings(targets), "\n")))
 	output = f.commandRunner.RunWithStdinGetOutputOrPanic(f.argv[0], append(f.argv[1:], tmpFile.Name()))

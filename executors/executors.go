@@ -63,32 +63,32 @@ func makeByName(name string) interface{} {
 		}
 	}
 	if d == nil {
-		util.Abort("Executor \"%s\" is not known", name)
+		util.Panicf("Executor \"%s\" is not known", name)
 	}
 	return d
 }
 
 func requireExactlyOneTarget(e interfaces.Executor, targets []target.Target) {
 	if len(targets) != 1 {
-		util.Abort("%s expects exactly one target, got %d: %s", e, len(targets), targets)
+		util.Panicf("%s expects exactly one target, got %d: %s", e, len(targets), targets)
 	}
 }
 
 func requireAtLeastOneTarget(e interfaces.Executor, targets []target.Target) {
 	if len(targets) < 1 {
-		util.Abort("%s expects at least one target.", e)
+		util.Panicf("%s expects at least one target.", e)
 	}
 }
 
 func requireNoCommand(e interfaces.Executor, command []string) {
 	if len(command) > 0 {
-		util.Abort("%s doesn't accept a command, got: %s", e, command)
+		util.Panicf("%s doesn't accept a command, got: %s", e, command)
 	}
 }
 
 func requireCommand(e interfaces.Executor, command []string) {
 	if len(command) == 0 {
-		util.Abort("%s requires a command.", e)
+		util.Panicf("%s requires a command.", e)
 	}
 }
 
@@ -104,7 +104,7 @@ func myExec(binaryName string, args ...string) {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		util.Abort("%s failed: %s", cmd.Args, err)
+		util.Panicf("%s failed: %s", cmd.Args, err)
 	}
 }
 

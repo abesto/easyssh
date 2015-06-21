@@ -29,7 +29,7 @@ func main() {
 		if err := recover(); err != nil {
 			switch err.(type) {
 			case string:
-				util.Abort(err.(string))
+				util.Panicf(err.(string))
 			default:
 				panic(err)
 			}
@@ -72,7 +72,7 @@ Options:
 	var logger = util.Logger
 
 	if flag.NArg() == 0 {
-		util.Abort("Required argument for target host lookup missing")
+		util.Panicf("Required argument for target host lookup missing")
 	}
 
 	discoverer = discoverers.Make(discovererDefinition)
@@ -84,7 +84,7 @@ Options:
 		targets = append(targets, target.Target{Host: host, User: user})
 	}
 	if len(targets) == 0 {
-		util.Abort("No targets found")
+		util.Panicf("No targets found")
 	}
 
 	logger.Debugf("Targets before filters: %s", targets)

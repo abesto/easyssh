@@ -51,7 +51,7 @@ func makeByName(name string) interface{} {
 		}
 	}
 	if d == nil {
-		util.Abort("Discoverer \"%s\" is not known", name)
+		util.Panicf("Discoverer \"%s\" is not known", name)
 	}
 	return d
 }
@@ -63,7 +63,7 @@ func (d *commaSeparated) Discover(input string) []string {
 }
 func (d *commaSeparated) SetArgs(args []interface{}) {
 	if len(args) > 0 {
-		util.Abort("%s takes no configuration, got %s", d, args)
+		util.Panicf("%s takes no configuration, got %s", d, args)
 	}
 }
 func (d *commaSeparated) String() string {
@@ -96,7 +96,7 @@ func (d *knifeSearch) Discover(input string) []string {
 	var error = cmd.Run()
 	if error != nil {
 		fmt.Print(stderr.String())
-		util.Abort(error.Error())
+		util.Panicf(error.Error())
 	}
 
 	var data map[string]interface{}
@@ -120,7 +120,7 @@ func (d *knifeSearch) Discover(input string) []string {
 }
 func (d *knifeSearch) SetArgs(args []interface{}) {
 	if len(args) > 0 {
-		util.Abort("%s takes no configuration, got %s", d, args)
+		util.Panicf("%s takes no configuration, got %s", d, args)
 	}
 }
 func (d *knifeSearch) String() string {

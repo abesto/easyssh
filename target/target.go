@@ -13,7 +13,7 @@ type Target struct {
 
 func (t Target) String() string {
 	if t.Host == "" {
-		util.Abort("Target host cannot be empty")
+		util.Panicf("Target host cannot be empty")
 	}
 	if t.User == "" {
 		return t.Host
@@ -31,7 +31,7 @@ func TargetStrings(ts []Target) []string {
 
 func FromString(str string) Target {
 	if len(str) == 0 {
-		util.Abort("FromString(str string) Target got an empty string")
+		util.Panicf("FromString(str string) Target got an empty string")
 	}
 	var parts = strings.Split(str, "@")
 	var target Target
@@ -40,7 +40,7 @@ func FromString(str string) Target {
 	} else if len(parts) == 2 {
 		target = Target{User: parts[0], Host: parts[1]}
 	} else {
-		util.Abort("FromString(str string) Target got a string containing more than one @ character")
+		util.Panicf("FromString(str string) Target got a string containing more than one @ character")
 	}
 	return target
 }

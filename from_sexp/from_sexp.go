@@ -9,7 +9,7 @@ import (
 func MakeFromString(input string, aliases Aliases, makeByName func(name string) interface{}) interface{} {
 	var data, error = sexp.Unmarshal([]byte(input))
 	if error != nil {
-		util.Abort(error.Error())
+		util.Panicf(error.Error())
 	}
 	util.Logger.Debugf("MakeFromString %s -> %s", input, data)
 	var result = Make(data, aliases, makeByName)
