@@ -64,18 +64,6 @@ func makeByName(name string) interface{} {
 	return d
 }
 
-type id struct{}
-
-func (f *id) Filter(targets []target.Target) []target.Target {
-	return targets
-}
-func (f *id) SetArgs(args []interface{}) {
-	util.RequireNoArguments(f, args)
-}
-func (f *id) String() string {
-	return fmt.Sprintf("<%s>", nameId)
-}
-
 type first struct{}
 
 func (f *first) Filter(targets []target.Target) []target.Target {
