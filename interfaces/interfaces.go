@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"fmt"
+
 	"github.com/abesto/easyssh/target"
 )
 

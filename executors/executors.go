@@ -2,15 +2,16 @@ package executors
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"strings"
+
 	"github.com/abesto/easyssh/fromsexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 	"github.com/alexcesaro/log"
 	"github.com/alexcesaro/log/golog"
-	"os"
-	"os/exec"
-	"strings"
 )
 
 func Make(input string) interfaces.Executor {

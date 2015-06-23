@@ -3,9 +3,10 @@ package filters
 import (
 	"encoding/json"
 	"fmt"
+	"testing"
+
 	"github.com/abesto/easyssh/target"
 	"github.com/maraino/go-mock"
-	"testing"
 )
 
 type dummyEc2InstanceIdParser struct {

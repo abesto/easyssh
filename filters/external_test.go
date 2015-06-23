@@ -2,10 +2,11 @@ package filters
 
 import (
 	"fmt"
-	"github.com/abesto/easyssh/target"
-	"github.com/maraino/go-mock"
 	"os"
 	"testing"
+
+	"github.com/abesto/easyssh/target"
+	"github.com/maraino/go-mock"
 )
 
 func TestExternalStringViaMake(t *testing.T) {

@@ -2,6 +2,7 @@ package filters
 
 import (
 	"fmt"
+
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 )

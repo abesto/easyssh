@@ -2,12 +2,13 @@ package filters
 
 import (
 	"fmt"
+	"io"
+	"testing"
+
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 	"github.com/alexcesaro/log"
 	"github.com/maraino/go-mock"
-	"io"
-	"testing"
 )
 
 func expectPanic(t *testing.T, expectedErr interface{}, f func()) {

@@ -2,10 +2,11 @@ package filters
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
-	"testing"
 )
 
 func TestListStringViaMake(t *testing.T) {

@@ -2,8 +2,9 @@ package target
 
 import (
 	"fmt"
-	"github.com/abesto/easyssh/util"
 	"strings"
+
+	"github.com/abesto/easyssh/util"
 )
 
 type Target struct {

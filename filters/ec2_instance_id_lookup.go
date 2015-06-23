@@ -3,10 +3,11 @@ package filters
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/abesto/easyssh/target"
-	"github.com/abesto/easyssh/util"
 	"regexp"
 	"strings"
+
+	"github.com/abesto/easyssh/target"
+	"github.com/abesto/easyssh/util"
 )
 
 var ec2InstanceIdRegex = regexp.MustCompile("i-[0-9a-f]{8}")

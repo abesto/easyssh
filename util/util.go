@@ -2,11 +2,12 @@ package util
 
 import (
 	"fmt"
-	"github.com/alexcesaro/log"
-	"github.com/alexcesaro/log/golog"
 	"io"
 	"os"
 	"os/exec"
+
+	"github.com/alexcesaro/log"
+	"github.com/alexcesaro/log/golog"
 )
 
 func Panicf(msg string, args ...interface{}) {

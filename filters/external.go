@@ -2,11 +2,12 @@ package filters
 
 import (
 	"fmt"
-	"github.com/abesto/easyssh/target"
-	"github.com/abesto/easyssh/util"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/abesto/easyssh/target"
+	"github.com/abesto/easyssh/util"
 )
 
 type external struct {

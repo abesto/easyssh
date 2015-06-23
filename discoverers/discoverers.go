@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os/exec"
+	"strings"
+
 	"github.com/abesto/easyssh/fromsexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/util"
-	"os/exec"
-	"strings"
 )
 
 func Make(input string) interfaces.Discoverer {
