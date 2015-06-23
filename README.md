@@ -3,7 +3,9 @@
 [![Build Status](https://travis-ci.org/abesto/easyssh.svg?branch=master)](https://travis-ci.org/abesto/easyssh)
 [![Coverage Status](https://coveralls.io/repos/abesto/easyssh/badge.svg?branch=master)](https://coveralls.io/r/abesto/easyssh?branch=master)
 
-`easyssh` is the culmination of several years of SSH-related aliases. It's a highly configurable wrapper around `ssh`, `tmux-cssh`, `csshx`, `aws`, `knife` and who knows what else. It's for you if the following makes you excited. You can have a single alias that does this (let's call the alias `s`):
+`easyssh` is the culmination of several years of SSH-related aliases. It's a highly configurable wrapper around `ssh`, `tmux-cssh`, `csshx`, `aws`, `knife` and whatever else.
+
+It's for you if having a single alias that does the following makes you excited:
 
  * `s myhost.com` logs in to myhost.com
  * `s app.myhost.com,db.myhost.com` logs in to both hosts using `tmux-ssh`
@@ -12,43 +14,20 @@
  * `s -lroot roles:app /etc/init.d/apache2 reload` parallelly reloads apache on all nodes that have the role `app` in Chef
  * If you provide a hostname that looks like it includes an EC2 instance id, it uses the `aws` CLI tool to look up the public IP, and uses that.
 
-The syntax is slightly verbose, it's designed to be used in aliases you frequently need.
-
 ## Installation
-
-### Releases
-
-These packages are more or less stable. At least _some_ basic functionality works in them, while `HEAD` may be completely broken. This situation will improve as more tests are added.
 
 1. Download, extract the [release](https://github.com/abesto/easyssh/releases) for your platform
 2. Add the `easyssh` executable to your `$PATH`
-3. ???
-4. Profit
 
-### From source
+Of course you can always compile from source:
 
 ```sh
-go get github.com/abesto/easyssh
+go get -u github.com/abesto/easyssh
 ```
 
-#### If you're new to Go
+## Inline usage
 
-You can follow the official [Getting Started](http://golang.org/doc/install) guide.
-
-The short version, for OSX:
-
-```sh
-brew install go
-mkdir ~/.gocode
-echo "export GOPATH=$HOME/.gocode" >> ~/.bashrc
-echo 'export PATH="$GOPATH/bin:$PATH"' >> ~/.bashrc
-```
-
-After installation you will find the executable in `~/.gocode/bin`.
-
-## Simple usage
-
-You probably won't ever do this; it's just a basic demonstration of the syntax.
+You probably won't ever do this; it's only here for a basic demonstration of the syntax.
 
 ```sh
 # log in with an interactive shell; old-fashioned ssh
@@ -59,9 +38,10 @@ easyssh -c='(ssh-exec)' -d='(knife)' roles:app hostname
 easyssh -c='(ssh-exec-parallel)' -d='(knife)' -l=root roles:app /etc/init.d/apache2 reload
 ```
 
-## Example alias
+## Suggested usage
 
-This one alias implements the use-case described in the introduction.
+This one alias implements the use-case described in the introduction. Writing aliases like this is the suggested
+way of using `easyssh`.
 
 ```sh
 easyssh_executor='(if-command (ssh-exec-parallel) (if-one-target (ssh-login) (tmux-cssh)))'
@@ -70,7 +50,7 @@ easyssh_filter='(list (ec2-instance-id us-east-1) (ec2-instance-id us-west-1))'
 alias s="easyssh -e='$easyssh_executor' -d='$easyssh_discoverer' -f='$easyssh_filter'"
 ```
 
-If you frequently log in to servers as root, you can then go:
+If you frequently log in to servers as root:
 
 ```sh
 alias sr='s -l root'
@@ -82,23 +62,32 @@ This assumes that
 
  * `knife` is correctly configured for the Chef environment you want to work with
  * The `aws` CLI tool is correctly configured
+ * You have `tmux-cssh` installed
+ * Your EC2 nodes are in `us-east-1` and `us-west-1`.
+
+That's a lot of assumptions; `easyssh` tries to be as general as possible, but in the end, you get to tailor it to your
+specific needs. Which brings us to...
 
 ## Configuration
 
 The behavior of `easyssh` is controlled by three components:
 
- * *Discoverers* produce a list of targets (user, host pairs) from some input string; the input string is the first
+ * *Discoverers* produce a list of targets to run against from some input string; this input string is the first
    non-flag argument to `easyssh`
  * *Filters* mutate the list of targets produced by the discoverers
  * *Executors* do something with the targets, optionally taking the arguments not consumed by the discoverers.
 
-An `easyssh` command then looks like this:
-
 ```
-easyssh -e='DISCOVERER_DEFINITION' -f='FILTER_DEFINITION' -e='EXECUTOR_DEFINITION' DISCOVERER_ARG [EXECUTOR [ARGUMENT [...]]]
+easyssh -d='(ddef)' -f='(fdef)' -e='(edef)' targetdef [cmd to run]
+          |           |           |             |           |
+          ▼           ▼           ▼             |           |
+      Discoverer---▶Filter----▶Executor◀--------+------------
+          ▲                                     |
+          |                                     |
+          ---------------------------------------
 ```
 
-Each definition is an S-Expression; the terms usable in the S-Expressions are described below.
+Discoverer, filter and executor definitions are [S-Expressions](https://en.wikipedia.org/wiki/S-expression); the terms usable in them are described below.
 
 ### Discoverers
 
