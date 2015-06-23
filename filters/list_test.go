@@ -54,7 +54,7 @@ type appendString struct {
 
 func (f *appendString) Filter(targets []target.Target) []target.Target {
 	util.RequireArgumentsAtLeast(f, 1, f.args)
-	for i, _ := range targets {
+	for i := range targets {
 		targets[i].Host += f.stringToAppend
 	}
 	return targets

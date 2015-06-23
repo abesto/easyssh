@@ -1,4 +1,4 @@
-package from_sexp
+package fromsexp
 
 import (
 	"bitbucket.org/shanehanna/sexp"
@@ -7,9 +7,9 @@ import (
 )
 
 func MakeFromString(input string, aliases Aliases, makeByName func(name string) interface{}) interface{} {
-	var data, error = sexp.Unmarshal([]byte(input))
-	if error != nil {
-		util.Panicf(error.Error())
+	data, err := sexp.Unmarshal([]byte(input))
+	if err != nil {
+		util.Panicf(err.Error())
 	}
 	util.Logger.Debugf("MakeFromString %s -> %s", input, data)
 	var result = Make(data, aliases, makeByName)

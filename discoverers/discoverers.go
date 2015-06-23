@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/abesto/easyssh/from_sexp"
+	"github.com/abesto/easyssh/fromsexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/util"
 	"os/exec"
@@ -12,7 +12,7 @@ import (
 )
 
 func Make(input string) interfaces.Discoverer {
-	return from_sexp.MakeFromString(input, nil, makeByName).(interfaces.Discoverer)
+	return fromsexp.MakeFromString(input, nil, makeByName).(interfaces.Discoverer)
 }
 
 func SupportedDiscovererNames() []string {
@@ -20,13 +20,13 @@ func SupportedDiscovererNames() []string {
 	var i = 0
 	for key := range discovererMakerMap {
 		keys[i] = key
-		i += 1
+		i++
 	}
 	return keys
 }
 
 func makeFromSExp(data []interface{}) interfaces.Discoverer {
-	return from_sexp.Make(data, nil, makeByName).(interfaces.Discoverer)
+	return fromsexp.Make(data, nil, makeByName).(interfaces.Discoverer)
 }
 
 const (
@@ -38,8 +38,8 @@ const (
 
 var discovererMakerMap = map[string]func() interfaces.Discoverer{
 	nameCommaSeparated: func() interfaces.Discoverer { return &commaSeparated{} },
-	nameKnife:          func() interfaces.Discoverer { return &knifeSearch{PublicIp} },
-	nameKnifeHostname:  func() interfaces.Discoverer { return &knifeSearch{PublicHostname} },
+	nameKnife:          func() interfaces.Discoverer { return &knifeSearch{publicIp} },
+	nameKnifeHostname:  func() interfaces.Discoverer { return &knifeSearch{publicHostname} },
 	nameFirstMatching:  func() interfaces.Discoverer { return &firstMatching{} },
 }
 
@@ -73,8 +73,8 @@ func (d *commaSeparated) String() string {
 type knifeSearchResultType int
 
 const (
-	PublicIp knifeSearchResultType = iota
-	PublicHostname
+	publicIp knifeSearchResultType = iota
+	publicHostname
 )
 
 type knifeSearch struct {
@@ -93,10 +93,10 @@ func (d *knifeSearch) Discover(input string) []string {
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	var error = cmd.Run()
-	if error != nil {
+	err := cmd.Run()
+	if err != nil {
 		fmt.Print(stderr.String())
-		util.Panicf(error.Error())
+		util.Panicf(err.Error())
 	}
 
 	var data map[string]interface{}
@@ -104,13 +104,13 @@ func (d *knifeSearch) Discover(input string) []string {
 
 	var ips = []string{}
 	fieldName := "public_ipv4"
-	if d.resultType == PublicHostname {
+	if d.resultType == publicHostname {
 		fieldName = "public_hostname"
 	}
 	for _, row := range data["rows"].([]interface{}) {
 		var automatic = row.(map[string]interface{})["automatic"].(map[string]interface{})
-		if cloud_v2, ok := automatic["cloud_v2"]; ok && cloud_v2 != nil {
-			ips = append(ips, cloud_v2.(map[string]interface{})[fieldName].(string))
+		if cloudV2, ok := automatic["cloud_v2"]; ok && cloudV2 != nil {
+			ips = append(ips, cloudV2.(map[string]interface{})[fieldName].(string))
 		} else {
 			ips = append(ips, automatic["ipaddress"].(string))
 		}

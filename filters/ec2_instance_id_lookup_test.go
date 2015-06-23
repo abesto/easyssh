@@ -30,9 +30,8 @@ type dummyEc2InstanceIdParser struct {
 func (p dummyEc2InstanceIdParser) Parse(input string) string {
 	if p.shouldMatch {
 		return input + ".instanceid"
-	} else {
-		return ""
 	}
+	return ""
 }
 
 type mockCommandRunner struct {

@@ -50,11 +50,11 @@ type RealCommandRunner struct{}
 
 func outputOrPanic(cmd *exec.Cmd) []byte {
 	Logger.Debugf("Executing: %s", cmd.Args)
-	if output, err := cmd.CombinedOutput(); err == nil {
+	output, err := cmd.CombinedOutput()
+	if err == nil {
 		return output
-	} else {
-		panic(err.Error())
 	}
+	panic(err.Error())
 }
 
 func (c RealCommandRunner) RunWithStdinGetOutputOrPanic(name string, args []string) []byte {

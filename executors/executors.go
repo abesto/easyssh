@@ -2,7 +2,7 @@ package executors
 
 import (
 	"fmt"
-	"github.com/abesto/easyssh/from_sexp"
+	"github.com/abesto/easyssh/fromsexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
@@ -14,7 +14,7 @@ import (
 )
 
 func Make(input string) interfaces.Executor {
-	return from_sexp.MakeFromString(input, aliases, makeByName).(interfaces.Executor)
+	return fromsexp.MakeFromString(input, aliases, makeByName).(interfaces.Executor)
 }
 
 func SupportedExecutorNames() []string {
@@ -22,13 +22,13 @@ func SupportedExecutorNames() []string {
 	var i = 0
 	for key := range executorMakerMap {
 		keys[i] = key
-		i += 1
+		i++
 	}
 	return keys
 }
 
 func makeFromSExp(data []interface{}) interfaces.Executor {
-	return from_sexp.Make(data, aliases, makeByName).(interfaces.Executor)
+	return fromsexp.Make(data, aliases, makeByName).(interfaces.Executor)
 }
 
 const (
@@ -51,8 +51,8 @@ var executorMakerMap = map[string]func() interfaces.Executor{
 	nameIfCommand:       func() interfaces.Executor { return &ifCommand{} },
 }
 
-var aliases = from_sexp.Aliases{
-	from_sexp.Alias{Name: nameIfCommand, Alias: "if-args"},
+var aliases = fromsexp.Aliases{
+	fromsexp.Alias{Name: nameIfCommand, Alias: "if-args"},
 }
 
 func makeByName(name string) interface{} {
@@ -177,7 +177,7 @@ type csshx struct{}
 func (e *csshx) Exec(targets []target.Target, command []string) {
 	requireAtLeastOneTarget(e, targets)
 	requireNoCommand(e, command)
-	myExec("csshx", target.TargetStrings(targets)...)
+	myExec("csshx", target.Strings(targets)...)
 }
 func (e *csshx) SetArgs(args []interface{}) {
 	util.RequireNoArguments(e, args)
@@ -191,7 +191,7 @@ type tmuxCssh struct{}
 func (e *tmuxCssh) Exec(targets []target.Target, command []string) {
 	requireAtLeastOneTarget(e, targets)
 	requireNoCommand(e, command)
-	myExec("tmux-cssh", target.TargetStrings(targets)...)
+	myExec("tmux-cssh", target.Strings(targets)...)
 }
 func (e *tmuxCssh) SetArgs(args []interface{}) {
 	util.RequireNoArguments(e, args)

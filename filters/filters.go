@@ -2,7 +2,7 @@ package filters
 
 import (
 	"fmt"
-	"github.com/abesto/easyssh/from_sexp"
+	"github.com/abesto/easyssh/fromsexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
@@ -12,7 +12,7 @@ import (
 )
 
 func Make(input string) interfaces.TargetFilter {
-	return from_sexp.MakeFromString(input, nil, makeByName).(interfaces.TargetFilter)
+	return fromsexp.MakeFromString(input, nil, makeByName).(interfaces.TargetFilter)
 }
 
 func SupportedFilterNames() []string {
@@ -20,13 +20,13 @@ func SupportedFilterNames() []string {
 	var i = 0
 	for key := range filterMakerMap {
 		keys[i] = key
-		i += 1
+		i++
 	}
 	return keys
 }
 
 func makeFromSExp(data []interface{}) interfaces.TargetFilter {
-	return from_sexp.Make(data, nil, makeByName).(interfaces.TargetFilter)
+	return fromsexp.Make(data, nil, makeByName).(interfaces.TargetFilter)
 }
 
 const (
@@ -93,7 +93,7 @@ func (f *external) Filter(targets []target.Target) []target.Target {
 	if err != nil {
 		util.Panicf(err.Error())
 	}
-	tmpFile.Write([]byte(strings.Join(target.TargetStrings(targets), "\n")))
+	tmpFile.Write([]byte(strings.Join(target.Strings(targets), "\n")))
 	output = f.commandRunner.RunWithStdinGetOutputOrPanic(f.argv[0], append(f.argv[1:], tmpFile.Name()))
 	var lines = strings.Split(strings.TrimSpace(string(output)), "\n")
 	var newTargets = make([]target.Target, len(lines))

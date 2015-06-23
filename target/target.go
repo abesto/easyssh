@@ -21,7 +21,7 @@ func (t Target) String() string {
 	return fmt.Sprintf("%s@%s", t.User, t.Host)
 }
 
-func TargetStrings(ts []Target) []string {
+func Strings(ts []Target) []string {
 	var strs = []string{}
 	for _, t := range ts {
 		strs = append(strs, t.String())

@@ -79,7 +79,7 @@ Options:
 	executor = executors.Make(executorDefinition)
 	filter = filters.Make(filterDefinition)
 
-	var targets []target.Target = []target.Target{}
+	targets := []target.Target{}
 	for _, host := range discoverer.Discover(flag.Arg(0)) {
 		targets = append(targets, target.Target{Host: host, User: user})
 	}
@@ -91,6 +91,6 @@ Options:
 	targets = filter.Filter(targets)
 	logger.Infof("Targets: %s", targets)
 
-	var command = flag.Args()[1:]
+	command := flag.Args()[1:]
 	executor.Exec(targets, command)
 }
