@@ -7,6 +7,7 @@ import (
 	"github.com/abesto/easyssh/util"
 	"github.com/alexcesaro/log"
 	"github.com/maraino/go-mock"
+	"io"
 	"testing"
 )
 
@@ -38,8 +39,8 @@ type mockCommandRunner struct {
 	mock.Mock
 }
 
-func (r *mockCommandRunner) RunWithStdinGetOutputOrPanic(name string, args []string) []byte {
-	ret := r.Called(name, args)
+func (r *mockCommandRunner) RunWithStdinGetOutputOrPanic(stdin io.Reader, name string, args []string) []byte {
+	ret := r.Called(stdin, name, args)
 	return ret.Bytes(0)
 }
 func (r *mockCommandRunner) RunGetOutputOrPanic(name string, args []string) []byte {

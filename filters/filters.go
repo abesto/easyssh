@@ -1,14 +1,9 @@
 package filters
 
 import (
-	"fmt"
 	"github.com/abesto/easyssh/fromsexp"
 	"github.com/abesto/easyssh/interfaces"
-	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
-	"io/ioutil"
-	"os"
-	"strings"
 )
 
 func Make(input string) interfaces.TargetFilter {
@@ -47,7 +42,9 @@ var filterMakerMap = map[string]func() interfaces.TargetFilter{
 	nameFirst: func() interfaces.TargetFilter { return &first{} },
 	nameExternal: func() interfaces.TargetFilter {
 		return &external{
-			commandRunner: util.RealCommandRunner{}}
+			commandRunner: util.RealCommandRunner{},
+			tmpFileMaker:  &realTmpFileMaker{},
+		}
 	},
 }
 
@@ -62,39 +59,4 @@ func makeByName(name string) interface{} {
 		util.Panicf("filter \"%s\" is not known", name)
 	}
 	return d
-}
-
-type external struct {
-	argv          []string
-	commandRunner util.CommandRunner
-}
-
-func (f *external) Filter(targets []target.Target) []target.Target {
-	var err error
-	var output []byte
-	var tmpFile *os.File
-	tmpFile, err = ioutil.TempFile("", "easyssh")
-	defer os.Remove(tmpFile.Name())
-	if err != nil {
-		util.Panicf(err.Error())
-	}
-	tmpFile.Write([]byte(strings.Join(target.Strings(targets), "\n")))
-	output = f.commandRunner.RunWithStdinGetOutputOrPanic(f.argv[0], append(f.argv[1:], tmpFile.Name()))
-	var lines = strings.Split(strings.TrimSpace(string(output)), "\n")
-	var newTargets = make([]target.Target, len(lines))
-	var i int
-	for i = 0; i < len(lines); i++ {
-		newTargets[i] = target.FromString(lines[i])
-	}
-	return newTargets
-}
-func (f *external) SetArgs(args []interface{}) {
-	util.RequireArguments(f, 1, args)
-	f.argv = make([]string, len(args))
-	for i := 0; i < len(args); i++ {
-		f.argv[i] = string(args[i].([]uint8))
-	}
-}
-func (f *external) String() string {
-	return fmt.Sprintf("<%s %s>", nameExternal, f.argv)
 }

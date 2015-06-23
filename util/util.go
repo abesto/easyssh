@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/alexcesaro/log"
 	"github.com/alexcesaro/log/golog"
+	"io"
 	"os"
 	"os/exec"
 )
@@ -41,7 +42,7 @@ func RequireArgumentsAtLeast(e interface{}, n int, args []interface{}) {
 var Logger log.Logger = golog.New(os.Stdout, log.Info)
 
 type CommandRunner interface {
-	RunWithStdinGetOutputOrPanic(name string, args []string) []byte
+	RunWithStdinGetOutputOrPanic(stdin io.Reader, name string, args []string) []byte
 	RunGetOutputOrPanic(name string, args []string) []byte
 	RunGetOutput(name string, args []string) ([]byte, error)
 }
@@ -54,12 +55,13 @@ func outputOrPanic(cmd *exec.Cmd) []byte {
 	if err == nil {
 		return output
 	}
-	panic(err.Error())
+	panic(err.Error() + "\n" + string(output))
 }
 
-func (c RealCommandRunner) RunWithStdinGetOutputOrPanic(name string, args []string) []byte {
+func (c RealCommandRunner) RunWithStdinGetOutputOrPanic(stdin io.Reader, name string, args []string) []byte {
 	cmd := exec.Command(name, args...)
-	cmd.Stdin = os.Stdin
+	cmd.Stdin = stdin
+	cmd.Env = os.Environ()
 	return outputOrPanic(cmd)
 }
 
