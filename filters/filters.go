@@ -64,21 +64,6 @@ func makeByName(name string) interface{} {
 	return d
 }
 
-type first struct{}
-
-func (f *first) Filter(targets []target.Target) []target.Target {
-	if len(targets) > 0 {
-		return targets[0:1]
-	}
-	return targets
-}
-func (f *first) SetArgs(args []interface{}) {
-	util.RequireNoArguments(f, args)
-}
-func (f *first) String() string {
-	return fmt.Sprintf("<%s>", nameFirst)
-}
-
 type external struct {
 	argv          []string
 	commandRunner util.CommandRunner
