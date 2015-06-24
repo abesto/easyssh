@@ -1,7 +1,8 @@
 package filters
+
 import (
-	"testing"
 	"sort"
+	"testing"
 )
 
 func TestSupportedFilterNames(t *testing.T) {
