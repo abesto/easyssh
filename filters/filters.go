@@ -11,8 +11,8 @@ func Make(input string) interfaces.TargetFilter {
 }
 
 func SupportedFilterNames() []string {
-	var keys = make([]string, len(filterMakerMap))
-	var i = 0
+	keys := make([]string, len(filterMakerMap))
+	i := 0
 	for key := range filterMakerMap {
 		keys[i] = key
 		i++
