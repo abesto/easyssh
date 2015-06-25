@@ -117,7 +117,7 @@ func TestEc2InstanceIdLookupFails(t *testing.T) {
 		l.ExpectDebugf("Response from AWS API: %s", msg).Times(2)
 		l.ExpectInfof("EC2 Instance lookup failed for %s (%s) in region %s (aws command failed): %s", host, instanceId, f.region, msg).Times(2)
 		// When the aws cli tool fails
-		awsReturns(r, instanceId, f.region, msg, util.DummyError{"test fails aws"}).Times(2)
+		awsReturns(r, instanceId, f.region, msg, util.DummyError{Msg: "test fails aws"}).Times(2)
 		// Filtering doesn't touch the target list
 		targets := target.GivenTargets(host, host)
 		assertFilterResults(t, f, targets, targets)
