@@ -3,6 +3,8 @@ package filters
 import (
 	"sort"
 	"testing"
+
+	"github.com/abesto/easyssh/util"
 )
 
 func TestSupportedFilterNames(t *testing.T) {
@@ -23,7 +25,7 @@ func TestSupportedFilterNames(t *testing.T) {
 }
 
 func TestMakeFilterWrongName(t *testing.T) {
-	expectPanic(t, "filter \"foo-bar\" is not known", func() {
+	util.ExpectPanic(t, "filter \"foo-bar\" is not known", func() {
 		Make("(list (foo-bar))")
 	})
 }

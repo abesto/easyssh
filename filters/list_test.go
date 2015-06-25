@@ -10,7 +10,7 @@ import (
 )
 
 func TestListStringViaMake(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		input := "(list (id) (id))"
 		structs := "[list [id] [id]]"
 		final := "<list [<id> <id>]>"
@@ -23,16 +23,16 @@ func TestListStringViaMake(t *testing.T) {
 }
 
 func TestListMakeWithoutArgument(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(list)", "[list]")
-		expectPanic(t, "<list []> requires at least 1 argument(s), got 0: []",
+		util.ExpectPanic(t, "<list []> requires at least 1 argument(s), got 0: []",
 			func() { Make("(list)") })
 	})
 }
 
 func TestListFilterWithoutSetArgs(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
-		expectPanic(t, "<list []> requires at least 1 argument(s), got 0: []",
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
+		util.ExpectPanic(t, "<list []> requires at least 1 argument(s), got 0: []",
 			func() { (&list{}).Filter([]target.Target{}) })
 	})
 }
@@ -77,10 +77,10 @@ func TestListOperation(t *testing.T) {
 	f := Make("(list (append-string foo) (append-string bar))").(*list)
 
 	var ts []target.Target
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("Targets after filter %s: %s", "<append-string foo>", "[onefoo twofoo]")
 		l.ExpectDebugf("Targets after filter %s: %s", "<append-string bar>", "[onefoobar twofoobar]")
-		ts = f.Filter(givenTargets("one", "two"))
+		ts = f.Filter(target.GivenTargets("one", "two"))
 	})
 
 	if len(ts) != 2 || ts[0].Host != "onefoobar" || ts[1].Host != "twofoobar" {

@@ -57,20 +57,6 @@ func makeByName(name string) interface{} {
 	return d
 }
 
-type commaSeparated struct{}
-
-func (d *commaSeparated) Discover(input string) []string {
-	return strings.Split(input, ",")
-}
-func (d *commaSeparated) SetArgs(args []interface{}) {
-	if len(args) > 0 {
-		util.Panicf("%s takes no configuration, got %s", d, args)
-	}
-}
-func (d *commaSeparated) String() string {
-	return fmt.Sprintf("<%s>", nameCommaSeparated)
-}
-
 type knifeSearchResultType int
 
 const (

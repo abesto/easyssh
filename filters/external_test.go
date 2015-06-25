@@ -6,11 +6,12 @@ import (
 	"testing"
 
 	"github.com/abesto/easyssh/target"
+	"github.com/abesto/easyssh/util"
 	"github.com/maraino/go-mock"
 )
 
 func TestExternalStringViaMake(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		input := "(external grep myservice)"
 		structs := "[external grep myservice]"
 		final := "<external [grep myservice]>"
@@ -21,17 +22,17 @@ func TestExternalStringViaMake(t *testing.T) {
 }
 
 func TestExternalMakeWithoutArgument(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(external)", "[external]")
-		expectPanic(t, "<external []> requires at least 1 argument(s), got 0: []",
+		util.ExpectPanic(t, "<external []> requires at least 1 argument(s), got 0: []",
 			func() { Make("(external)") })
 	})
 }
 
 func TestExternalFilterWithoutSetArgs(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
-		expectPanic(t, "<external []> requires at least 1 argument(s), got 0: []",
-			func() { (&external{}).Filter(givenTargets()) })
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
+		util.ExpectPanic(t, "<external []> requires at least 1 argument(s), got 0: []",
+			func() { (&external{}).Filter(target.GivenTargets()) })
 	})
 }
 
@@ -61,7 +62,7 @@ func TestExternalOperation(t *testing.T) {
 	// This filter
 	f := Make("(external grep -v bar)").(*external)
 	// Will call "grep -v bar", which will return "foo\baz"
-	r := &mockCommandRunner{}
+	r := &util.MockCommandRunner{}
 	r.When("RunWithStdinGetOutputOrPanic", os.Stdin, "grep", []string{"-v", "bar", os.Stdin.Name()}).Return([]byte("foo\nbaz")).Times(1)
 	f.commandRunner = r
 	// Via this temporary file
@@ -69,12 +70,12 @@ func TestExternalOperation(t *testing.T) {
 	m.When("make", "", "easyssh").Return(os.Stdin, nil)
 	f.tmpFileMaker = m
 	// When passed these targets
-	input := givenTargets("foo", "bar", "foobar", "baz")
+	input := target.GivenTargets("foo", "bar", "foobar", "baz")
 	// And return these.
 	expectedOutput := []target.Target{input[0], input[3]}
 	output := f.Filter(input)
 	if len(output) != len(expectedOutput) || output[0] != expectedOutput[0] || output[1] != expectedOutput[1] {
 		t.Error(input, output, expectedOutput)
 	}
-	verifyMocks(t, r, m)
+	util.VerifyMocks(t, r, m)
 }

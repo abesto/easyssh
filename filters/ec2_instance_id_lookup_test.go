@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/abesto/easyssh/target"
+	"github.com/abesto/easyssh/util"
 	"github.com/maraino/go-mock"
 )
 
@@ -21,7 +22,7 @@ func (p dummyEc2InstanceIdParser) Parse(input string) string {
 }
 
 func TestEc2InstanceIdLookupStringViaMake(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		input := "(ec2-instance-id test-region)"
 		structs := "[ec2-instance-id test-region]"
 		final := "<ec2-instance-id test-region>"
@@ -32,30 +33,30 @@ func TestEc2InstanceIdLookupStringViaMake(t *testing.T) {
 }
 
 func TestEc2InstanceIdLookupMakeWithoutArgument(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(ec2-instance-id)", "[ec2-instance-id]")
-		expectPanic(t, "<ec2-instance-id > requires exactly 1 argument(s), got 0: []",
+		util.ExpectPanic(t, "<ec2-instance-id > requires exactly 1 argument(s), got 0: []",
 			func() { Make("(ec2-instance-id)") })
 	})
 }
 
 func TestEc2InstanceIdLookupFilterWithoutSetArgs(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
-		expectPanic(t, "<ec2-instance-id > requires exactly 1 argument(s), got 0: []",
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
+		util.ExpectPanic(t, "<ec2-instance-id > requires exactly 1 argument(s), got 0: []",
 			func() { (&ec2InstanceIdLookup{}).Filter([]target.Target{}) })
 	})
 }
 
 func TestEc2InstanceIdSetTooManyArgs(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(ec2-instance-id foo bar)", "[ec2-instance-id foo bar]")
-		expectPanic(t, "<ec2-instance-id > requires exactly 1 argument(s), got 2: [foo bar]",
+		util.ExpectPanic(t, "<ec2-instance-id > requires exactly 1 argument(s), got 2: [foo bar]",
 			func() { Make("(ec2-instance-id foo bar)") })
 	})
 }
 
 func TestEc2InstanceIdSetArgs(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(ec2-instance-id foo)", "[ec2-instance-id foo]").Times(1)
 		l.ExpectDebugf("Make %s -> %s", "[ec2-instance-id foo]", "<ec2-instance-id foo>").Times(1)
 		f := Make("(ec2-instance-id foo)").(*ec2InstanceIdLookup)
@@ -83,14 +84,14 @@ func TestEc2InstanceIdParser(t *testing.T) {
 	}
 }
 
-func givenAnEc2InstanceIdLookupWithMockedParserAndRunner(shouldMatch bool) (*mockCommandRunner, *ec2InstanceIdLookup) {
-	r := &mockCommandRunner{}
+func givenAnEc2InstanceIdLookupWithMockedParserAndRunner(shouldMatch bool) (*util.MockCommandRunner, *ec2InstanceIdLookup) {
+	r := &util.MockCommandRunner{}
 	idParser := dummyEc2InstanceIdParser{shouldMatch}
 	f := &ec2InstanceIdLookup{idParser: idParser, commandRunner: r, region: "dummy-region", args: []interface{}{"dummy-region"}}
 	return r, f
 }
 
-func awsReturns(r *mockCommandRunner, instanceId string, region string, output string, err error) *mock.MockFunction {
+func awsReturns(r *util.MockCommandRunner, instanceId string, region string, output string, err error) *mock.MockFunction {
 	return r.When("RunGetOutput", "aws", []string{"ec2", "describe-instances", "--instance-id", instanceId, "--region", region}).Return([]byte(output), err)
 }
 
@@ -107,7 +108,7 @@ func assertFilterResults(t *testing.T, f *ec2InstanceIdLookup, input []target.Ta
 }
 
 func TestEc2InstanceIdLookupFails(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(true)
 		msg := "A client error (InvalidInstanceID.NotFound) occurred when calling the DescribeInstances operation: The instance ID 'i-deadbeef' does not exist"
 		host := "dummy-instance-id"
@@ -116,17 +117,17 @@ func TestEc2InstanceIdLookupFails(t *testing.T) {
 		l.ExpectDebugf("Response from AWS API: %s", msg).Times(2)
 		l.ExpectInfof("EC2 Instance lookup failed for %s (%s) in region %s (aws command failed): %s", host, instanceId, f.region, msg).Times(2)
 		// When the aws cli tool fails
-		awsReturns(r, instanceId, f.region, msg, dummyError{"test fails aws"}).Times(2)
+		awsReturns(r, instanceId, f.region, msg, util.DummyError{"test fails aws"}).Times(2)
 		// Filtering doesn't touch the target list
-		targets := givenTargets(host, host)
+		targets := target.GivenTargets(host, host)
 		assertFilterResults(t, f, targets, targets)
-		verifyMocks(t, r)
+		util.VerifyMocks(t, r)
 		// And no panic happened on JSON parsing, even though the CLI tools output was not valid JSON, because we don't even try to parse the output.
 	})
 }
 
 func TestEc2InstanceIdLookupInvalidJson(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		invalidJson := "HAH! not a valid JSON"
 		host := "dummy-instance-id"
 		instanceId := host + ".instanceid"
@@ -136,9 +137,9 @@ func TestEc2InstanceIdLookupInvalidJson(t *testing.T) {
 		// When the AWS API returns invalid JSON
 		awsReturns(r, instanceId, f.region, invalidJson, nil).Times(1)
 		// I get a fatal error for filtering
-		expectPanic(t, fmt.Sprintf("Invalid JSON returned by AWS API.\nError: invalid character 'H' looking for beginning of value\nJSON follows this line\n%s", invalidJson),
+		util.ExpectPanic(t, fmt.Sprintf("Invalid JSON returned by AWS API.\nError: invalid character 'H' looking for beginning of value\nJSON follows this line\n%s", invalidJson),
 			func() { f.Filter([]target.Target{target.FromString(host)}) })
-		verifyMocks(t, r)
+		util.VerifyMocks(t, r)
 	})
 }
 
@@ -185,7 +186,7 @@ func makeInputAndOutputTargets(cases []lookupCase, shouldRewrite bool) ([]target
 	return inputTargets, outputTargets
 }
 
-func assertLookupCasesPass(t *testing.T, r *mockCommandRunner, f *ec2InstanceIdLookup, shouldRewrite bool, cases []lookupCase) {
+func assertLookupCasesPass(t *testing.T, r *util.MockCommandRunner, f *ec2InstanceIdLookup, shouldRewrite bool, cases []lookupCase) {
 	for _, c := range cases {
 		awsReturns(r, c.instanceId, f.region, c.json, nil).Times(1)
 	}
@@ -194,7 +195,7 @@ func assertLookupCasesPass(t *testing.T, r *mockCommandRunner, f *ec2InstanceIdL
 }
 
 func TestEc2InstanceIdLookupDoesntLookLikeInstanceId(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		cases := []lookupCase{
 			makeLookupCase("no-hits", ""),
 			makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1"),
@@ -210,7 +211,7 @@ func TestEc2InstanceIdLookupDoesntLookLikeInstanceId(t *testing.T) {
 }
 
 func TestEc2InstanceIdLookupHappyPath(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(true)
 		cases := []lookupCase{
 			makeLookupCase("no-hits", ""),
@@ -229,6 +230,6 @@ func TestEc2InstanceIdLookupHappyPath(t *testing.T) {
 		}
 
 		assertLookupCasesPass(t, r, f, true, cases)
-		verifyMocks(t, r)
+		util.VerifyMocks(t, r)
 	})
 }

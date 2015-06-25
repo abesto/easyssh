@@ -2,10 +2,13 @@ package filters
 
 import (
 	"testing"
+
+	"github.com/abesto/easyssh/target"
+	"github.com/abesto/easyssh/util"
 )
 
 func TestFirstStringViaMake(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(first)", "[first]")
 		l.ExpectDebugf("Make %s -> %s", "[first]", "<first>")
 		Make("(first)")
@@ -13,9 +16,9 @@ func TestFirstStringViaMake(t *testing.T) {
 }
 
 func TestFirstMakeWithArgument(t *testing.T) {
-	withLogAssertions(t, func(l *mockLogger) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(first foo)", "[first foo]")
-		expectPanic(t, "<first> doesn't take any arguments, got 1: [foo]", func() { Make("(first foo)") })
+		util.ExpectPanic(t, "<first> doesn't take any arguments, got 1: [foo]", func() { Make("(first foo)") })
 	})
 }
 
@@ -32,8 +35,8 @@ func TestFirstOperation(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		output := f.Filter(givenTargets(c.input...))
-		expectedOutput := givenTargets(c.expectedOutput...)
+		output := f.Filter(target.GivenTargets(c.input...))
+		expectedOutput := target.GivenTargets(c.expectedOutput...)
 		if len(output) != len(expectedOutput) {
 			t.Error(c, output)
 		}
