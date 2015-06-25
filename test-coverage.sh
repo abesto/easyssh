@@ -17,15 +17,16 @@ do
     go test -coverprofile=profile.out $dir || fail=1
     if [ -f profile.out ]
     then
-      cat profile.out | grep -v "mode: set" >> acc.out
+      cat profile.out | grep -v "mode: set" | grep -v "test_helpers.go" >> acc.out
       rm profile.out
     fi
   fi
 done
 
 # Failures have incomplete results, so don't send
-if [ -n "$COVERALLS" ] && [ "$fail" -eq 0 ]
-then
+if [ -z "$COVERALLS" ]; then
+  go tool cover -html=acc.out
+elif [ "$fail" -eq 0 ]; then
   goveralls -v -coverprofile=acc.out $COVERALLS
 fi
 
