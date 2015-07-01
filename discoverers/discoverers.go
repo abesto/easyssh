@@ -7,7 +7,7 @@ import (
 )
 
 func Make(input string) interfaces.Discoverer {
-	return fromsexp.MakeFromString(input, nil, makeByName).(interfaces.Discoverer)
+	return fromsexp.MakeFromString(input, aliases, makeByName).(interfaces.Discoverer)
 }
 
 func SupportedDiscovererNames() []string {
@@ -21,7 +21,7 @@ func SupportedDiscovererNames() []string {
 }
 
 func makeFromSExp(data []interface{}) interfaces.Discoverer {
-	return fromsexp.Make(data, nil, makeByName).(interfaces.Discoverer)
+	return fromsexp.Make(data, aliases, makeByName).(interfaces.Discoverer)
 }
 
 const (
@@ -29,6 +29,7 @@ const (
 	nameKnife          = "knife"
 	nameKnifeHostname  = "knife-hostname"
 	nameFirstMatching  = "first-matching"
+	nameFixed          = "fixed"
 )
 
 var discovererMakerMap = map[string]func() interfaces.Discoverer{
@@ -42,6 +43,11 @@ var discovererMakerMap = map[string]func() interfaces.Discoverer{
 			realKnifeSearchResultRowIpExtractor{publicHostname}, util.RealCommandRunner{}}
 	},
 	nameFirstMatching: func() interfaces.Discoverer { return &firstMatching{} },
+	nameFixed:         func() interfaces.Discoverer { return &fixed{} },
+}
+
+var aliases = fromsexp.Aliases{
+	fromsexp.Alias{Name: nameFixed, Alias: "const"},
 }
 
 func makeByName(name string) interface{} {
