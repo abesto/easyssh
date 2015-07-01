@@ -87,7 +87,7 @@ easyssh -d='(ddef)' -f='(fdef)' -e='(edef)' targetdef [cmd to run]
           ---------------------------------------
 ```
 
-Discoverer, filter and executor definitions are [S-Expressions](https://en.wikipedia.org/wiki/S-expression); the terms usable in them are described below.
+Discoverer, filter and executor definitions are [S-Expressions](https://en.wikipedia.org/wiki/S-expression); the terms usable in them are described below. Wherever a "string" is referenced, you don't need to quote the string (but you can). For example, `(const foo "bar")` is fine.
 
 ### Discoverers
 

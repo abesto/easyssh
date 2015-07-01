@@ -8,7 +8,7 @@ import (
 
 func TestFixedStringViaMake(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
-		input := "(const foo bar)"
+		input := "(const \"foo\" bar)"
 		structs := "[const foo bar]"
 		final := "<fixed [foo bar]>"
 		l.ExpectDebugf("MakeFromString %s -> %s", input, structs)
