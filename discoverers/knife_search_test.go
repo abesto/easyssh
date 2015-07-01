@@ -5,9 +5,10 @@ import (
 
 	"encoding/json"
 
+	"errors"
+
 	"github.com/abesto/easyssh/util"
 	"github.com/maraino/go-mock"
-	"errors"
 )
 
 func TestKnifeStringViaMake(t *testing.T) {
@@ -104,11 +105,22 @@ func TestKnifeError(t *testing.T) {
 	s, e, r := givenAMockedKnifeSearch()
 	input := "name:whatever"
 	err := "knife run failed"
-	whenKnifeSearch(r, input).Return(util.CommandRunnerOutputs{Error: errors.New(err), Combined: []byte("Foo\nBar")})
+	whenKnifeSearch(r, input).Return(util.CommandRunnerOutputs{Error: errors.New(err), Combined: []byte("Foo\nBar")}).Times(1)
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectInfof("Looking up nodes with knife matching %s", input)
 		e.When("Extract", mock.Any).Times(0)
 		util.ExpectPanic(t, "Knife lookup failed: knife run failed\nOutput:\nFoo\nBar", func() { s.Discover(input) })
 	})
+	util.VerifyMocks(t, e, r)
+}
+
+func TestKnifeInvalidJsonFromKnife(t *testing.T) {
+	s, e, r := givenAMockedKnifeSearch()
+	input := "foo:bar"
+	whenKnifeSearch(r, input).Return(util.CommandRunnerOutputs{Stdout: []byte("Invalid JSON")}).Times(1)
+	e.When("Extract", mock.Any).Times(0)
+	util.ExpectPanic(t,
+		"Failed to parse knife search result: invalid character 'I' looking for beginning of value",
+		func() { s.Discover(input) })
 	util.VerifyMocks(t, e, r)
 }
