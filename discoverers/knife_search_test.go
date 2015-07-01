@@ -119,8 +119,29 @@ func TestKnifeInvalidJsonFromKnife(t *testing.T) {
 	input := "foo:bar"
 	whenKnifeSearch(r, input).Return(util.CommandRunnerOutputs{Stdout: []byte("Invalid JSON")}).Times(1)
 	e.When("Extract", mock.Any).Times(0)
-	util.ExpectPanic(t,
-		"Failed to parse knife search result: invalid character 'I' looking for beginning of value",
-		func() { s.Discover(input) })
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
+		l.ExpectInfof("Looking up nodes with knife matching %s", input)
+		util.ExpectPanic(t,
+			"Failed to parse knife search result: invalid character 'I' looking for beginning of value",
+			func() { s.Discover(input) })
+	})
+	util.VerifyMocks(t, e, r)
+}
+
+func TestKnifeHappyPath(t *testing.T) {
+	s, e, r := givenAMockedKnifeSearch()
+	input := "test:query"
+	data := givenKnifeSearchResultWithCloudV2("alpha", "beta", "gamma")
+	knifeReturnsWithCloudV2(r, input, data)
+	for _, row := range data.Rows {
+		e.When("Extract", row).Return(row.Automatic.CloudV2.PublicHostname).Times(1)
+	}
+	var actualIps []string
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
+		l.ExpectInfof("Looking up nodes with knife matching %s", input)
+		actualIps = s.Discover(input)
+	})
+	expectedIps := []string{"alpha.hostname", "beta.hostname", "gamma.hostname"}
+	util.AssertStringListEquals(t, expectedIps, actualIps)
 	util.VerifyMocks(t, e, r)
 }
