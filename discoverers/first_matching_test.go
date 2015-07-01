@@ -46,43 +46,14 @@ func TestFirstMatchingSetArgs(t *testing.T) {
 	}
 }
 
-//type appendString struct {
-//	args           []interface{}
-//	stringToAppend string
-//}
-//
-//func (f *appendString) Filter(targets []target.Target) []target.Target {
-//	util.RequireArgumentsAtLeast(f, 1, f.args)
-//	for i := range targets {
-//		targets[i].Host += f.stringToAppend
-//	}
-//	return targets
-//}
-//func (f *appendString) SetArgs(args []interface{}) {
-//	util.RequireArgumentsAtLeast(f, 1, args)
-//	f.args = args
-//	f.stringToAppend = string(args[0].([]byte))
-//}
-//func (f *appendString) String() string {
-//	return fmt.Sprintf("<%s %s>", "append-string", f.stringToAppend)
-//}
-//
-//func TestFirstMatchingOperation(t *testing.T) {
-//	discovererMakerMap["append-string"] = func() interfaces.Discoverer {
-//		return &appendString{}
-//	}
-//
-//	f := Make("(first-matching (append-string foo) (append-string bar))").(*firstMatching)
-//
-//	var ts []target.Target
-//	util.WithLogAssertions(t, func(l *util.MockLogger) {
-//		l.ExpectDebugf("Targets after discoverer %s: %s", "<append-string foo>", "[onefoo twofoo]")
-//		l.ExpectDebugf("Targets after discoverer %s: %s", "<append-string bar>", "[onefoobar twofoobar]")
-//		ts = f.Discover("")
-//	})
-//
-//	if len(ts) != 2 || ts[0].Host != "onefoobar" || ts[1].Host != "twofoobar" {
-//		t.Error(len(ts), ts)
-//	}
-//	delete(discovererMakerMap, "append-string")
-//}
+func TestFirstMatchingOperation(t *testing.T) {
+	f := Make("(first-matching (const foo) (const a b) (const c d))").(*firstMatching)
+	// Hack to test skipping a non-matching discoverer
+	f.children[0].(*fixed).retval = []string{}
+
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
+		l.ExpectDebugf("Trying discoverer %s", "<fixed []>")
+		l.ExpectDebugf("Trying discoverer %s", "<fixed [a b]>")
+		util.AssertStringListEquals(t, []string{"a", "b"}, f.Discover("irrelevant string"))
+	})
+}
