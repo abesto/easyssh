@@ -36,8 +36,10 @@ const (
 
 var discovererMakerMap = map[string]func() interfaces.Discoverer{
 	nameCommaSeparated: func() interfaces.Discoverer { return &commaSeparated{} },
-	nameKnife:          func() interfaces.Discoverer { return &knifeSearch{publicIp, util.RealCommandRunner{}} },
-	nameKnifeHostname:  func() interfaces.Discoverer { return &knifeSearch{publicHostname, util.RealCommandRunner{}} },
+	nameKnife:          func() interfaces.Discoverer { return &knifeSearch{
+		realKnifeSearchResultRowIpExtractor{publicIp}, util.RealCommandRunner{}} },
+	nameKnifeHostname:  func() interfaces.Discoverer { return &knifeSearch{
+		realKnifeSearchResultRowIpExtractor{publicHostname}, util.RealCommandRunner{}} },
 	nameFirstMatching:  func() interfaces.Discoverer { return &firstMatching{} },
 }
 

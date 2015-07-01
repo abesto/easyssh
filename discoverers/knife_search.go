@@ -16,21 +16,48 @@ const (
 )
 
 type knifeSearch struct {
-	resultType    knifeSearchResultType
+	extractor knifeSearchResultRowIpExtractor
 	commandRunner util.CommandRunner
 }
 
-type searchResult struct {
-	Rows []struct {
-		Name      string
-		Automatic *struct {
-			CloudV2 *struct {
-				PublicHostname string `json:"public_hostname"`
-				PublicIpv4     string `json:"public_ipv4"`
-			} `json:"cloud_v2"`
-			Ipaddress string
-		}
+type knifeSearchResult struct {
+	Rows []knifeSearchResultRow
+}
+
+type knifeSearchResultRow struct {
+	Name      string
+	Automatic struct {
+		CloudV2 *knifeSearchResultCloudV2 `json:"cloud_v2"`
+		Ipaddress string
 	}
+}
+
+type knifeSearchResultCloudV2 struct {
+	PublicHostname string `json:"public_hostname"`
+	PublicIpv4     string `json:"public_ipv4"`
+}
+
+type knifeSearchResultRowIpExtractor interface {
+	Extract(knifeSearchResultRow) string
+	GetResultType() knifeSearchResultType
+}
+
+type realKnifeSearchResultRowIpExtractor struct {
+	resultType knifeSearchResultType
+}
+
+func (e realKnifeSearchResultRowIpExtractor) Extract(row knifeSearchResultRow) string {
+	if row.Automatic.CloudV2 != nil {
+		if e.resultType == publicHostname {
+			return row.Automatic.CloudV2.PublicHostname
+		}
+		return row.Automatic.CloudV2.PublicIpv4
+	}
+	return row.Automatic.Ipaddress
+}
+
+func (e realKnifeSearchResultRowIpExtractor) GetResultType() knifeSearchResultType {
+	return e.resultType
 }
 
 func (d *knifeSearch) Discover(input string) []string {
@@ -45,7 +72,7 @@ func (d *knifeSearch) Discover(input string) []string {
 		util.Panicf("Knife lookup failed: %s\nOutput:\n%s", outputs.Error, outputs.Combined)
 	}
 
-	data := searchResult{}
+	data := knifeSearchResult{}
 	if err := json.Unmarshal(outputs.Stdout, &data); err != nil {
 		util.Panicf("Failed to parse knife search result: %s", err)
 	}
@@ -53,29 +80,18 @@ func (d *knifeSearch) Discover(input string) []string {
 
 	var ips = []string{}
 	for _, row := range data.Rows {
-		var thisIp string = ""
-		if row.Automatic.CloudV2 != nil {
-			if d.resultType == publicHostname {
-				thisIp = row.Automatic.CloudV2.PublicHostname
-			} else {
-				thisIp = row.Automatic.CloudV2.PublicIpv4
-			}
-		} else {
-			thisIp = row.Automatic.Ipaddress
-		}
-		ips = append(ips, thisIp)
+		ips = append(ips, d.extractor.Extract(row))
 	}
 
 	return ips
 }
 func (d *knifeSearch) SetArgs(args []interface{}) {
-	if len(args) > 0 {
-		util.Panicf("%s takes no configuration, got %s", d, args)
-	}
+	util.RequireNoArguments(d, args)
 }
+
 func (d *knifeSearch) String() string {
 	var rawName string
-	if d.resultType == publicHostname {
+	if d.extractor.GetResultType() == publicHostname {
 		rawName = nameKnifeHostname
 	} else {
 		rawName = nameKnife
