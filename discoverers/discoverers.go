@@ -1,9 +1,6 @@
 package discoverers
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/abesto/easyssh/fromsexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/util"
@@ -58,33 +55,4 @@ func makeByName(name string) interface{} {
 		util.Panicf("Discoverer \"%s\" is not known", name)
 	}
 	return d
-}
-
-type firstMatching struct {
-	discoverers []interfaces.Discoverer
-}
-
-func (d *firstMatching) Discover(input string) []string {
-	var hosts []string
-	for _, discoverer := range d.discoverers {
-		util.Logger.Debugf("Trying discoverer %s", discoverer)
-		hosts = discoverer.Discover(input)
-		if len(hosts) > 0 {
-			return hosts
-		}
-	}
-	return []string{}
-}
-func (d *firstMatching) SetArgs(args []interface{}) {
-	d.discoverers = []interfaces.Discoverer{}
-	for _, exp := range args {
-		d.discoverers = append(d.discoverers, makeFromSExp(exp.([]interface{})))
-	}
-}
-func (d *firstMatching) String() string {
-	var strs = []string{}
-	for _, child := range d.discoverers {
-		strs = append(strs, child.String())
-	}
-	return fmt.Sprintf("<%s %s>", nameFirstMatching, strings.Join(strs, " "))
 }
