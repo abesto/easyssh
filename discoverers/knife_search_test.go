@@ -145,3 +145,35 @@ func TestKnifeHappyPath(t *testing.T) {
 	util.AssertStringListEquals(t, expectedIps, actualIps)
 	util.VerifyMocks(t, e, r)
 }
+
+func TestKnifeIpExtractor(t *testing.T) {
+	cases := []struct {
+		resultType     knifeSearchResultType
+		input          knifeSearchResultRow
+		expectedOutput string
+	}{
+		{resultType: publicIp, expectedOutput: "a.ip", input: knifeSearchResultRow{
+			Automatic: knifeSearchResultRowAutomatic{
+				CloudV2: &knifeSearchResultCloudV2{
+					PublicIpv4: "a.ip"}}}},
+		{resultType: publicIp, expectedOutput: "b.noncloud-ip", input: knifeSearchResultRow{
+			Automatic: knifeSearchResultRowAutomatic{
+				Ipaddress: "b.noncloud-ip"}}},
+		{resultType: publicHostname, expectedOutput: "c.hostname", input: knifeSearchResultRow{
+			Automatic: knifeSearchResultRowAutomatic{
+				CloudV2: &knifeSearchResultCloudV2{
+					PublicHostname: "c.hostname"}}}},
+		{resultType: publicHostname, expectedOutput: "d.noncloud-ip", input: knifeSearchResultRow{
+			Automatic: knifeSearchResultRowAutomatic{
+				Ipaddress: "d.noncloud-ip"}}},
+	}
+	for _, c := range cases {
+		e := realKnifeSearchResultRowIpExtractor{c.resultType}
+		if e.GetResultType() != c.resultType {
+			t.Error("resultType", c, e)
+		}
+		if actualOutput := e.Extract(c.input); actualOutput != c.expectedOutput {
+			t.Error("output", c, e, actualOutput)
+		}
+	}
+}

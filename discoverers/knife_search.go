@@ -26,10 +26,12 @@ type knifeSearchResult struct {
 
 type knifeSearchResultRow struct {
 	Name      string
-	Automatic struct {
-		CloudV2   *knifeSearchResultCloudV2 `json:"cloud_v2"`
-		Ipaddress string
-	}
+	Automatic knifeSearchResultRowAutomatic
+}
+
+type knifeSearchResultRowAutomatic struct {
+	CloudV2   *knifeSearchResultCloudV2 `json:"cloud_v2"`
+	Ipaddress string
 }
 
 type knifeSearchResultCloudV2 struct {
