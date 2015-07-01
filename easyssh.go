@@ -30,7 +30,8 @@ func main() {
 		if err := recover(); err != nil {
 			switch err.(type) {
 			case string:
-				util.Panicf(err.(string))
+				util.Logger.Critical(err.(string))
+				os.Exit(1)
 			default:
 				panic(err)
 			}
