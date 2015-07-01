@@ -16,7 +16,7 @@ const (
 )
 
 type knifeSearch struct {
-	extractor knifeSearchResultRowIpExtractor
+	extractor     knifeSearchResultRowIpExtractor
 	commandRunner util.CommandRunner
 }
 
@@ -27,7 +27,7 @@ type knifeSearchResult struct {
 type knifeSearchResultRow struct {
 	Name      string
 	Automatic struct {
-		CloudV2 *knifeSearchResultCloudV2 `json:"cloud_v2"`
+		CloudV2   *knifeSearchResultCloudV2 `json:"cloud_v2"`
 		Ipaddress string
 	}
 }

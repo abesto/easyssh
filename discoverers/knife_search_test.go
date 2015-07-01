@@ -3,12 +3,14 @@ package discoverers
 import (
 	"testing"
 
+	"encoding/json"
+
 	"github.com/abesto/easyssh/util"
 	"github.com/maraino/go-mock"
-	"encoding/json"
+	"errors"
 )
 
-func TestKnifeSearchStringViaMake(t *testing.T) {
+func TestKnifeStringViaMake(t *testing.T) {
 	cases := []struct {
 		input   string
 		structs string
@@ -29,7 +31,7 @@ func TestKnifeSearchStringViaMake(t *testing.T) {
 	}
 }
 
-func TestKnifeSearchMakeWithArgument(t *testing.T) {
+func TestKnifeMakeWithArgument(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(knife foo)", "[knife foo]")
 		util.ExpectPanic(t, "<knife> doesn't take any arguments, got 1: [foo]", func() { Make("(knife foo)") })
@@ -73,18 +75,20 @@ func givenKnifeSearchResultWithCloudV2(values ...string) knifeSearchResult {
 func knifeReturnsWithCloudV2(r *util.MockCommandRunner, input string, data knifeSearchResult) {
 	jsonData, _ := json.Marshal(data)
 	outputs := util.CommandRunnerOutputs{
-		Error: nil,
-		Stdout: jsonData,
+		Error:    nil,
+		Stdout:   jsonData,
 		Combined: []byte("Junk\n" + string(jsonData) + "\nMore junk\n"),
 	}
-	r.When("Outputs", "knife", []string{"search", "node", "-F", "json", input}).Return(outputs)
+	whenKnifeSearch(r, input).Return(outputs)
 }
 
-func TestNoColonInSearchString(t *testing.T) {
+func whenKnifeSearch(r *util.MockCommandRunner, input string) *mock.MockFunction {
+	return r.When("Outputs", "knife", []string{"search", "node", "-F", "json", input})
+}
+
+func TestKnifeNoColonInSearchString(t *testing.T) {
 	s, e, r := givenAMockedKnifeSearch()
 	input := "no colon at all"
-	data := givenKnifeSearchResultWithCloudV2("alpha", "beta")
-	knifeReturnsWithCloudV2(r, input, data)
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("Host lookup string doesn't contain ':', it won't match anything in a knife search node query")
 		e.When("Extract", mock.Any).Times(0)
@@ -92,6 +96,19 @@ func TestNoColonInSearchString(t *testing.T) {
 		if len(s.Discover(input)) != 0 {
 			t.Fail()
 		}
+	})
+	util.VerifyMocks(t, e, r)
+}
+
+func TestKnifeError(t *testing.T) {
+	s, e, r := givenAMockedKnifeSearch()
+	input := "name:whatever"
+	err := "knife run failed"
+	whenKnifeSearch(r, input).Return(util.CommandRunnerOutputs{Error: errors.New(err), Combined: []byte("Foo\nBar")})
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
+		l.ExpectInfof("Looking up nodes with knife matching %s", input)
+		e.When("Extract", mock.Any).Times(0)
+		util.ExpectPanic(t, "Knife lookup failed: knife run failed\nOutput:\nFoo\nBar", func() { s.Discover(input) })
 	})
 	util.VerifyMocks(t, e, r)
 }
