@@ -34,7 +34,7 @@ func (f *external) Filter(targets []target.Target) []target.Target {
 		util.Panicf(err.Error())
 	}
 	tmpFile.Write([]byte(strings.Join(target.Strings(targets), "\n")))
-	output := f.commandRunner.RunWithStdinGetOutputOrPanic(os.Stdin, f.argv[0], append(f.argv[1:], tmpFile.Name()))
+	output := f.commandRunner.CombinedOutputWithStdinOrPanic(os.Stdin, f.argv[0], append(f.argv[1:], tmpFile.Name()))
 	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
 	newTargets := make([]target.Target, len(lines))
 	for i := 0; i < len(lines); i++ {

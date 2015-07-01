@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+
 	"strings"
 
 	"github.com/abesto/easyssh/target"
@@ -49,16 +50,16 @@ func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
 		if len(instanceId) > 0 {
 			util.Logger.Infof("EC2 Instance lookup: %s in %s", instanceId, f.region)
 
-			output, err := f.commandRunner.RunGetOutput("aws", []string{"ec2", "describe-instances", "--instance-id", instanceId, "--region", f.region})
-			util.Logger.Debugf("Response from AWS API: %s", output)
-			if err != nil {
-				util.Logger.Infof("EC2 Instance lookup failed for %s (%s) in region %s (aws command failed): %s", t.Host, instanceId, f.region, strings.TrimSpace(string(output)))
+			outputs := f.commandRunner.Outputs("aws", []string{"ec2", "describe-instances", "--instance-id", instanceId, "--region", f.region})
+			util.Logger.Debugf("Response from AWS API: %s", outputs.Combined)
+			if outputs.Error != nil {
+				util.Logger.Infof("EC2 Instance lookup failed for %s (%s) in region %s (aws command failed): %s", t.Host, instanceId, f.region, strings.TrimSpace(string(outputs.Combined)))
 				continue
 			}
 
 			var data ec2DescribeInstanceApiResponse
-			if err = json.Unmarshal(output, &data); err != nil {
-				panic(fmt.Sprintf("Invalid JSON returned by AWS API.\nError: %s\nJSON follows this line\n%s", err.Error(), output))
+			if err := json.Unmarshal(outputs.Combined, &data); err != nil {
+				panic(fmt.Sprintf("Invalid JSON returned by AWS API.\nError: %s\nJSON follows this line\n%s", err.Error(), outputs.Combined))
 			}
 
 			if data.Reservations == nil || len(data.Reservations) == 0 {

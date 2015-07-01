@@ -26,17 +26,17 @@ type MockCommandRunner struct {
 	mock.Mock
 }
 
-func (r *MockCommandRunner) RunWithStdinGetOutputOrPanic(stdin io.Reader, name string, args []string) []byte {
+func (r *MockCommandRunner) CombinedOutputWithStdinOrPanic(stdin io.Reader, name string, args []string) []byte {
 	ret := r.Called(stdin, name, args)
 	return ret.Bytes(0)
 }
-func (r *MockCommandRunner) RunGetOutputOrPanic(name string, args []string) []byte {
+func (r *MockCommandRunner) CombinedOutputOrPanic(name string, args []string) []byte {
 	ret := r.Called(name, args)
 	return ret.Bytes(0)
 }
-func (r *MockCommandRunner) RunGetOutput(name string, args []string) ([]byte, error) {
+func (r *MockCommandRunner) Outputs(name string, args []string) CommandRunnerOutputs {
 	ret := r.Called(name, args)
-	return ret.Bytes(0), ret.Error(1)
+	return ret.GetType(0, CommandRunnerOutputs{}).(CommandRunnerOutputs)
 }
 
 type MockLogger struct {

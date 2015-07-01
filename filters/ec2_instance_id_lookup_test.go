@@ -92,7 +92,8 @@ func givenAnEc2InstanceIdLookupWithMockedParserAndRunner(shouldMatch bool) (*uti
 }
 
 func awsReturns(r *util.MockCommandRunner, instanceId string, region string, output string, err error) *mock.MockFunction {
-	return r.When("RunGetOutput", "aws", []string{"ec2", "describe-instances", "--instance-id", instanceId, "--region", region}).Return([]byte(output), err)
+	return r.When("Outputs", "aws", []string{"ec2", "describe-instances", "--instance-id", instanceId, "--region", region}).Return(
+		util.CommandRunnerOutputs{Combined: []byte(output), Error: err})
 }
 
 func assertFilterResults(t *testing.T, f *ec2InstanceIdLookup, input []target.Target, expectedOutput []target.Target) {
@@ -149,7 +150,7 @@ func jsonWithoutReservations() string {
 }
 
 func jsonWithIp(ip string) string {
-	bytes, _ := json.Marshal(ec2DescribeInstanceApiResponse{Reservations: []ec2Reservation{ec2Reservation{Instances: []ec2Instance{ec2Instance{PublicIpAddress: ip}}}}})
+	bytes, _ := json.Marshal(ec2DescribeInstanceApiResponse{Reservations: []ec2Reservation{{Instances: []ec2Instance{{PublicIpAddress: ip}}}}})
 	return string(bytes)
 }
 

@@ -63,7 +63,7 @@ func TestExternalOperation(t *testing.T) {
 	f := Make("(external grep -v bar)").(*external)
 	// Will call "grep -v bar", which will return "foo\baz"
 	r := &util.MockCommandRunner{}
-	r.When("RunWithStdinGetOutputOrPanic", os.Stdin, "grep", []string{"-v", "bar", os.Stdin.Name()}).Return([]byte("foo\nbaz")).Times(1)
+	r.When("CombinedOutputWithStdinOrPanic", os.Stdin, "grep", []string{"-v", "bar", os.Stdin.Name()}).Return([]byte("foo\nbaz")).Times(1)
 	f.commandRunner = r
 	// Via this temporary file
 	m := &mockTmpFileMaker{}
