@@ -34,7 +34,7 @@ func makeFromSExp(data []interface{}) interfaces.Executor {
 
 const (
 	nameSshLogin        = "ssh-login"
-	nameCsshx           = "knife"
+	nameCsshx           = "csshx"
 	nameSshExec         = "ssh-exec"
 	nameSshExecParallel = "ssh-exec-parallel"
 	nameTmuxCssh        = "tmux-cssh"
