@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	"sort"
+
 	"github.com/abesto/easyssh/fromsexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
-	"sort"
 )
 
 func Make(input string) interfaces.Executor {

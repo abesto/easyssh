@@ -9,9 +9,10 @@ import (
 	"bufio"
 	"bytes"
 
+	"strings"
+
 	"github.com/alexcesaro/log"
 	"github.com/alexcesaro/log/golog"
-	"strings"
 )
 
 func Panicf(msg string, args ...interface{}) {

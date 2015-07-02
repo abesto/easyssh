@@ -1,10 +1,11 @@
 package discoverers
 
 import (
+	"sort"
+
 	"github.com/abesto/easyssh/fromsexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/util"
-	"sort"
 )
 
 func Make(input string) interfaces.Discoverer {
