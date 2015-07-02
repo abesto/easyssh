@@ -12,7 +12,7 @@ It's for you if having a single alias that does the following makes you excited:
  * `s -lroot myhost.com /etc/init.d/apache2 reload` reloads apache
  * `s app.myhost.com,db.myhost.com uptime` runs uptime on both hosts (parallelly, which is interesting if you run longer-running commands)
  * `s -lroot roles:app /etc/init.d/apache2 reload` parallelly reloads apache on all nodes that have the role `app` in Chef
- * If you provide a hostname that looks like it includes an EC2 instance id, it uses the `aws` CLI tool to look up the public IP, and uses that.
+ * `s i-deadbeef` looks up the EC2 instance id using `aws`, and logs in to the host
 
 ## Installation
 
