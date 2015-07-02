@@ -135,3 +135,11 @@ Most of these executors are in fact constructed using the following low-level ex
 
 For example `tmux-cssh` is `(assert-no-command (external-interactive tmux-cssh))`.
 
+## Contributing
+
+All feedback and feature requests are welcome. Pull-requests are even more welcome :)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for a quick rundown of how and where to start.
+
+## License
+
+`easyssh` is licensed under [ISC](http://opensource.org/licenses/ISC). See the [LICENSE.txt](LICENSE.txt) file.
