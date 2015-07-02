@@ -111,12 +111,27 @@ Discoverer, filter and executor definitions are [S-Expressions](https://en.wikip
 
 ### Executors
 
-| Name      | Arguments   | Required targets | Command | Description |
-|-----------|-------------|------------------|---------|-------------|
-| `ssh-login` | - | 1 | rejects | Logs in to the target using SSH |
-| `ssh-exec` | - | >0 | requires | Executes the command on each target sequentially |
-| `ssh-exec-parallel` | - | >0 | requires | Executes the command on each target parallelly |
-| `csshx` | - | >0 | rejects | Uses `csshx` to log in to all the targets |
-| `tmux-cssh` | - | >0 | rejects | Uses `tmux-cssh` to log in to all the targets |
-| `if-one-target` | exactly two executors | >0 | pass-through | If there's one target, it calls the executor in its first argument. Otherwise the executor in its second argument. |
-| `if-command` | exactly two executors | N/A | pass-through | Alias: `if-args`. If a command was defined, it calls the executor in its first argument. Otherwise the executor in its second argument. |
+| Name      | Arguments   | Command | Description |
+|-----------|-------------|---------|-------------|
+| `ssh-login` | - | rejects | Logs in to each target sequentially using SSH |
+| `ssh-exec` | - | requires | Executes the command on each target sequentially |
+| `ssh-exec-parallel` | - | requires | Executes the command on each target parallelly |
+| `csshx` | - | rejects | Uses `csshx` to log in to all the targets |
+| `tmux-cssh` | - | rejects | Uses `tmux-cssh` to log in to all the targets |
+| `if-one-target` | exactly two executors | pass-through | If there's one target, it calls the executor in its first argument. Otherwise the executor in its second argument. |
+| `if-command` | Exactly two executors | pass-through | Alias: `if-args`. If a command was defined, it calls the executor in its first argument. Otherwise the executor in its second argument. |
+
+Most of these executors are in fact constructed using the following low-level executors:
+
+| Name      | Arguments   | Description |
+|-----------|-------------|-------------|
+| `assert-command` | Exactly one executor | Fails if no command was provided; calls its argument otherwise. |
+| `assert-no-command` | Exactly one executor | Fails if a command was provided; calls its argument otherwise. |
+| `external` | At least one string | Runs `arguments targets command`, prefixing each output line with a timestamp and the hostname. For example `(external csshx)` would run `csshx host1 host2 command`. |
+| `external-interactive` | At least one string | Same as `external`, except output lines are not prefixed. |
+| `external-sequential` | At least one string | Runs its arguments against each target sequentially, prefixing each output line with a timestamp and the hostname. For example `(external-sequential ssh)` with the command `hostname` would run `ssh host1 hostname; ssh host2 hostname; ...`||
+| `external-sequential-interactive` | At least one string | Same as `external-sequential`, except output lines are not prefixed. |
+| `external-parallel` | At least one string | Runs its arguments against each target parallelly, prefixing each output line with a timestamp and the hostname. |
+
+For example `tmux-cssh` is `(assert-no-command (external-interactive tmux-cssh))`.
+

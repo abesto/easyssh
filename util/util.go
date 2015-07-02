@@ -11,6 +11,7 @@ import (
 
 	"github.com/alexcesaro/log"
 	"github.com/alexcesaro/log/golog"
+	"strings"
 )
 
 func Panicf(msg string, args ...interface{}) {
@@ -139,4 +140,82 @@ func (c RealCommandRunner) Outputs(name string, args []string) CommandRunnerOutp
 	outputs.Stdout = stdoutBuffer.Bytes()
 
 	return outputs
+}
+
+type InteractiveCommandRunnerJob struct {
+	Interactive bool
+	Label       string
+	Argv        []string
+}
+
+func (job InteractiveCommandRunnerJob) Command() *exec.Cmd {
+	cmd := exec.Command(job.Argv[0], job.Argv[1:]...)
+	cmd.Stdin = os.Stdin
+	cmd.Env = os.Environ()
+
+	if job.Interactive {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	} else {
+		makeCommandLogged(job.Label, cmd)
+	}
+
+	return cmd
+}
+
+type InteractiveCommandRunner interface {
+	Run(job InteractiveCommandRunnerJob)
+	RunParallel(jobs []InteractiveCommandRunnerJob)
+}
+
+type RealInteractiveCommandRunner struct{}
+
+func (e RealInteractiveCommandRunner) Run(job InteractiveCommandRunnerJob) {
+	job.Argv[0] = LookPathOrAbort(job.Argv[0])
+	Logger.Infof("Executing %s", job.Argv)
+	cmd := job.Command()
+	err := cmd.Run()
+	if err != nil {
+		Panicf("%s failed: %s", cmd.Args, err)
+	}
+}
+
+func (e RealInteractiveCommandRunner) RunParallel(jobs []InteractiveCommandRunnerJob) {
+	cmds := make([]*exec.Cmd, len(jobs))
+	for i, job := range jobs {
+		job.Argv[0] = LookPathOrAbort(job.Argv[0])
+		cmds[i] = job.Command()
+		Logger.Debugf("Executing %s", cmds[i].Args)
+		cmds[i].Start()
+	}
+	for _, cmd := range cmds {
+		err := cmd.Wait()
+		if err != nil {
+			Logger.Errorf("%s: %s", cmd.Args, err)
+		}
+	}
+}
+
+func makeCommandLogged(prefix string, cmd *exec.Cmd) {
+	prefixStdout := fmt.Sprintf("[%s] (STDOUT)", prefix)
+	prefixStderr := fmt.Sprintf("[%s] (STDERR)", prefix)
+	cmd.Stdout = newPrefixedLogWriterProxy(prefixStdout, os.Stdout)
+	cmd.Stderr = newPrefixedLogWriterProxy(prefixStderr, os.Stderr)
+}
+
+type prefixedLogWriterProxy struct {
+	prefix string
+	logger *golog.Logger
+}
+
+func newPrefixedLogWriterProxy(prefix string, file *os.File) prefixedLogWriterProxy {
+	return prefixedLogWriterProxy{prefix: prefix, logger: golog.New(file, log.Debug)}
+}
+func (w prefixedLogWriterProxy) Write(p []byte) (n int, err error) {
+	var logger = *w.logger
+	var lines = strings.Split(strings.TrimSpace(string(p)), "\n")
+	for _, line := range lines {
+		logger.Notice(w.prefix, line)
+	}
+	return len(p), nil
 }

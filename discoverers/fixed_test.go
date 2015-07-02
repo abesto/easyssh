@@ -9,11 +9,9 @@ import (
 func TestFixedStringViaMake(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		input := "(const \"foo\" bar)"
-		structs := "[const foo bar]"
-		final := "<fixed [foo bar]>"
-		l.ExpectDebugf("MakeFromString %s -> %s", input, structs)
-		l.ExpectDebugf("Alias: %s -> %s", "const", "fixed")
-		l.ExpectDebugf("Make %s -> %s", structs, final)
+		l.ExpectDebugf("MakeFromString %s -> %s", input, "[const foo bar]")
+		l.ExpectDebugf("Transform: %s -> %s", "[const foo bar]", "[fixed foo bar]")
+		l.ExpectDebugf("Make %s -> %s", "[fixed foo bar]", "<fixed [foo bar]>")
 		Make(input)
 	})
 }

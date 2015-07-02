@@ -4,6 +4,7 @@ import (
 	"github.com/abesto/easyssh/fromsexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/util"
+	"sort"
 )
 
 func Make(input string) interfaces.TargetFilter {
@@ -17,6 +18,7 @@ func SupportedFilterNames() []string {
 		keys[i] = key
 		i++
 	}
+	sort.Strings(keys)
 	return keys
 }
 

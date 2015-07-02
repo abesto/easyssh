@@ -4,24 +4,34 @@ import (
 	"github.com/abesto/easyssh/fromsexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/util"
+	"sort"
 )
 
 func Make(input string) interfaces.Discoverer {
-	return fromsexp.MakeFromString(input, aliases, makeByName).(interfaces.Discoverer)
+	return fromsexp.MakeFromString(input, sexpTransforms, makeByName).(interfaces.Discoverer)
 }
 
 func SupportedDiscovererNames() []string {
-	var keys = make([]string, len(discovererMakerMap))
-	var i = 0
+	names := make([]string, len(discovererMakerMap)+len(sexpTransforms))
+
+	// Normal discoverers
+	for i := 0; i < len(sexpTransforms); i++ {
+		names[i] = sexpTransforms[i].Name
+	}
+
+	// Aliases
+	i := len(sexpTransforms)
 	for key := range discovererMakerMap {
-		keys[i] = key
+		names[i] = key
 		i++
 	}
-	return keys
+
+	sort.Strings(names)
+	return names
 }
 
 func makeFromSExp(data []interface{}) interfaces.Discoverer {
-	return fromsexp.Make(data, aliases, makeByName).(interfaces.Discoverer)
+	return fromsexp.Make(data, sexpTransforms, makeByName).(interfaces.Discoverer)
 }
 
 const (
@@ -46,8 +56,8 @@ var discovererMakerMap = map[string]func() interfaces.Discoverer{
 	nameFixed:         func() interfaces.Discoverer { return &fixed{} },
 }
 
-var aliases = fromsexp.Aliases{
-	fromsexp.Alias{Name: nameFixed, Alias: "const"},
+var sexpTransforms = []fromsexp.SexpTransform{
+	fromsexp.Alias("const", nameFixed),
 }
 
 func makeByName(name string) interface{} {
