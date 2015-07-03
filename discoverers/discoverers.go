@@ -58,7 +58,7 @@ var discovererMakerMap = map[string]func() interfaces.Discoverer{
 }
 
 var sexpTransforms = []fromsexp.SexpTransform{
-	fromsexp.Replace("(const)", "(fixed)"),
+	fromsexp.Replace("const", "fixed"),
 }
 
 func makeByName(name string) interface{} {
