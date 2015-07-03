@@ -90,34 +90,15 @@ var executorMakerMap = map[string]func() interfaces.Executor{
 	},
 }
 
+var r = fromsexp.Replace
 var sexpTransforms = []fromsexp.SexpTransform{
-	fromsexp.Alias("if-args", nameIfCommand),
-	fromsexp.Alias("ssh-exec", "ssh-exec-sequential"),
-	fromsexp.WrapAndReplaceHead(
-		"ssh-login",
-		[]string{nameAssertNoCommand},
-		[]string{nameExternalSequentialInteractive, "ssh"},
-	),
-	fromsexp.WrapAndReplaceHead(
-		"ssh-exec-sequential",
-		[]string{nameAssertCommand},
-		[]string{nameExternalSequential, "ssh"},
-	),
-	fromsexp.WrapAndReplaceHead(
-		"ssh-exec-parallel",
-		[]string{nameAssertCommand},
-		[]string{nameExternalParallel, "ssh"},
-	),
-	fromsexp.WrapAndReplaceHead(
-		"csshx",
-		[]string{nameAssertNoCommand},
-		[]string{nameExternalInteractive, "csshx"},
-	),
-	fromsexp.WrapAndReplaceHead(
-		"tmux-cssh",
-		[]string{nameAssertNoCommand},
-		[]string{nameExternalInteractive, "tmux-cssh"},
-	),
+	r("(if-args)", "(if-command)"),
+	r("(ssh-login)", "(assert-no-command (external-sequential-interactive ssh))"),
+	r("(ssh-exec)", "(ssh-exec-sequential)"),
+	r("(ssh-exec-sequential)", "(assert-command (external-sequential ssh))"),
+	r("(ssh-exec-parallel)", "(assert-command (external-parallel ssh))"),
+	r("(csshx)", "(assert-no-command (external-interactive csshx))"),
+	r("(tmux-cssh)", "(assert-no-command (external-interactive tmux-cssh))"),
 }
 
 func makeByName(name string) interface{} {
@@ -185,18 +166,15 @@ type external struct {
 	interactive   bool
 }
 
-func (e *external) Exec(targets []target.Target, command []string) {
-	util.RequireArgumentsAtLeast(e, 1, e.initialArgs)
-	if e.mode == externalModeSingleRun {
-		job := util.InteractiveCommandRunnerJob{
-			Interactive: e.interactive,
-			Label:       strings.Join(target.Strings(targets), " "),
-			Argv:        append(e.args, append(target.Strings(targets), command...)...),
-		}
-		e.commandRunner.Run(job)
-		return
+func (e *external) makeSingleRunJob(targets []target.Target, command []string) util.InteractiveCommandRunnerJob {
+	return util.InteractiveCommandRunnerJob{
+		Interactive: e.interactive,
+		Label:       strings.Join(target.Strings(targets), " "),
+		Argv:        append(e.args, append(target.Strings(targets), command...)...),
 	}
+}
 
+func (e *external) makeJobPerTarget(targets []target.Target, command []string) []util.InteractiveCommandRunnerJob {
 	jobs := make([]util.InteractiveCommandRunnerJob, len(targets))
 	for i, target := range targets {
 		jobs[i] = util.InteractiveCommandRunnerJob{
@@ -205,13 +183,20 @@ func (e *external) Exec(targets []target.Target, command []string) {
 			Argv:        append(e.args, append([]string{target.String()}, command...)...),
 		}
 	}
-	if e.mode == externalModeSequential {
-		for _, job := range jobs {
+	return jobs
+}
+
+func (e *external) Exec(targets []target.Target, command []string) {
+	util.RequireArgumentsAtLeast(e, 1, e.initialArgs)
+	if e.mode == externalModeSingleRun {
+		e.commandRunner.Run(e.makeSingleRunJob(targets, command))
+	} else if e.mode == externalModeSequential {
+		for _, job := range e.makeJobPerTarget(targets, command) {
 			e.commandRunner.Run(job)
 		}
 	} else if e.mode == externalModeParallel {
 		util.Logger.Infof("Parallelly executing %s on %s", command, targets)
-		e.commandRunner.RunParallel(jobs)
+		e.commandRunner.RunParallel(e.makeJobPerTarget(targets, command))
 	} else {
 		util.Panicf("Unknown externalMode %s", e.mode)
 	}

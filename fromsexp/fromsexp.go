@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/shanehanna/sexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/util"
+	"reflect"
 )
 
 func MakeFromString(input string, transforms []SexpTransform, makeByName func(name string) interface{}) interface{} {
@@ -45,46 +46,20 @@ type SexpTransform struct {
 	Transform SexpTransformFunction
 }
 
-func isFirstItem(input []interface{}, this string) bool {
-	switch input[0].(type) {
-	case []byte:
-		return string(input[0].([]byte)) == this
-	default:
-		return false
+func Replace(original string, replacement string) SexpTransform {
+	originalData, err := sexp.Unmarshal([]byte(original))
+	if err != nil {
+		panic(err)
 	}
-}
-
-func Alias(from string, to string) SexpTransform {
+	replacementData, err := sexp.Unmarshal([]byte(replacement))
+	if err != nil {
+		panic(err)
+	}
 	return SexpTransform{
-		Name:    from,
-		Matches: func(input []interface{}) bool { return isFirstItem(input, from) },
+		Name:    string(originalData[0].([]byte)),
+		Matches: func(input []interface{}) bool { return reflect.DeepEqual(originalData, input) },
 		Transform: func(input []interface{}) []interface{} {
-			output := make([]interface{}, len(input))
-			copy(output, input)
-			output[0] = []byte(to)
-			return output
-		},
-	}
-}
-
-func wrap(input []interface{}, with string) []interface{} {
-	return []interface{}{[]byte(with), input}
-}
-
-func WrapAndReplaceHead(ifNameIs string, wrapWith []string, replaceHeadWith []string) SexpTransform {
-	return SexpTransform{
-		Name:    ifNameIs,
-		Matches: func(input []interface{}) bool { return isFirstItem(input, ifNameIs) },
-		Transform: func(data []interface{}) []interface{} {
-			replaceHeadWithInterfaces := make([]interface{}, len(replaceHeadWith))
-			for i, s := range replaceHeadWith {
-				replaceHeadWithInterfaces[i] = []byte(s)
-			}
-			data = append(replaceHeadWithInterfaces, data[1:]...)
-			for _, wrapper := range wrapWith {
-				data = wrap(data, wrapper)
-			}
-			return data
+			return replacementData
 		},
 	}
 }
