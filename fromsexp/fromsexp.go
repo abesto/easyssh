@@ -1,10 +1,11 @@
 package fromsexp
 
 import (
+	"reflect"
+
 	"bitbucket.org/shanehanna/sexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/util"
-	"reflect"
 )
 
 func MakeFromString(input string, transforms []SexpTransform, makeByName func(name string) interface{}) interface{} {
@@ -60,6 +61,22 @@ func Replace(original string, replacement string) SexpTransform {
 		Matches: func(input []interface{}) bool { return reflect.DeepEqual(originalData, input) },
 		Transform: func(input []interface{}) []interface{} {
 			return replacementData
+		},
+	}
+}
+
+func Alias(from string, to string) SexpTransform {
+	fromBytes := []byte(from)
+	return SexpTransform{
+		Name: from,
+		Matches: func(input []interface{}) bool {
+			return reflect.DeepEqual(input[0], fromBytes)
+		},
+		Transform: func(input []interface{}) []interface{} {
+			output := make([]interface{}, len(input))
+			copy(output[1:], input[1:])
+			output[0] = []byte(to)
+			return output
 		},
 	}
 }
