@@ -49,7 +49,6 @@ const (
 	nameExternalParallel              = "external-parallel"
 	nameIfOneTarget                   = "if-one-target"
 	nameIfCommand                     = "if-command"
-	nameNoop                          = "noop"
 )
 
 var executorMakerMap = map[string]func() interfaces.Executor{
