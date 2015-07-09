@@ -111,6 +111,8 @@ Discoverer, filter and executor definitions are [S-Expressions](https://en.wikip
 
 ### Executors
 
+First, some executors that integrate "external" tools, like `ssh` and `csshx`:
+
 | Name      | Arguments   | Command | Description |
 |-----------|-------------|---------|-------------|
 | `ssh-login` | - | rejects | Logs in to each target sequentially using SSH |
@@ -118,22 +120,55 @@ Discoverer, filter and executor definitions are [S-Expressions](https://en.wikip
 | `ssh-exec-parallel` | - | requires | Executes the command on each target parallelly |
 | `csshx` | - | rejects | Uses `csshx` to log in to all the targets |
 | `tmux-cssh` | - | rejects | Uses `tmux-cssh` to log in to all the targets |
+
+You can use the following combinators for run-time decisions on which executor to use:
+
+| Name      | Arguments   | Command | Description |
+|-----------|-------------|---------|-------------|
 | `if-one-target` | exactly two executors | pass-through | If there's one target, it calls the executor in its first argument. Otherwise the executor in its second argument. |
 | `if-command` | Exactly two executors | pass-through | Alias: `if-args`. If a command was defined, it calls the executor in its first argument. Otherwise the executor in its second argument. |
 
-Most of these executors are in fact constructed using the following low-level executors:
+The executors calling external commands are implemented using the following low-level executors; you can use them directly if a tool you need is not supported above - feel free to send a PR to provide user-friendly support, of course.
+
+<table>
+  <tr>
+    <th></th>
+    <th>Single</th>
+    <th>Sequential</th>
+    <th>Parallel</th>
+  </tr>
+  <tr>
+    <th>Timestamp</th>
+    <td><code>execute</code></td>
+    <td><code>execute-sequential</code></td>
+    <td><code>execute-parallel</code></td>
+  </tr>
+  <tr>
+    <th>Interactive</th>
+    <td><code>execute-interactive</code></td>
+    <td><code>execute-sequential-interactive</code></td>
+    <td>-</td>
+  </tr>
+</table>
+
+**Single**: A single run of the specified external command, with all the targets passed as arguments to it.<br>
+**Sequential**: The command is run once for each target, sequentially.<br>
+**Parallel**: The command is run once for each target, parallelly.<br>
+**Timestamp**: Recommended for non-interactive tools. Each output line is prefixed with a timestamp. This is achieved by intercepting both `STDOUT` and `STDERR`. If the command does detection of terminal features, this usually results in it not emitting control sequences (ie. no colors)<br>
+**Interactive**: Recommended for interactive in-terminal tools. `STDOUT` and `STDERR` are passed directly to the command.
+
+Finally, you can use these combinators to fail early if an executor would be called incorrectly.
 
 | Name      | Arguments   | Description |
 |-----------|-------------|-------------|
 | `assert-command` | Exactly one executor | Fails if no command was provided; calls its argument otherwise. |
 | `assert-no-command` | Exactly one executor | Fails if a command was provided; calls its argument otherwise. |
-| `external` | At least one string | Runs `arguments targets command`, prefixing each output line with a timestamp and the hostname. For example `(external csshx)` would run `csshx host1 host2 command`. |
-| `external-interactive` | At least one string | Same as `external`, except output lines are not prefixed. |
-| `external-sequential` | At least one string | Runs its arguments against each target sequentially, prefixing each output line with a timestamp and the hostname. For example `(external-sequential ssh)` with the command `hostname` would run `ssh host1 hostname; ssh host2 hostname; ...`||
-| `external-sequential-interactive` | At least one string | Same as `external-sequential`, except output lines are not prefixed. |
-| `external-parallel` | At least one string | Runs its arguments against each target parallelly, prefixing each output line with a timestamp and the hostname. |
 
-For example `tmux-cssh` is `(assert-no-command (external-interactive tmux-cssh))`.
+Some examples of how these are used to provide the built-in integrations with external tools (the full list is in [executors.go](executors/executors.go), in `sexpTransforms`):
+
+ * `ssh-login`: `(assert-no-command (external-sequential-interactive ssh))`
+ * `ssh-exec-parallel`: `(assert-command (external-parallel ssh))`
+ * `tmux-cssh`: `(assert-no-command (external-interactive tmux-cssh))`
 
 ## Contributing
 
