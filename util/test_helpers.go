@@ -5,6 +5,8 @@ import (
 	"io"
 	"testing"
 
+	"reflect"
+
 	"github.com/alexcesaro/log"
 	"github.com/maraino/go-mock"
 )
@@ -205,7 +207,7 @@ func AssertInterfaceListEquals(t *testing.T, expected []interface{}, actual []in
 		t.Errorf("len expected=%d actual=%d", len(expected), len(actual))
 	}
 	for i := 0; i < len(expected); i++ {
-		if expected[i] != actual[i] {
+		if !reflect.DeepEqual(expected[i], actual[i]) {
 			t.Errorf("Lists not equal, first diff at index %d\nExpected %s\nActual %s\nExpected list: %s\nActual list: %s",
 				i, expected[i], actual[i], expected, actual)
 		}
