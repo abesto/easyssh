@@ -221,10 +221,10 @@ type ifCommand struct {
 func (e *ifCommand) Exec(targets []target.Target, args []string) {
 	util.RequireArguments(e, 2, e.initialArgs)
 	if len(args) < 1 {
-		util.Logger.Debugf("%s got no args, using %s", e, e.withoutCommand)
+		util.Logger.Debugf("%s got no command, using %s", e, e.withoutCommand)
 		e.withoutCommand.Exec(targets, args)
 	} else {
-		util.Logger.Debugf("%s got args, using %s", e, e.withCommand)
+		util.Logger.Debugf("%s got command, using %s", e, e.withCommand)
 		e.withCommand.Exec(targets, args)
 	}
 }
