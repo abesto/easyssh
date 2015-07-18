@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
-	"github.com/maraino/go-mock"
 )
 
-var names = []string{nameAssertCommand, nameAssertNoCommand}
-var namesWithRequire = []struct {
+var assertCommandNames = []string{nameAssertCommand, nameAssertNoCommand}
+var assertCommandNamesWithRequire = []struct {
 	name    string
 	require bool
 }{
@@ -20,7 +18,7 @@ var namesWithRequire = []struct {
 }
 
 func TestAssertCommandStringViaMake(t *testing.T) {
-	for _, name := range names {
+	for _, name := range assertCommandNames {
 		util.WithLogAssertions(t, func(l *util.MockLogger) {
 			input := fmt.Sprintf("(%s (external-sequential ssh))", name)
 			structs := fmt.Sprintf("[%s [external-sequential ssh]]", name)
@@ -34,7 +32,7 @@ func TestAssertCommandStringViaMake(t *testing.T) {
 }
 
 func TestAssertCommandMakeWithoutArgument(t *testing.T) {
-	for _, name := range names {
+	for _, name := range assertCommandNames {
 		util.WithLogAssertions(t, func(l *util.MockLogger) {
 			l.ExpectDebugf("MakeFromString %s -> %s", fmt.Sprintf("(%s)", name), fmt.Sprintf("[%s]", name))
 			util.ExpectPanic(t, fmt.Sprintf("<%s %s> requires exactly 1 argument(s), got 0: []", name, nil),
@@ -44,7 +42,7 @@ func TestAssertCommandMakeWithoutArgument(t *testing.T) {
 }
 
 func TestAssertCommandMakeWithTooManyArguments(t *testing.T) {
-	for _, name := range names {
+	for _, name := range assertCommandNames {
 		util.WithLogAssertions(t, func(l *util.MockLogger) {
 			l.ExpectDebugf("MakeFromString %s -> %s", fmt.Sprintf("(%s foo bar)", name), fmt.Sprintf("[%s foo bar]", name))
 			util.ExpectPanic(t, fmt.Sprintf("<%s %s> requires exactly 1 argument(s), got 2: [foo bar]", name, nil),
@@ -54,7 +52,7 @@ func TestAssertCommandMakeWithTooManyArguments(t *testing.T) {
 }
 
 func TestAssertCommandExecWithoutSetArgs(t *testing.T) {
-	for _, item := range namesWithRequire {
+	for _, item := range assertCommandNamesWithRequire {
 		util.WithLogAssertions(t, func(l *util.MockLogger) {
 			util.ExpectPanic(t, fmt.Sprintf("<%s %s> requires exactly 1 argument(s), got 0: []", item.name, nil),
 				func() { (&assertCommand{require: item.require}).Exec([]target.Target{}, []string{}) })
@@ -63,7 +61,7 @@ func TestAssertCommandExecWithoutSetArgs(t *testing.T) {
 }
 
 func TestAssertCommandSetArgs(t *testing.T) {
-	for _, item := range namesWithRequire {
+	for _, item := range assertCommandNamesWithRequire {
 		input := fmt.Sprintf("(%s (ssh-exec))", item.name)
 		e := Make(input).(*assertCommand)
 		if e.require != item.require {
@@ -76,26 +74,6 @@ func TestAssertCommandSetArgs(t *testing.T) {
 			t.Error("initialArgs", e.initialArgs)
 		}
 	}
-}
-
-type mockExecutor struct {
-	mock.Mock
-}
-
-func (e *mockExecutor) Exec(targets []target.Target, args []string) {
-	e.Called(targets, args)
-}
-func (e *mockExecutor) SetArgs(args []interface{}) {
-	// We don't actually want to assert on this, so no call to e.Called
-}
-func (e *mockExecutor) String() string {
-	return "<mock>"
-}
-
-func withMockInMakerMap(f func()) {
-	executorMakerMap["mock"] = func() interfaces.Executor { return &mockExecutor{} }
-	f()
-	delete(executorMakerMap, "mock")
 }
 
 func TestAssertCommandGetsCommand(t *testing.T) {
