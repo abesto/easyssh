@@ -7,17 +7,17 @@
 # COVERALLS="-service drone.io -repotoken $COVERALLS_TOKEN" ./test-coverage.sh
 #
 
-echo "mode: set" > acc.out
+echo "mode: count" > acc.out
 fail=0
 
 # Standard go tooling behavior is to ignore dirs with leading underscors
 for dir in $(find . -maxdepth 10 -not -path './.git*' -not -path '*/_*' -type d);
 do
   if ls $dir/*.go &> /dev/null; then
-    go test -coverprofile=profile.out $dir || fail=1
+    go test -covermode=count -coverprofile=profile.out $dir || fail=1
     if [ -f profile.out ]
     then
-      cat profile.out | grep -v "mode: set" | grep -v "test_helpers.go" >> acc.out
+      cat profile.out | grep -v "^mode: " | grep -v "test_helpers.go" >> acc.out
       rm profile.out
     fi
   fi
