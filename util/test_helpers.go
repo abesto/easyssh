@@ -41,6 +41,18 @@ func (r *MockCommandRunner) Outputs(name string, args []string) CommandRunnerOut
 	return ret.GetType(0, CommandRunnerOutputs{}).(CommandRunnerOutputs)
 }
 
+type MockInteractiveCommandRunner struct {
+	mock.Mock
+}
+
+func (r *MockInteractiveCommandRunner) Run(job InteractiveCommandRunnerJob) {
+	r.Called(job)
+}
+
+func (r *MockInteractiveCommandRunner) RunParallel(jobs []InteractiveCommandRunnerJob) {
+	r.Called(jobs)
+}
+
 type MockLogger struct {
 	mock.Mock
 }
