@@ -140,3 +140,12 @@ func TestExternalExec(t *testing.T) {
 		})
 	}
 }
+
+func TestExternalUnknownMode(t *testing.T) {
+	var mode externalMode = 128
+	e := Make("(external ssh)").(*external)
+	e.mode = mode
+	util.ExpectPanic(t, fmt.Sprintf("Unknown externalMode %s", mode), func() {
+		e.Exec([]target.Target{}, []string{})
+	})
+}
