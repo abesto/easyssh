@@ -13,13 +13,17 @@ type Target struct {
 }
 
 func (t Target) String() string {
-	if t.Host == "" {
-		util.Panicf("Target host cannot be empty")
-	}
+	t.verify()
 	if t.User == "" {
 		return t.Host
 	}
 	return fmt.Sprintf("%s@%s", t.User, t.Host)
+}
+
+func (t Target) verify() {
+	if t.Host == "" {
+		util.Panicf("Target host cannot be empty")
+	}
 }
 
 func Strings(ts []Target) []string {
@@ -43,5 +47,6 @@ func FromString(str string) Target {
 	} else {
 		util.Panicf("FromString(str string) Target got a string containing more than one @ character")
 	}
+	target.verify()
 	return target
 }
