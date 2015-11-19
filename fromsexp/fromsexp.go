@@ -47,6 +47,13 @@ type SexpTransform struct {
 	Transform SexpTransformFunction
 }
 
+func (t SexpTransform) TransformIfMatches(input []interface{}) []interface{} {
+	if !t.Matches(input) {
+		return input
+	}
+	return t.Transform(input)
+}
+
 func Replace(original string, replacement string) SexpTransform {
 	originalData, err := sexp.Unmarshal([]byte(original))
 	if err != nil {
@@ -70,6 +77,9 @@ func Alias(from string, to string) SexpTransform {
 	return SexpTransform{
 		Name: from,
 		Matches: func(input []interface{}) bool {
+			if len(input) == 0 {
+				return false
+			}
 			return reflect.DeepEqual(input[0], fromBytes)
 		},
 		Transform: func(input []interface{}) []interface{} {

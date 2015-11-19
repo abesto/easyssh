@@ -17,7 +17,7 @@ func ExpectPanic(t *testing.T, expectedErr interface{}, f func()) {
 		if actualErr == nil {
 			t.Errorf("Expected panic(\"%s\"), got no panic", expectedErr)
 		}
-		if actualErr != expectedErr {
+		if actualErr != expectedErr && expectedErr != nil {
 			t.Errorf("Expected panic(\"%s\"), got panic(\"%s\") instead", expectedErr, actualErr)
 		}
 	}()
