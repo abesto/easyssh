@@ -13,4 +13,5 @@ before_install:
 # Tests
 script:
     - COVERALLS='-service travis-ci' ./test-coverage.sh
+    - go tool vet .
     - ./integration-tests.sh
