@@ -1,0 +1,7 @@
+server:
+  build: server
+
+client:
+  build: client
+  links:
+    - server

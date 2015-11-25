@@ -1,7 +1,16 @@
+# Docker
+sudo: required
+services:
+  - docker
+
+# Golang
 language: go
 before_install:
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
   - if ! go get code.google.com/p/go.tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+
+# Tests
 script:
     - COVERALLS='-service travis-ci' ./test-coverage.sh
+    - ./integration-tests.sh
