@@ -25,7 +25,7 @@ func TestIfCommandStringViaMake(t *testing.T) {
 func TestIfCommandMakeWithoutArgument(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(if-command)", fmt.Sprintf("[if-command]"))
-		util.ExpectPanic(t, fmt.Sprintf("<if-command %s %s> requires exactly 2 argument(s), got 0: []", nil, nil),
+		util.ExpectPanic(t, fmt.Sprintf("<if-command %v %v> requires exactly 2 argument(s), got 0: []", nil, nil),
 			func() { Make(fmt.Sprintf("(if-command)")) })
 	})
 }
@@ -33,7 +33,7 @@ func TestIfCommandMakeWithoutArgument(t *testing.T) {
 func TestIfCommandMakeWithOneArgument(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(if-command (external ssh))", fmt.Sprintf("[if-command [external ssh]]"))
-		util.ExpectPanic(t, fmt.Sprintf("<if-command %s %s> requires exactly 2 argument(s), got 1: [[external ssh]]", nil, nil),
+		util.ExpectPanic(t, fmt.Sprintf("<if-command %v %v> requires exactly 2 argument(s), got 1: [[external ssh]]", nil, nil),
 			func() { Make(fmt.Sprintf("(if-command (external ssh))")) })
 	})
 }
@@ -41,14 +41,14 @@ func TestIfCommandMakeWithOneArgument(t *testing.T) {
 func TestIfCommandMakeWithTooManyArguments(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(if-command foo bar baz)", "[if-command foo bar baz]")
-		util.ExpectPanic(t, fmt.Sprintf("<if-command %s %s> requires exactly 2 argument(s), got 3: [foo bar baz]", nil, nil),
+		util.ExpectPanic(t, fmt.Sprintf("<if-command %v %v> requires exactly 2 argument(s), got 3: [foo bar baz]", nil, nil),
 			func() { Make("(if-command foo bar baz)") })
 	})
 }
 
 func TestIfCommandExecWithoutSetArgs(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
-		util.ExpectPanic(t, fmt.Sprintf("<if-command %s %s> requires exactly 2 argument(s), got 0: []", nil, nil),
+		util.ExpectPanic(t, fmt.Sprintf("<if-command %v %v> requires exactly 2 argument(s), got 0: []", nil, nil),
 			func() { (&ifCommand{}).Exec([]target.Target{}, []string{}) })
 	})
 }

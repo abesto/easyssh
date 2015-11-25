@@ -41,7 +41,7 @@ func (e *assertCommand) String() string {
 	} else {
 		rawName = nameAssertNoCommand
 	}
-	return fmt.Sprintf("<%s %s>", rawName, e.child)
+	return fmt.Sprintf("<%s %v>", rawName, e.child)
 }
 
 type externalMode byte

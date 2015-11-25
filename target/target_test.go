@@ -20,7 +20,7 @@ func TestString(t *testing.T) {
 			t.Errorf("Expected: %s. Actual: %s.", item.expected, actual)
 		}
 	}
-	util.ExpectPanic(t, "Target host cannot be empty", func() { Target{"", "user-3"}.String() })
+	util.ExpectPanic(t, "Target host cannot be empty", func() { _ = Target{"", "user-3"}.String() })
 }
 
 func TestFromString(t *testing.T) {

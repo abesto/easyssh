@@ -31,5 +31,5 @@ func (e *ifOneTarget) SetArgs(args []interface{}) {
 	e.more = makeFromSExp(args[1].([]interface{}))
 }
 func (e *ifOneTarget) String() string {
-	return fmt.Sprintf("<%s %s %s>", nameIfOneTarget, e.one, e.more)
+	return fmt.Sprintf("<%s %v %v>", nameIfOneTarget, e.one, e.more)
 }

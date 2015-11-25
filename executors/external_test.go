@@ -34,7 +34,7 @@ func TestExternalStringViaMake(t *testing.T) {
 				t.Errorf("executor.interactive is %t for %s, expected %t", executor.interactive, name, item.interactive)
 			}
 			if executor.mode != item.mode {
-				t.Errorf("executor.mode is %s for %s, expected %s", executor.mode, name, item.mode)
+				t.Errorf("executor.mode is %v for %s, expected %v", executor.mode, name, item.mode)
 			}
 		})
 	}
@@ -98,7 +98,7 @@ func TestExternalMakeJobPerTarget(t *testing.T) {
 		executor := Make(fmt.Sprintf("(%s ssh)", item.name)).(*external)
 		jobs := executor.makeJobPerTarget(targets, command)
 		if len(jobs) != len(targets) {
-			t.Errorf("Expected to get %d jobs from %s, got %d instead: %s", len(targets), item.name, len(jobs), jobs)
+			t.Errorf("Expected to get %d jobs from %s, got %d instead: %v", len(targets), item.name, len(jobs), jobs)
 		}
 		for i, target := range targets {
 			job := jobs[i]
@@ -145,7 +145,7 @@ func TestExternalUnknownMode(t *testing.T) {
 	var mode externalMode = 128
 	e := Make("(external ssh)").(*external)
 	e.mode = mode
-	util.ExpectPanic(t, fmt.Sprintf("Unknown externalMode %s", mode), func() {
+	util.ExpectPanic(t, fmt.Sprintf("Unknown externalMode %v", mode), func() {
 		e.Exec([]target.Target{}, []string{})
 	})
 }

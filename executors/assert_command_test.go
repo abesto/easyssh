@@ -35,7 +35,7 @@ func TestAssertCommandMakeWithoutArgument(t *testing.T) {
 	for _, name := range assertCommandNames {
 		util.WithLogAssertions(t, func(l *util.MockLogger) {
 			l.ExpectDebugf("MakeFromString %s -> %s", fmt.Sprintf("(%s)", name), fmt.Sprintf("[%s]", name))
-			util.ExpectPanic(t, fmt.Sprintf("<%s %s> requires exactly 1 argument(s), got 0: []", name, nil),
+			util.ExpectPanic(t, fmt.Sprintf("<%s %v> requires exactly 1 argument(s), got 0: []", name, nil),
 				func() { Make(fmt.Sprintf("(%s)", name)) })
 		})
 	}
@@ -45,7 +45,7 @@ func TestAssertCommandMakeWithTooManyArguments(t *testing.T) {
 	for _, name := range assertCommandNames {
 		util.WithLogAssertions(t, func(l *util.MockLogger) {
 			l.ExpectDebugf("MakeFromString %s -> %s", fmt.Sprintf("(%s foo bar)", name), fmt.Sprintf("[%s foo bar]", name))
-			util.ExpectPanic(t, fmt.Sprintf("<%s %s> requires exactly 1 argument(s), got 2: [foo bar]", name, nil),
+			util.ExpectPanic(t, fmt.Sprintf("<%s %v> requires exactly 1 argument(s), got 2: [foo bar]", name, nil),
 				func() { Make(fmt.Sprintf("(%s foo bar)", name)) })
 		})
 	}
@@ -54,7 +54,7 @@ func TestAssertCommandMakeWithTooManyArguments(t *testing.T) {
 func TestAssertCommandExecWithoutSetArgs(t *testing.T) {
 	for _, item := range assertCommandNamesWithRequire {
 		util.WithLogAssertions(t, func(l *util.MockLogger) {
-			util.ExpectPanic(t, fmt.Sprintf("<%s %s> requires exactly 1 argument(s), got 0: []", item.name, nil),
+			util.ExpectPanic(t, fmt.Sprintf("<%s %v> requires exactly 1 argument(s), got 0: []", item.name, nil),
 				func() { (&assertCommand{require: item.require}).Exec([]target.Target{}, []string{}) })
 		})
 	}

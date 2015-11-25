@@ -43,7 +43,7 @@ func TestAlias(t *testing.T) {
 		expectedData, _ := sexp.Unmarshal([]byte(item.expected))
 		actualData := transform.TransformIfMatches(inputData)
 		if !reflect.DeepEqual(expectedData, actualData) {
-			t.Errorf("%s returned %s for input %s. Expected %s.", transform, actualData, inputData, expectedData)
+			t.Errorf("%v returned %s for input %s. Expected %s.", transform, actualData, inputData, expectedData)
 		}
 	}
 }
@@ -67,7 +67,7 @@ func TestReplace(t *testing.T) {
 		expectedData, _ := sexp.Unmarshal([]byte(item.expected))
 		actualData := transform.TransformIfMatches(inputData)
 		if !reflect.DeepEqual(expectedData, actualData) {
-			t.Errorf("%s returned %s for input %s. Expected %s.", transform, actualData, inputData, expectedData)
+			t.Errorf("%v returned %s for input %s. Expected %s.", transform, actualData, inputData, expectedData)
 		}
 	}
 }
@@ -82,7 +82,7 @@ func TestMakeFromStringWithoutTransforms(t *testing.T) {
 	actualFoo := MakeFromString(input, []SexpTransform{}, m.makeByName)
 
 	if actualFoo != expectedFoo {
-		t.Errorf("MakeFromString returned %s, expected: %s", actualFoo, expectedFoo)
+		t.Errorf("MakeFromString returned %v, expected: %v", actualFoo, expectedFoo)
 	}
 
 	mock.AssertVerifyMocks(t, m, expectedFoo)
@@ -102,7 +102,7 @@ func TestMakeFromStringWithTransforms(t *testing.T) {
 	actualFoo := MakeFromString(input, transforms, m.makeByName)
 
 	if actualFoo != expectedFoo {
-		t.Errorf("MakeFromString returned %s, expected: %s", actualFoo, expectedFoo)
+		t.Errorf("MakeFromString returned %v, expected: %v", actualFoo, expectedFoo)
 	}
 
 	mock.AssertVerifyMocks(t, m, expectedFoo)

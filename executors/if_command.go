@@ -33,5 +33,5 @@ func (e *ifCommand) SetArgs(args []interface{}) {
 }
 
 func (e *ifCommand) String() string {
-	return fmt.Sprintf("<%s %s %s>", nameIfCommand, e.withCommand, e.withoutCommand)
+	return fmt.Sprintf("<%s %v %v>", nameIfCommand, e.withCommand, e.withoutCommand)
 }

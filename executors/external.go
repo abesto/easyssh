@@ -54,7 +54,7 @@ func (e *external) Exec(targets []target.Target, command []string) {
 		util.Logger.Infof("Parallelly executing %s on %s", command, targets)
 		e.commandRunner.RunParallel(e.makeJobPerTarget(targets, command))
 	} else {
-		util.Panicf("Unknown externalMode %s", e.mode)
+		util.Panicf("Unknown externalMode %v", e.mode)
 	}
 }
 

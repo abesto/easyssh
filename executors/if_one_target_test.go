@@ -25,7 +25,7 @@ func TestIfOneTargetStringViaMake(t *testing.T) {
 func TestIfOneTargetMakeWithoutArgument(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(if-one-target)", fmt.Sprintf("[if-one-target]"))
-		util.ExpectPanic(t, fmt.Sprintf("<if-one-target %s %s> requires exactly 2 argument(s), got 0: []", nil, nil),
+		util.ExpectPanic(t, fmt.Sprintf("<if-one-target %v %v> requires exactly 2 argument(s), got 0: []", nil, nil),
 			func() { Make(fmt.Sprintf("(if-one-target)")) })
 	})
 }
@@ -33,7 +33,7 @@ func TestIfOneTargetMakeWithoutArgument(t *testing.T) {
 func TestIfOneTargetMakeWithOneArgument(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(if-one-target (external ssh))", fmt.Sprintf("[if-one-target [external ssh]]"))
-		util.ExpectPanic(t, fmt.Sprintf("<if-one-target %s %s> requires exactly 2 argument(s), got 1: [[external ssh]]", nil, nil),
+		util.ExpectPanic(t, fmt.Sprintf("<if-one-target %v %v> requires exactly 2 argument(s), got 1: [[external ssh]]", nil, nil),
 			func() { Make(fmt.Sprintf("(if-one-target (external ssh))")) })
 	})
 }
@@ -41,14 +41,14 @@ func TestIfOneTargetMakeWithOneArgument(t *testing.T) {
 func TestIfOneTargetMakeWithTooManyArguments(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(if-one-target foo bar baz)", "[if-one-target foo bar baz]")
-		util.ExpectPanic(t, fmt.Sprintf("<if-one-target %s %s> requires exactly 2 argument(s), got 3: [foo bar baz]", nil, nil),
+		util.ExpectPanic(t, fmt.Sprintf("<if-one-target %v %v> requires exactly 2 argument(s), got 3: [foo bar baz]", nil, nil),
 			func() { Make("(if-one-target foo bar baz)") })
 	})
 }
 
 func TestIfOneTargetExecWithoutSetArgs(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
-		util.ExpectPanic(t, fmt.Sprintf("<if-one-target %s %s> requires exactly 2 argument(s), got 0: []", nil, nil),
+		util.ExpectPanic(t, fmt.Sprintf("<if-one-target %v %v> requires exactly 2 argument(s), got 0: []", nil, nil),
 			func() { (&ifOneTarget{}).Exec([]target.Target{}, []string{}) })
 	})
 }
