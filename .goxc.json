@@ -1,19 +1,19 @@
 {
-	"Tasks": [
-		"default",
-		"publish-github"
-	],
-	"BuildConstraints": "linux,!arm windows,darwin,freebsd",
-	"PackageVersion": "0.1-alpha.5",
-	"TaskSettings": {
-		"publish-github": {
-			"owner": "abesto",
-			"prerelease": true,
-			"repository": "easyssh"
-		}
-	},
-  "Env": [
-    "GOPATH={{.Env.PWD}}{{.PS}}Godeps{{.PS}}_workspace{{.PLS}}{{.Env.GOPATH}}"
-  ],
-	"ConfigVersion": "0.9"
+    "Tasks": [
+        "default",
+        "publish-github"
+    ],
+    "BuildConstraints": "linux,!arm windows,darwin,freebsd",
+    "PackageVersion": "0.1-alpha.5",
+    "TaskSettings": {
+        "publish-github": {
+            "owner": "abesto",
+            "prerelease": true,
+            "repository": "easyssh"
+        }
+    },
+    "Env": [
+        "GOPATH={{.Env.PWD}}{{.PS}}Godeps{{.PS}}_workspace{{.PLS}}{{.Env.GOPATH}}"
+    ],
+    "ConfigVersion": "0.9"
 }
