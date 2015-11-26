@@ -1,5 +1,21 @@
 #!/usr/bin/env bats
 
+load common
+
+setup() {
+    env GOOS=linux go build
+    mv easyssh test/integration-test/client/easyssh
+    
+    cd test/integration-test
+    
+    docker-compose build
+    docker-compose scale server=2
+}
+
+teardown() {
+    rm client/easyssh
+}
+
 matches() {
     line_no="$1"
     regex="$2"
@@ -10,11 +26,6 @@ matches() {
 timestamp="\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}"
 ip="[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
 container="[a-z0-9]{12}"
-
-setup() {
-    docker-compose build
-    docker-compose scale server=2
-}
 
 @test "Smoke test, log level info" {
     run docker-compose run \
@@ -63,3 +74,4 @@ setup() {
     [ $(matches 14 "$timestamp NOTICE \[server_2\] (STDERR) Warning: Permanently added 'server_2,$ip' (ECDSA) to the list of known hosts.") ]
     [ $(matches 15 "$timestamp NOTICE \[server_2\] (STDOUT) $container") ]
 }
+

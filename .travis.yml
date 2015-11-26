@@ -14,8 +14,5 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq bats
 
-# Tests
 script:
-    - COVERALLS='-service travis-ci' ./test-coverage.sh
-    - go tool vet .
-    - ./integration-tests.sh
+    - COVERALLS='-service travis-ci' ./test.sh
