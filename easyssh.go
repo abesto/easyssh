@@ -74,7 +74,9 @@ Options:
 	var logger = util.Logger
 
 	if flag.NArg() == 0 {
-		util.Panicf("Required argument for target host lookup missing")
+		logger.Critical("Required argument for target host lookup missing")
+		flag.Usage()
+		return
 	}
 
 	discoverer = discoverers.Make(discovererDefinition)
