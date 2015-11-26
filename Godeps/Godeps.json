@@ -1,0 +1,30 @@
+{
+	"ImportPath": "github.com/abesto/easyssh",
+	"GoVersion": "go1.5.1",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "bitbucket.org/shanehanna/sexp",
+			"Rev": "59577f369c473347b0be4ab18e2063dcc5471a04"
+		},
+		{
+			"ImportPath": "github.com/alexcesaro/log",
+			"Rev": "61e686294e58a8698a9e1091268bb4ac1116bd5e"
+		},
+		{
+			"ImportPath": "github.com/kr/pretty",
+			"Comment": "go.weekly.2011-12-22-27-ge6ac2fc",
+			"Rev": "e6ac2fc51e89a3249e82157fa0bb7a18ef9dd5bb"
+		},
+		{
+			"ImportPath": "github.com/kr/text",
+			"Rev": "bb797dc4fb8320488f47bf11de07a733d7233e1f"
+		},
+		{
+			"ImportPath": "github.com/maraino/go-mock",
+			"Rev": "3d044b7ea45759510b4e24b679e1df257289675a"
+		}
+	]
+}
