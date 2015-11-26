@@ -3,5 +3,5 @@
 load common
 
 @test "go tool vet" {
-    go tool vet .
+    godep go tool vet .
 }

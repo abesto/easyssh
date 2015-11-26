@@ -3,7 +3,7 @@
 load common
 
 setup() {
-    env GOOS=linux go build
+    env GOOS=linux godep go build
     mv easyssh test/integration-test/client/easyssh
     
     cd test/integration-test

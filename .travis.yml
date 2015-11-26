@@ -5,10 +5,11 @@ services:
 
 language: go
 before_install:
-  # Golang toos
+  # Golang tools
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
+  - go get github.com/tools/godep
   # Bats (https://github.com/sstephenson/bats), as described in https://blog.engineyard.com/2014/bats-test-command-line-tools
   - sudo add-apt-repository ppa:duggan/bats --yes
   - sudo apt-get update -qq
