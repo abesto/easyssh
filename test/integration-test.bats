@@ -14,7 +14,6 @@ setup() {
 
 teardown() {
     rm client/easyssh
-    cd ../..
 }
 
 matches() {
