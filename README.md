@@ -16,10 +16,19 @@ It's for you if having a single alias that does the following makes you excited:
 
 ## Installation
 
+### Homebrew
+
+```
+brew tap abesto/easyssh
+brew install easyssh
+```
+
+### Binary release
+
 1. Download, extract the [release](https://github.com/abesto/easyssh/releases) for your platform
 2. Add the `easyssh` executable to your `$PATH`
 
-Of course you can always compile from source:
+### Compile from source
 
 ```sh
 go get -u github.com/abesto/easyssh
