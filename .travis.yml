@@ -8,7 +8,7 @@ before_install:
   # Golang toos
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
-  - if ! go get code.google.com/p/go.tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+  - go get golang.org/x/tools/cmd/cover
   # Bats (https://github.com/sstephenson/bats), as described in https://blog.engineyard.com/2014/bats-test-command-line-tools
   - sudo add-apt-repository ppa:duggan/bats --yes
   - sudo apt-get update -qq
