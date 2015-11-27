@@ -64,7 +64,7 @@ func givenAMockedKnifeSearch() (knifeSearch, *mockKnifeSearchResultRowIpExtracto
 func givenKnifeSearchResultWithCloudV2(values ...string) knifeSearchResult {
 	data := knifeSearchResult{}
 	for _, value := range values {
-		row := knifeSearchResultRow{}
+		row := knifeSearchResultRow{Name: value}
 		row.Automatic.CloudV2 = new(knifeSearchResultCloudV2)
 		row.Automatic.CloudV2.PublicHostname = value + ".hostname"
 		row.Automatic.CloudV2.PublicIpv4 = value + ".ipv4"
@@ -176,4 +176,24 @@ func TestKnifeIpExtractor(t *testing.T) {
 			t.Error("output", c, e, actualOutput)
 		}
 	}
+}
+
+func TestKnifeNoIp(t *testing.T) {
+	s, e, r := givenAMockedKnifeSearch()
+	input := "test:query"
+	data := givenKnifeSearchResultWithCloudV2("alpha", "beta", "gamma")
+	data.Rows[0].Automatic.CloudV2.PublicHostname = ""
+	knifeReturnsWithCloudV2(r, input, data)
+	for _, row := range data.Rows {
+		e.When("Extract", row).Return(row.Automatic.CloudV2.PublicHostname).Times(1)
+	}
+	var actualIps []string
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
+		l.ExpectInfof("Looking up nodes with knife matching %s", input)
+		l.ExpectInfof("Host %s doesn't have an IP address, ignoring", "alpha")
+		actualIps = s.Discover(input)
+	})
+	expectedIps := []string{"beta.hostname", "gamma.hostname"}
+	util.AssertStringListEquals(t, expectedIps, actualIps)
+	util.VerifyMocks(t, e, r)
 }

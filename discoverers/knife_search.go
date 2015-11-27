@@ -82,7 +82,12 @@ func (d *knifeSearch) Discover(input string) []string {
 
 	var ips = []string{}
 	for _, row := range data.Rows {
-		ips = append(ips, d.extractor.Extract(row))
+		ip := d.extractor.Extract(row)
+		if ip == "" {
+			util.Logger.Infof("Host %s doesn't have an IP address, ignoring", row.Name)
+		} else {
+			ips = append(ips, ip)
+		}
 	}
 
 	return ips
