@@ -3,9 +3,9 @@ package fromsexp
 import (
 	"reflect"
 
-	"bitbucket.org/shanehanna/sexp"
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/util"
+	"github.com/abesto/sexp"
 )
 
 func MakeFromString(input string, transforms []SexpTransform, makeByName func(name string) interface{}) interface{} {

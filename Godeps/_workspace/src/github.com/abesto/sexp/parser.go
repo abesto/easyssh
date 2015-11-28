@@ -41,8 +41,10 @@ func unmarshal(l *lexer) (interface{}, error) {
 			return exp, nil
 		case ItemToken, ItemQuote, ItemVerbatim:
 			exp = append(exp, item.Value)
+		case ItemError:
+			return nil, fmt.Errorf("%s. Error was generated at position %d near '%s'", item.Value, l.pos, l.near())
 		default:
-			panic("Unreachable.")
+			return nil, fmt.Errorf("Unexpected %s at position %d near '%s'", item, l.pos, l.near())
 		}
 	}
 	return exp, nil

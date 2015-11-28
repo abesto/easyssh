@@ -6,8 +6,8 @@
 	],
 	"Deps": [
 		{
-			"ImportPath": "bitbucket.org/shanehanna/sexp",
-			"Rev": "59577f369c473347b0be4ab18e2063dcc5471a04"
+			"ImportPath": "github.com/abesto/sexp",
+			"Rev": "dcad0e0a1b527f28cd5b06a1ccfcf12222206831"
 		},
 		{
 			"ImportPath": "github.com/alexcesaro/log",

@@ -14,17 +14,38 @@ type Item struct {
 
 type ItemType int
 
+func (item Item) String() string {
+	switch item.Type {
+	case ItemError:
+		return fmt.Sprintf("Error(%v)", item.Value)
+	case ItemBracketLeft:
+		return "("
+	case ItemBracketRight:
+		return ")"
+	case ItemToken:
+		return fmt.Sprintf("Token(%v)", item.Value)
+	case ItemQuote:
+		return fmt.Sprintf("Quote(%v)", item.Value)
+	case ItemVerbatim:
+		return fmt.Sprintf("Verbatim(%v)", item.Value)
+	case ItemEOF:
+		return "EOF"
+	default:
+		return "Unknown(%v)"
+	}
+}
+
 const (
-	ItemError        ItemType = iota
-	ItemBracketLeft           // (
-	ItemBracketRight          // )
-	ItemToken                 // abc        Token.
-	ItemQuote                 // "abc"      Quoted string. May also include length 3"abc"
-	ItemVerbatim              // 3:abc      Length prefixed "verbatim" encoding.
+	ItemEOF ItemType = iota
+	ItemError
+	ItemBracketLeft  // (
+	ItemBracketRight // )
+	ItemToken        // abc        Token.
+	ItemQuote        // "abc"      Quoted string. May also include length 3"abc"
+	ItemVerbatim     // 3:abc      Length prefixed "verbatim" encoding.
 	// ItemHex                // #616263#   Hexidecimal string.
 	// ItemBase64             // {MzphYmM=} Base64 of the verbatim encoding "3:abc"
 	// ItemBase64Octet        // |YWJj|     Base64 encoding of the octet-string "abc"
-	ItemEOF
 )
 
 var (
@@ -49,10 +70,24 @@ type lexer struct {
 	pos     int
 	state   stateFn
 	matches [][]byte
+	parens  int
 }
 
 func (l *lexer) emit(t ItemType) {
-	l.items <- Item{t, l.start, l.input[l.start:l.pos]}
+	switch t {
+	case ItemBracketLeft:
+		l.parens++
+	case ItemBracketRight:
+		l.parens--
+	}
+
+	if l.parens > 0 && t == ItemEOF {
+		l.items <- Item{ItemError, l.start, []byte(fmt.Sprintf("Unexpected EOF, %d '(' unmatched", l.parens))}
+	} else if l.parens < 0 {
+		l.items <- Item{ItemError, l.start, []byte("Unmatched )")}
+	} else {
+		l.items <- Item{t, l.start, l.input[l.start:l.pos]}
+	}
 }
 
 func (l *lexer) Next() Item {
@@ -119,14 +154,19 @@ func lex(l *lexer) stateFn {
 		return lex
 	}
 
-	// TODO: Read number of runes. Reading 10 bytes may leave the last unprintable.
-	near := l.input[l.pos:]
-	if len(near) < 10 {
-		near = near[:len(near)]
-	} else {
-		near = near[:10]
+	return l.errorf("Unexpected byte at %d near '%s'.", l.pos, l.near())
+}
+
+func (l *lexer) near() []byte {
+	from := l.pos - 5
+	if from < 0 {
+		from = 0
 	}
-	return l.errorf("Unexpected byte at %d near '%s'.", l.pos, near)
+	near := l.input[from:]
+	if len(near) < 10 {
+		return near[:len(near)]
+	}
+	return near[:10]
 }
 
 /*

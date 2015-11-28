@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"bitbucket.org/shanehanna/sexp"
+	"github.com/abesto/sexp"
 	"github.com/maraino/go-mock"
 
 	"github.com/abesto/easyssh/util"
