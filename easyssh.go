@@ -26,19 +26,6 @@ func main() {
 		filter               interfaces.TargetFilter
 	)
 
-	defer func() {
-		if err := recover(); err != nil {
-			switch err.(type) {
-			case string:
-				util.Logger.Critical(err.(string))
-				os.Exit(1)
-			default:
-				panic(err)
-			}
-
-		}
-	}()
-
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: %s [options] target-definition [command]
 
@@ -78,6 +65,27 @@ Options:
 		flag.Usage()
 		return
 	}
+
+	defer func() {
+		if err := recover(); err != nil {
+			// discoverer, executor and filter are created in this order
+			// if at least one of them is nil, then the creation of the first one that is nil has generated the error.
+			if discoverer == nil {
+				util.Logger.Critical("Failed to create discoverer")
+			} else if executor == nil {
+				util.Logger.Critical("Failed to create executor")
+			} else if filter == nil {
+				util.Logger.Critical("Failed to create filter")
+			}
+			switch err.(type) {
+			case string:
+				util.Logger.Critical(err.(string))
+				os.Exit(1)
+			default:
+				panic(err)
+			}
+		}
+	}()
 
 	discoverer = discoverers.Make(discovererDefinition)
 	executor = executors.Make(executorDefinition)
