@@ -9,7 +9,12 @@
 # NOTE: go files in the root and in the dir "utils" are ignored for purposes of
 #       test coverage calculation.
 
+load common
+
+
 @test "Unit tests" {
+    export PATH="$(pwd)/test/noop-external-tools:$PATH"
+
     echo "mode: count" > acc.out
     fail=0
     
