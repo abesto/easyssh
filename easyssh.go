@@ -15,6 +15,9 @@ import (
 	"github.com/alexcesaro/log/stdlog"
 )
 
+var VERSION = "HEAD"
+var BUILD_DATE = "LOCAL"
+
 func main() {
 	var (
 		discovererDefinition string
@@ -56,7 +59,13 @@ Options:
 	flag.StringVar(&filterDefinition, "f", "(id)",
 		fmt.Sprintf("Filter definition. Supported filters: %s", strings.Join(filters.SupportedFilterNames(), ", ")))
 	verbose := flag.Bool("v", false, "Verbose output (alias of '-log debug')")
+	versionRequested := flag.Bool("version", false, "Display the version number and exit")
 	flag.Parse()
+
+	if *versionRequested {
+		fmt.Printf("easyssh version %s build %s\n", VERSION, BUILD_DATE)
+		return
+	}
 
 	if *verbose {
 		flag.Set("log", "debug")
