@@ -7,7 +7,7 @@ import (
 
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
-	"github.com/maraino/go-mock"
+	"github.com/abesto/go-mock"
 )
 
 type dummyEc2InstanceIdParser struct {

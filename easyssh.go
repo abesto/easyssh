@@ -59,7 +59,7 @@ Options:
 	flag.StringVar(&filterDefinition, "f", "(id)",
 		fmt.Sprintf("Filter definition. Supported filters: %s", strings.Join(filters.SupportedFilterNames(), ", ")))
 	verbose := flag.Bool("v", false, "Verbose output (alias of '-log debug')")
-	versionRequested := flag.Bool("version", false, "Display the version number and exit")
+	versionRequested := flag.Bool("V", false, "Display the version number and exit")
 	flag.Parse()
 
 	if *versionRequested {

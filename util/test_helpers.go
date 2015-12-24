@@ -3,15 +3,19 @@ package util
 import (
 	"fmt"
 	"io"
-	"testing"
 
 	"reflect"
 
+	"github.com/abesto/go-mock"
 	"github.com/alexcesaro/log"
-	"github.com/maraino/go-mock"
 )
 
-func ExpectPanic(t *testing.T, expectedErr interface{}, f func()) {
+type TestReporter interface {
+	Error(...interface{})
+	Errorf(string, ...interface{})
+}
+
+func ExpectPanic(t TestReporter, expectedErr interface{}, f func()) {
 	defer func() {
 		actualErr := recover()
 		if actualErr == nil {
@@ -178,7 +182,7 @@ func (e DummyError) Error() string {
 	return e.Msg
 }
 
-func ExpectLogs(t *testing.T, setExpectedCalls func(*MockLogger)) func() {
+func ExpectLogs(t TestReporter, setExpectedCalls func(*MockLogger)) func() {
 	originalLogger := Logger
 	Logger = &MockLogger{}
 	l := Logger.(*MockLogger)
@@ -190,11 +194,11 @@ func ExpectLogs(t *testing.T, setExpectedCalls func(*MockLogger)) func() {
 	}
 }
 
-func WithLogAssertions(t *testing.T, f func(*MockLogger)) {
+func WithLogAssertions(t TestReporter, f func(*MockLogger)) {
 	ExpectLogs(t, f)()
 }
 
-func VerifyMocks(t *testing.T, mocks ...HasVerify) {
+func VerifyMocks(t TestReporter, mocks ...HasVerify) {
 	for _, m := range mocks {
 		if ok, msg := m.Verify(); !ok {
 			t.Error(msg)
@@ -202,7 +206,7 @@ func VerifyMocks(t *testing.T, mocks ...HasVerify) {
 	}
 }
 
-func AssertStringListEquals(t *testing.T, expected []string, actual []string) {
+func AssertStringListEquals(t TestReporter, expected []string, actual []string) {
 	expectedInterfaces := make([]interface{}, len(expected))
 	actualInterfaces := make([]interface{}, len(actual))
 	for i := 0; i < len(expected); i++ {
@@ -214,7 +218,7 @@ func AssertStringListEquals(t *testing.T, expected []string, actual []string) {
 	AssertInterfaceListEquals(t, expectedInterfaces, actualInterfaces)
 }
 
-func AssertInterfaceListEquals(t *testing.T, expected []interface{}, actual []interface{}) {
+func AssertInterfaceListEquals(t TestReporter, expected []interface{}, actual []interface{}) {
 	if len(expected) != len(actual) {
 		t.Errorf("len expected=%d actual=%d", len(expected), len(actual))
 	}

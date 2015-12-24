@@ -6,6 +6,10 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "github.com/abesto/go-mock",
+			"Rev": "cbb663ae953f99624609dddf3ef4733c83848dd1"
+		},
+		{
 			"ImportPath": "github.com/abesto/sexp",
 			"Rev": "dcad0e0a1b527f28cd5b06a1ccfcf12222206831"
 		},
@@ -21,10 +25,6 @@
 		{
 			"ImportPath": "github.com/kr/text",
 			"Rev": "bb797dc4fb8320488f47bf11de07a733d7233e1f"
-		},
-		{
-			"ImportPath": "github.com/maraino/go-mock",
-			"Rev": "3d044b7ea45759510b4e24b679e1df257289675a"
 		}
 	]
 }

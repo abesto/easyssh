@@ -3,7 +3,7 @@ package executors
 import (
 	"github.com/abesto/easyssh/interfaces"
 	"github.com/abesto/easyssh/target"
-	"github.com/maraino/go-mock"
+	"github.com/abesto/go-mock"
 )
 
 type mockExecutor struct {

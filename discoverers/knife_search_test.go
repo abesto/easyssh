@@ -8,7 +8,7 @@ import (
 	"errors"
 
 	"github.com/abesto/easyssh/util"
-	"github.com/maraino/go-mock"
+	"github.com/abesto/go-mock"
 )
 
 func TestKnifeStringViaMake(t *testing.T) {
