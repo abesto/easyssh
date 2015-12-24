@@ -19,6 +19,8 @@ before_install:
   - echo "#!/bin/bash" > ./external-tools/noop
   - cp ./external-tools/{noop,aws}
   - cp ./external-tools/{noop,knife}
+  - cp ./external-tools/{noop,csshx}
+  - cp ./external-tools/{noop,tmux-cssh}
   - chmod +x ./external-tools/*
 
 script:
