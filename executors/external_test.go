@@ -65,9 +65,9 @@ func TestExternalExecWithoutSetArgs(t *testing.T) {
 
 func TestExternalSetArgs(t *testing.T) {
 	for _, item := range externalDefs {
-		input := fmt.Sprintf("(%s ssh-exec)", item.name)
+		input := fmt.Sprintf("(%s ssh)", item.name)
 		e := Make(input).(*external)
-		if fmt.Sprintf("%s", e.initialArgs) != "[ssh-exec]" {
+		if fmt.Sprintf("%s", e.initialArgs) != "[ssh]" {
 			t.Error("initialArgs", e.initialArgs)
 		}
 	}
