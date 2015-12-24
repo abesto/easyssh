@@ -55,10 +55,14 @@ Options:
 		fmt.Sprintf("Executor definition. Supported executors: %s", strings.Join(executors.SupportedExecutorNames(), ", ")))
 	flag.StringVar(&filterDefinition, "f", "(id)",
 		fmt.Sprintf("Filter definition. Supported filters: %s", strings.Join(filters.SupportedFilterNames(), ", ")))
+	verbose := flag.Bool("v", false, "Verbose output (alias of '-log debug')")
 	flag.Parse()
 
+	if *verbose {
+		flag.Set("log", "debug")
+	}
 	util.Logger = stdlog.GetFromFlags()
-	var logger = util.Logger
+	logger := util.Logger
 
 	if flag.NArg() == 0 {
 		logger.Critical("Required argument for target host lookup missing")
