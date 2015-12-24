@@ -4,11 +4,10 @@
         "publish-github"
     ],
     "BuildConstraints": "linux,!arm windows,darwin,freebsd",
-    "PackageVersion": "0.1.1-alpha.2",
+    "PackageVersion": "0.1.1",
     "TaskSettings": {
         "publish-github": {
             "owner": "abesto",
-            "prerelease": true,
             "repository": "easyssh"
         }
     },
