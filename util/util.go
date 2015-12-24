@@ -27,6 +27,13 @@ func LookPathOrAbort(binaryName string) string {
 	return binary
 }
 
+func RequireOnPath(requiredBy interface{}, binaryName string) {
+	_, lookErr := exec.LookPath(binaryName)
+	if lookErr != nil {
+		Panicf("%s is not found on PATH, but is required by %s", binaryName, requiredBy)
+	}
+}
+
 func RequireNoArguments(e interface{}, args []interface{}) {
 	if len(args) > 0 {
 		Panicf("%s doesn't take any arguments, got %d: %s", e, len(args), args)

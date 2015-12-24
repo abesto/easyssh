@@ -80,6 +80,7 @@ func (f *ec2InstanceIdLookup) SetArgs(args []interface{}) {
 	util.RequireArguments(f, 1, args)
 	f.args = args
 	f.region = string(args[0].([]byte))
+	util.RequireOnPath(f, "aws")
 }
 func (f *ec2InstanceIdLookup) String() string {
 	return fmt.Sprintf("<%s %s>", nameEc2InstanceId, f.region)

@@ -65,6 +65,7 @@ func (e *external) SetArgs(args []interface{}) {
 	for i, arg := range args {
 		e.args[i] = string(arg.([]byte))
 	}
+	util.RequireOnPath(e, e.args[0])
 }
 
 func (e *external) String() string {

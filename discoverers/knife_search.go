@@ -94,6 +94,7 @@ func (d *knifeSearch) Discover(input string) []string {
 }
 func (d *knifeSearch) SetArgs(args []interface{}) {
 	util.RequireNoArguments(d, args)
+	util.RequireOnPath(d, "knife")
 }
 
 func (d *knifeSearch) String() string {
