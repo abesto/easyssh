@@ -7,7 +7,7 @@ import (
 
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
-	"github.com/abesto/go-mock"
+	"github.com/maraino/go-mock"
 )
 
 func TestExternalStringViaMake(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 
 	"reflect"
 
-	"github.com/abesto/go-mock"
+	"github.com/maraino/go-mock"
 	"github.com/alexcesaro/log"
 )
 

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/abesto/sexp"
-	"github.com/abesto/go-mock"
+	"github.com/maraino/go-mock"
 
 	"github.com/abesto/easyssh/util"
 )

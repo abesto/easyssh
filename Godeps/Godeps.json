@@ -1,14 +1,10 @@
 {
 	"ImportPath": "github.com/abesto/easyssh",
-	"GoVersion": "go1.5.1",
+	"GoVersion": "go1.5",
 	"Packages": [
 		"./..."
 	],
 	"Deps": [
-		{
-			"ImportPath": "github.com/abesto/go-mock",
-			"Rev": "cbb663ae953f99624609dddf3ef4733c83848dd1"
-		},
 		{
 			"ImportPath": "github.com/abesto/sexp",
 			"Rev": "dcad0e0a1b527f28cd5b06a1ccfcf12222206831"
@@ -25,6 +21,10 @@
 		{
 			"ImportPath": "github.com/kr/text",
 			"Rev": "bb797dc4fb8320488f47bf11de07a733d7233e1f"
+		},
+		{
+			"ImportPath": "github.com/maraino/go-mock",
+			"Rev": "c73593ff1dbffda090770a31f88a69f1cf3037b4"
 		}
 	]
 }
