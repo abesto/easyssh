@@ -105,11 +105,11 @@ func TestExternalMakeJobPerTarget(t *testing.T) {
 			if job.Interactive != item.interactive {
 				t.Errorf("job.Interactive for output of %s.makeJobPerTarget is %t, expected %t", item.name, job.Interactive, item.interactive)
 			}
-			expectedLabel := target.String()
+			expectedLabel := target.FriendlyName()
 			if job.Label != expectedLabel {
 				t.Errorf("job.Label for output of %s.makeJobPerTarget is \"%s\", expected \"%s\"", item.name, job.Label, expectedLabel)
 			}
-			expectedArgv := []string{"ssh", target.String(), "ls"}
+			expectedArgv := []string{"ssh", target.SSHTarget(), "ls"}
 			util.AssertStringListEquals(t, expectedArgv, job.Argv)
 		}
 	}

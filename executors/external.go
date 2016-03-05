@@ -25,8 +25,8 @@ type external struct {
 func (e *external) makeSingleRunJob(targets []target.Target, command []string) util.InteractiveCommandRunnerJob {
 	return util.InteractiveCommandRunnerJob{
 		Interactive: e.interactive,
-		Label:       strings.Join(target.Strings(targets), " "),
-		Argv:        append(e.args, append(target.Strings(targets), command...)...),
+		Label:       strings.Join(target.FriendlyNames(targets), " "),
+		Argv:        append(e.args, append(target.SSHTargets(targets), command...)...),
 	}
 }
 
@@ -35,8 +35,8 @@ func (e *external) makeJobPerTarget(targets []target.Target, command []string) [
 	for i, target := range targets {
 		jobs[i] = util.InteractiveCommandRunnerJob{
 			Interactive: e.interactive,
-			Label:       target.String(),
-			Argv:        append(e.args, append([]string{target.String()}, command...)...),
+			Label:       target.FriendlyName(),
+			Argv:        append(e.args, append([]string{target.SSHTarget()}, command...)...),
 		}
 	}
 	return jobs

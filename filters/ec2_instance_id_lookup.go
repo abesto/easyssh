@@ -71,7 +71,7 @@ func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
 			util.Logger.Infof("AWS API returned PublicIpAddress %s for %s (%s)", ip, targets[idx].Host, instanceId)
 			targets[idx].Host = ip
 		} else {
-			util.Logger.Debugf("Target %s looks like it doesn't have EC2 instance ID, skipping lookup for region %s", t, f.region)
+			util.Logger.Debugf("Target %s looks like it doesn't have EC2 instance ID, skipping lookup for region %s", t.FriendlyName(), f.region)
 		}
 	}
 	return targets
