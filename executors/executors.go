@@ -96,7 +96,7 @@ var sexpTransforms = []fromsexp.SexpTransform{
 	r("(ssh-exec-sequential)", "(assert-command (external-sequential ssh))"),
 	r("(ssh-exec-parallel)", "(assert-command (external-parallel ssh))"),
 	r("(csshx)", "(assert-no-command (external-interactive csshx))"),
-	r("(tmux-cssh)", "(assert-no-command (external-interactive tmux-cssh))"),
+	r("(tmux-cssh)", "(assert-no-command (external-interactive tmux-cssh -ns))"),
 }
 
 func makeByName(name string) interface{} {
