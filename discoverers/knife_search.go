@@ -9,15 +9,8 @@ import (
 	"github.com/abesto/easyssh/util"
 )
 
-type knifeSearchResultType int
-
-const (
-	publicIp knifeSearchResultType = iota
-	publicHostname
-)
-
 type knifeSearch struct {
-	extractor     knifeSearchResultRowIpExtractor
+	extractor     knifeSearchResultRowExtractor
 	commandRunner util.CommandRunner
 }
 
@@ -34,6 +27,7 @@ type knifeSearchResultRowAutomatic struct {
 	CloudV2   *knifeSearchResultCloudV2 `json:"cloud_v2"`
 	Ipaddress string
 	Hostname  string
+	Fqdn      string
 }
 
 type knifeSearchResultCloudV2 struct {
@@ -41,27 +35,24 @@ type knifeSearchResultCloudV2 struct {
 	PublicIpv4     string `json:"public_ipv4"`
 }
 
-type knifeSearchResultRowIpExtractor interface {
-	Extract(knifeSearchResultRow) string
-	GetResultType() knifeSearchResultType
+type knifeSearchResultRowExtractor interface {
+	Extract(knifeSearchResultRow) target.Target
 }
 
-type realKnifeSearchResultRowIpExtractor struct {
-	resultType knifeSearchResultType
+type realKnifeSearchResultRowExtractor struct {
 }
 
-func (e realKnifeSearchResultRowIpExtractor) Extract(row knifeSearchResultRow) string {
+func (e realKnifeSearchResultRowExtractor) Extract(row knifeSearchResultRow) target.Target {
+	var target target.Target
 	if row.Automatic.CloudV2 != nil {
-		if e.resultType == publicHostname {
-			return row.Automatic.CloudV2.PublicHostname
-		}
-		return row.Automatic.CloudV2.PublicIpv4
+		target.Host = row.Automatic.CloudV2.PublicHostname
+		target.IP = row.Automatic.CloudV2.PublicIpv4
+	} else {
+		target.Host = row.Automatic.Fqdn
+		target.IP = row.Automatic.Ipaddress
 	}
-	return row.Automatic.Ipaddress
-}
-
-func (e realKnifeSearchResultRowIpExtractor) GetResultType() knifeSearchResultType {
-	return e.resultType
+	target.Hostname = row.Automatic.Hostname
+	return target
 }
 
 func (d *knifeSearch) Discover(input string) []target.Target {
@@ -85,11 +76,11 @@ func (d *knifeSearch) Discover(input string) []target.Target {
 	//	util.Logger.Debugf("Parsed result into data: %s", data)
 
 	for _, row := range data.Rows {
-		ip := d.extractor.Extract(row)
-		if ip == "" {
-			util.Logger.Infof("Host %s doesn't have an IP address, ignoring", row.Name)
+		target := d.extractor.Extract(row)
+		if target.IsEmpty() {
+			util.Logger.Infof("Host %s doesn't have an IP address or public hostname, ignoring", row.Name)
 		} else {
-			targets = append(targets, target.FromString(ip))
+			targets = append(targets, target)
 		}
 	}
 
@@ -102,11 +93,5 @@ func (d *knifeSearch) SetArgs(args []interface{}) {
 }
 
 func (d *knifeSearch) String() string {
-	var rawName string
-	if d.extractor.GetResultType() == publicHostname {
-		rawName = nameKnifeHostname
-	} else {
-		rawName = nameKnife
-	}
-	return fmt.Sprintf("<%s>", rawName)
+	return fmt.Sprintf("<%s>", nameKnife)
 }

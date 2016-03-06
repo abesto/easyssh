@@ -58,8 +58,12 @@ func (t Target) String() string {
 	return t.FriendlyName()
 }
 
+func (t Target) IsEmpty() bool {
+	return firstNonEmptyString(t.IP, t.Host) == ""
+}
+
 func (t Target) verify() {
-	if firstNonEmptyString(t.IP, t.Host) == "" {
+	if t.IsEmpty() {
 		util.Panicf("At least one of Target.IP and Target.Host must be set")
 	}
 }

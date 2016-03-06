@@ -18,7 +18,6 @@ func TestKnifeStringViaMake(t *testing.T) {
 		final   string
 	}{
 		{input: "(knife)", structs: "[knife]", final: "<knife>"},
-		{input: "(knife-hostname)", structs: "[knife-hostname]", final: "<knife-hostname>"},
 	}
 	for _, c := range cases {
 		util.WithLogAssertions(t, func(l *util.MockLogger) {
@@ -37,27 +36,23 @@ func TestKnifeMakeWithArgument(t *testing.T) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(knife foo)", "[knife foo]")
 		util.ExpectPanic(t, "<knife> doesn't take any arguments, got 1: [foo]", func() { Make("(knife foo)") })
 	})
-	util.WithLogAssertions(t, func(l *util.MockLogger) {
-		l.ExpectDebugf("MakeFromString %s -> %s", "(knife-hostname foo)", "[knife-hostname foo]")
-		util.ExpectPanic(t, "<knife-hostname> doesn't take any arguments, got 1: [foo]", func() { Make("(knife-hostname foo)") })
-	})
 }
 
-type mockKnifeSearchResultRowIpExtractor struct {
+type mockKnifeSearchResultRowExtractor struct {
 	mock.Mock
 }
 
-func (e mockKnifeSearchResultRowIpExtractor) Extract(row knifeSearchResultRow) string {
-	return e.Called(row).String(0)
+func (e mockKnifeSearchResultRowExtractor) Extract(row knifeSearchResultRow) target.Target {
+	r := e.Called(row)
+	if r.Contains(0) {
+		return r.Result[0].(target.Target)
+	}
+	return target.Target{}
 }
 
-func (e mockKnifeSearchResultRowIpExtractor) GetResultType() knifeSearchResultType {
-	return e.Called().GetType(0, publicHostname).(knifeSearchResultType)
-}
-
-func givenAMockedKnifeSearch() (knifeSearch, *mockKnifeSearchResultRowIpExtractor, *util.MockCommandRunner) {
+func givenAMockedKnifeSearch() (knifeSearch, *mockKnifeSearchResultRowExtractor, *util.MockCommandRunner) {
 	commandRunner := util.MockCommandRunner{}
-	ipExtractor := mockKnifeSearchResultRowIpExtractor{}
+	ipExtractor := mockKnifeSearchResultRowExtractor{}
 	return knifeSearch{&ipExtractor, &commandRunner}, &ipExtractor, &commandRunner
 }
 
@@ -134,7 +129,7 @@ func TestKnifeHappyPath(t *testing.T) {
 	data := givenKnifeSearchResultWithCloudV2("alpha", "beta", "gamma")
 	knifeReturnsWithCloudV2(r, input, data)
 	for _, row := range data.Rows {
-		e.When("Extract", row).Return(row.Automatic.CloudV2.PublicHostname).Times(1)
+		e.When("Extract", row).Return(target.Target{Host: row.Automatic.CloudV2.PublicHostname}).Times(1)
 	}
 	var actualTargets []target.Target
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
@@ -146,54 +141,36 @@ func TestKnifeHappyPath(t *testing.T) {
 	util.VerifyMocks(t, e, r)
 }
 
-func TestKnifeIpExtractor(t *testing.T) {
+func TestKnifeExtractor(t *testing.T) {
 	cases := []struct {
-		resultType     knifeSearchResultType
 		input          knifeSearchResultRow
-		expectedOutput string
+		expectedOutput target.Target
 	}{
-		{resultType: publicIp, expectedOutput: "a.ip", input: knifeSearchResultRow{
-			Automatic: knifeSearchResultRowAutomatic{
-				CloudV2: &knifeSearchResultCloudV2{
-					PublicIpv4: "a.ip"}}}},
-		{resultType: publicIp, expectedOutput: "b.noncloud-ip", input: knifeSearchResultRow{
-			Automatic: knifeSearchResultRowAutomatic{
-				Ipaddress: "b.noncloud-ip"}}},
-		{resultType: publicHostname, expectedOutput: "c.hostname", input: knifeSearchResultRow{
-			Automatic: knifeSearchResultRowAutomatic{
-				CloudV2: &knifeSearchResultCloudV2{
-					PublicHostname: "c.hostname"}}}},
-		{resultType: publicHostname, expectedOutput: "d.noncloud-ip", input: knifeSearchResultRow{
-			Automatic: knifeSearchResultRowAutomatic{
-				Ipaddress: "d.noncloud-ip"}}},
+		{
+			expectedOutput: target.Target{IP: "a.ip", Host: "a.host", Hostname: "a.hostname"},
+			input: knifeSearchResultRow{
+				Automatic: knifeSearchResultRowAutomatic{
+					Hostname: "a.hostname",
+					CloudV2: &knifeSearchResultCloudV2{
+						PublicIpv4:     "a.ip",
+						PublicHostname: "a.host",
+					}},
+			},
+		},
+		{
+			expectedOutput: target.Target{IP: "b.noncloud-ip", Host: "b.fqdn", Hostname: "b.hostname"},
+			input: knifeSearchResultRow{
+				Automatic: knifeSearchResultRowAutomatic{
+					Hostname:  "b.hostname",
+					Ipaddress: "b.noncloud-ip",
+					Fqdn:      "b.fqdn",
+				}},
+		},
 	}
 	for _, c := range cases {
-		e := realKnifeSearchResultRowIpExtractor{c.resultType}
-		if e.GetResultType() != c.resultType {
-			t.Error("resultType", c, e)
-		}
+		e := realKnifeSearchResultRowExtractor{}
 		if actualOutput := e.Extract(c.input); actualOutput != c.expectedOutput {
-			t.Error("output", c, e, actualOutput)
+			t.Error("output", c.expectedOutput, actualOutput)
 		}
 	}
-}
-
-func TestKnifeNoIp(t *testing.T) {
-	s, e, r := givenAMockedKnifeSearch()
-	input := "test:query"
-	data := givenKnifeSearchResultWithCloudV2("alpha", "beta", "gamma")
-	data.Rows[0].Automatic.CloudV2.PublicHostname = ""
-	knifeReturnsWithCloudV2(r, input, data)
-	for _, row := range data.Rows {
-		e.When("Extract", row).Return(row.Automatic.CloudV2.PublicHostname).Times(1)
-	}
-	var actualTargets []target.Target
-	util.WithLogAssertions(t, func(l *util.MockLogger) {
-		l.ExpectInfof("Looking up nodes with knife matching %s", input)
-		l.ExpectInfof("Host %s doesn't have an IP address, ignoring", "alpha")
-		actualTargets = s.Discover(input)
-	})
-	expectedTargets := target.FromStrings("beta.hostname", "gamma.hostname")
-	target.AssertTargetListEquals(t, expectedTargets, actualTargets)
-	util.VerifyMocks(t, e, r)
 }

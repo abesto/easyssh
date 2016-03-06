@@ -8,6 +8,6 @@ import (
 
 func TestSupportedDiscovererNames(t *testing.T) {
 	util.AssertStringListEquals(t,
-		[]string{"comma-separated", "const", "first-matching", "fixed", "knife", "knife-hostname"},
+		[]string{"comma-separated", "const", "first-matching", "fixed", "knife"},
 		SupportedDiscovererNames())
 }
