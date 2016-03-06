@@ -1,14 +1,14 @@
 package discoverers
 
 import (
+	"encoding/json"
+	"errors"
 	"testing"
 
-	"encoding/json"
-
-	"errors"
-
-	"github.com/abesto/easyssh/util"
 	"github.com/maraino/go-mock"
+
+	"github.com/abesto/easyssh/target"
+	"github.com/abesto/easyssh/util"
 )
 
 func TestKnifeStringViaMake(t *testing.T) {
@@ -136,13 +136,13 @@ func TestKnifeHappyPath(t *testing.T) {
 	for _, row := range data.Rows {
 		e.When("Extract", row).Return(row.Automatic.CloudV2.PublicHostname).Times(1)
 	}
-	var actualIps []string
+	var actualTargets []target.Target
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectInfof("Looking up nodes with knife matching %s", input)
-		actualIps = s.Discover(input)
+		actualTargets = s.Discover(input)
 	})
-	expectedIps := []string{"alpha.hostname", "beta.hostname", "gamma.hostname"}
-	util.AssertStringListEquals(t, expectedIps, actualIps)
+	expectedTargets := target.FromStrings("alpha.hostname", "beta.hostname", "gamma.hostname")
+	target.AssertTargetListEquals(t, expectedTargets, actualTargets)
 	util.VerifyMocks(t, e, r)
 }
 
@@ -187,13 +187,13 @@ func TestKnifeNoIp(t *testing.T) {
 	for _, row := range data.Rows {
 		e.When("Extract", row).Return(row.Automatic.CloudV2.PublicHostname).Times(1)
 	}
-	var actualIps []string
+	var actualTargets []target.Target
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectInfof("Looking up nodes with knife matching %s", input)
 		l.ExpectInfof("Host %s doesn't have an IP address, ignoring", "alpha")
-		actualIps = s.Discover(input)
+		actualTargets = s.Discover(input)
 	})
-	expectedIps := []string{"beta.hostname", "gamma.hostname"}
-	util.AssertStringListEquals(t, expectedIps, actualIps)
+	expectedTargets := target.FromStrings("beta.hostname", "gamma.hostname")
+	target.AssertTargetListEquals(t, expectedTargets, actualTargets)
 	util.VerifyMocks(t, e, r)
 }

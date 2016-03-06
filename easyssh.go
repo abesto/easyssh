@@ -10,7 +10,6 @@ import (
 	"github.com/abesto/easyssh/executors"
 	"github.com/abesto/easyssh/filters"
 	"github.com/abesto/easyssh/interfaces"
-	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 	"github.com/alexcesaro/log/stdlog"
 )
@@ -104,10 +103,7 @@ Options:
 	executor = executors.Make(executorDefinition)
 	filter = filters.Make(filterDefinition)
 
-	targets := []target.Target{}
-	for _, host := range discoverer.Discover(flag.Arg(0)) {
-		targets = append(targets, target.Target{Host: host, User: user})
-	}
+	targets := discoverer.Discover(flag.Arg(0))
 	if len(targets) == 0 {
 		util.Panicf("No targets found")
 	}

@@ -25,7 +25,7 @@ func TestIdMakeWithArgument(t *testing.T) {
 func TestIdOperation(t *testing.T) {
 	f := Make("(id)").(*id)
 
-	before := target.GivenTargets("one", "two")
+	before := target.FromStrings("one", "two")
 	after := f.Filter(before)
 	if len(after) != len(before) || before[0] != after[0] || before[1] != after[1] {
 		t.Error(before, after)

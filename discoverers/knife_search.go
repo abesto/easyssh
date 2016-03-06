@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 )
 
@@ -32,6 +33,7 @@ type knifeSearchResultRow struct {
 type knifeSearchResultRowAutomatic struct {
 	CloudV2   *knifeSearchResultCloudV2 `json:"cloud_v2"`
 	Ipaddress string
+	Hostname  string
 }
 
 type knifeSearchResultCloudV2 struct {
@@ -62,10 +64,12 @@ func (e realKnifeSearchResultRowIpExtractor) GetResultType() knifeSearchResultTy
 	return e.resultType
 }
 
-func (d *knifeSearch) Discover(input string) []string {
+func (d *knifeSearch) Discover(input string) []target.Target {
+	var targets []target.Target
+
 	if !strings.Contains(input, ":") {
 		util.Logger.Debugf("Host lookup string doesn't contain ':', it won't match anything in a knife search node query")
-		return []string{}
+		return targets
 	}
 
 	util.Logger.Infof("Looking up nodes with knife matching %s", input)
@@ -80,18 +84,18 @@ func (d *knifeSearch) Discover(input string) []string {
 	}
 	//	util.Logger.Debugf("Parsed result into data: %s", data)
 
-	var ips = []string{}
 	for _, row := range data.Rows {
 		ip := d.extractor.Extract(row)
 		if ip == "" {
 			util.Logger.Infof("Host %s doesn't have an IP address, ignoring", row.Name)
 		} else {
-			ips = append(ips, ip)
+			targets = append(targets, target.FromString(ip))
 		}
 	}
 
-	return ips
+	return targets
 }
+
 func (d *knifeSearch) SetArgs(args []interface{}) {
 	util.RequireNoArguments(d, args)
 	util.RequireOnPath(d, "knife")

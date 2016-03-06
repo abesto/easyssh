@@ -61,10 +61,7 @@ func (e *external) Exec(targets []target.Target, command []string) {
 func (e *external) SetArgs(args []interface{}) {
 	util.RequireArgumentsAtLeast(e, 1, args)
 	e.initialArgs = args
-	e.args = make([]string, len(args))
-	for i, arg := range args {
-		e.args[i] = string(arg.([]byte))
-	}
+	e.args = util.ByteToStringArray(args)
 	util.RequireOnPath(e, e.args[0])
 }
 

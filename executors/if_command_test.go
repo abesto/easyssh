@@ -70,7 +70,7 @@ func TestIfCommandSetArgs(t *testing.T) {
 func TestIfCommandGetsCommand(t *testing.T) {
 	withMockInMakerMap(func() {
 		e := Make("(if-command (mock) (mock))").(*ifCommand)
-		targets := target.GivenTargets("foo")
+		targets := target.FromStrings("foo")
 		command := []string{"ssh", "-l", "root"}
 
 		withCommand := e.withCommand.(*mockExecutor)
@@ -87,7 +87,7 @@ func TestIfCommandGetsCommand(t *testing.T) {
 func TestIfCommandGetsNoCommand(t *testing.T) {
 	withMockInMakerMap(func() {
 		e := Make("(if-command (mock) (mock))").(*ifCommand)
-		targets := target.GivenTargets("foo")
+		targets := target.FromStrings("foo")
 		command := []string{}
 
 		withCommand := e.withCommand.(*mockExecutor)

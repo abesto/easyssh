@@ -3,6 +3,7 @@ package discoverers
 import (
 	"testing"
 
+	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 )
 
@@ -34,6 +35,7 @@ func TestFixedFilterWithoutSetArgs(t *testing.T) {
 func TestFixedOperation(t *testing.T) {
 	input := "(fixed a b c)"
 	d := Make(input).(*fixed)
-	util.AssertStringListEquals(t, []string{"a", "b", "c"}, d.retval)
-	util.AssertStringListEquals(t, []string{"a", "b", "c"}, d.Discover("foobar"))
+	expected := target.FromStrings("a", "b", "c")
+	target.AssertTargetListEquals(t, expected, d.retval)
+	target.AssertTargetListEquals(t, expected, d.Discover("foobar"))
 }

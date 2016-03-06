@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/abesto/easyssh/interfaces"
+	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 )
 
@@ -12,18 +13,19 @@ type firstMatching struct {
 	children []interfaces.Discoverer
 }
 
-func (d *firstMatching) Discover(input string) []string {
+func (d *firstMatching) Discover(input string) []target.Target {
 	util.RequireArgumentsAtLeast(d, 1, d.args)
-	var hosts []string
+	var targets []target.Target
 	for _, discoverer := range d.children {
 		util.Logger.Debugf("Trying discoverer %s", discoverer)
-		hosts = discoverer.Discover(input)
-		if len(hosts) > 0 {
-			return hosts
+		targets = discoverer.Discover(input)
+		if len(targets) > 0 {
+			break
 		}
 	}
-	return []string{}
+	return targets
 }
+
 func (d *firstMatching) SetArgs(args []interface{}) {
 	util.RequireArgumentsAtLeast(d, 1, args)
 	d.args = args
@@ -32,6 +34,7 @@ func (d *firstMatching) SetArgs(args []interface{}) {
 		d.children = append(d.children, makeFromSExp(exp.([]interface{})))
 	}
 }
+
 func (d *firstMatching) String() string {
 	return fmt.Sprintf("<%s %s>", nameFirstMatching, d.children)
 }

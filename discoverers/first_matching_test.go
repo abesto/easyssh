@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 )
 
@@ -49,11 +50,11 @@ func TestFirstMatchingSetArgs(t *testing.T) {
 func TestFirstMatchingOperation(t *testing.T) {
 	f := Make("(first-matching (const foo) (const a b) (const c d))").(*firstMatching)
 	// Hack to test skipping a non-matching discoverer
-	f.children[0].(*fixed).retval = []string{}
+	f.children[0].(*fixed).retval = []target.Target{}
 
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("Trying discoverer %s", "<fixed []>")
 		l.ExpectDebugf("Trying discoverer %s", "<fixed [a b]>")
-		util.AssertStringListEquals(t, []string{"a", "b"}, f.Discover("irrelevant string"))
+		target.AssertTargetListEquals(t, target.FromStrings("a", "b"), f.Discover("irrelevant string"))
 	})
 }

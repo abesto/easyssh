@@ -227,3 +227,11 @@ func (w prefixedLogWriterProxy) Write(p []byte) (n int, err error) {
 	}
 	return len(p), nil
 }
+
+func ByteToStringArray(input []interface{}) []string {
+	output := make([]string, len(input))
+	for i, item := range input {
+		output[i] = string(item.([]byte))
+	}
+	return output
+}

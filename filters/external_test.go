@@ -32,7 +32,7 @@ func TestExternalMakeWithoutArgument(t *testing.T) {
 func TestExternalFilterWithoutSetArgs(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		util.ExpectPanic(t, "<external []> requires at least 1 argument(s), got 0: []",
-			func() { (&external{}).Filter(target.GivenTargets()) })
+			func() { (&external{}).Filter(target.FromStrings()) })
 	})
 }
 
@@ -70,7 +70,7 @@ func TestExternalOperation(t *testing.T) {
 	m.When("make", "", "easyssh").Return(os.Stdin, nil)
 	f.tmpFileMaker = m
 	// When passed these targets
-	input := target.GivenTargets("foo", "bar", "foobar", "baz")
+	input := target.FromStrings("foo", "bar", "foobar", "baz")
 	// And return these.
 	expectedOutput := []target.Target{input[0], input[3]}
 	output := f.Filter(input)

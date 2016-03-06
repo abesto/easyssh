@@ -74,7 +74,7 @@ func TestExternalSetArgs(t *testing.T) {
 }
 
 func TestExternalMakeSingleRunJob(t *testing.T) {
-	targets := target.GivenTargets("foo", "bar")
+	targets := target.FromStrings("foo", "bar")
 	command := []string{"ls"}
 	for _, item := range externalDefs {
 		executor := Make(fmt.Sprintf("(%s csshx -l root)", item.name)).(*external)
@@ -92,7 +92,7 @@ func TestExternalMakeSingleRunJob(t *testing.T) {
 }
 
 func TestExternalMakeJobPerTarget(t *testing.T) {
-	targets := target.GivenTargets("foo", "bar")
+	targets := target.FromStrings("foo", "bar")
 	command := []string{"ls"}
 	for _, item := range externalDefs {
 		executor := Make(fmt.Sprintf("(%s ssh)", item.name)).(*external)
@@ -116,7 +116,7 @@ func TestExternalMakeJobPerTarget(t *testing.T) {
 }
 
 func TestExternalExec(t *testing.T) {
-	targets := target.GivenTargets("foo", "bar")
+	targets := target.FromStrings("foo", "bar")
 	command := []string{"ls"}
 	for _, item := range externalDefs {
 		executor := Make(fmt.Sprintf("(%s ssh)", item.name)).(*external)

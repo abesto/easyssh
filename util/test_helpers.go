@@ -6,8 +6,8 @@ import (
 
 	"reflect"
 
-	"github.com/maraino/go-mock"
 	"github.com/alexcesaro/log"
+	"github.com/maraino/go-mock"
 )
 
 type TestReporter interface {

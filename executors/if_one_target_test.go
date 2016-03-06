@@ -70,7 +70,7 @@ func TestIfOneTargetSetArgs(t *testing.T) {
 func TestIfOneTargetGetsOneTarget(t *testing.T) {
 	withMockInMakerMap(func() {
 		e := Make("(if-one-target (mock) (mock))").(*ifOneTarget)
-		targets := target.GivenTargets("foo")
+		targets := target.FromStrings("foo")
 		command := []string{"ssh", "-l", "root"}
 
 		one := e.one.(*mockExecutor)
@@ -87,7 +87,7 @@ func TestIfOneTargetGetsOneTarget(t *testing.T) {
 func TestIfOneTargetGetsMultipleTargets(t *testing.T) {
 	withMockInMakerMap(func() {
 		e := Make("(if-one-target (mock) (mock))").(*ifOneTarget)
-		targets := target.GivenTargets("bar", "baz")
+		targets := target.FromStrings("bar", "baz")
 		command := []string{"ls", "/"}
 
 		one := e.one.(*mockExecutor)

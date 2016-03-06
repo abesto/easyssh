@@ -80,7 +80,7 @@ func TestListOperation(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("Targets after filter %s: %s", "<append-string foo>", "[onefoo twofoo]")
 		l.ExpectDebugf("Targets after filter %s: %s", "<append-string bar>", "[onefoobar twofoobar]")
-		ts = f.Filter(target.GivenTargets("one", "two"))
+		ts = f.Filter(target.FromStrings("one", "two"))
 	})
 
 	if len(ts) != 2 || ts[0].Host != "onefoobar" || ts[1].Host != "twofoobar" {

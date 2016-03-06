@@ -79,7 +79,7 @@ func TestAssertCommandSetArgs(t *testing.T) {
 func TestAssertCommandGetsCommand(t *testing.T) {
 	withMockInMakerMap(func() {
 		e := Make("(assert-command (mock))").(*assertCommand)
-		targets := target.GivenTargets("foo", "bar")
+		targets := target.FromStrings("foo", "bar")
 		command := []string{"ssh", "-l", "root"}
 
 		m := e.child.(*mockExecutor)
@@ -93,7 +93,7 @@ func TestAssertCommandGetsCommand(t *testing.T) {
 func TestAssertCommandGetsNoCommand(t *testing.T) {
 	withMockInMakerMap(func() {
 		e := Make("(assert-command (mock))").(*assertCommand)
-		targets := target.GivenTargets("foo", "bar")
+		targets := target.FromStrings("foo", "bar")
 		command := []string{}
 		util.ExpectPanic(t, "<assert-command <mock>> requires a command.", func() { e.Exec(targets, command) })
 	})
@@ -102,7 +102,7 @@ func TestAssertCommandGetsNoCommand(t *testing.T) {
 func TestAssertNoCommandGetsNoCommand(t *testing.T) {
 	withMockInMakerMap(func() {
 		e := Make("(assert-no-command (mock))").(*assertCommand)
-		targets := target.GivenTargets("foo", "bar")
+		targets := target.FromStrings("foo", "bar")
 		command := []string{}
 
 		m := e.child.(*mockExecutor)
@@ -116,7 +116,7 @@ func TestAssertNoCommandGetsNoCommand(t *testing.T) {
 func TestAssertNoCommandGetsCommand(t *testing.T) {
 	withMockInMakerMap(func() {
 		e := Make("(assert-no-command (mock))").(*assertCommand)
-		targets := target.GivenTargets("foo", "bar")
+		targets := target.FromStrings("foo", "bar")
 		command := []string{"ssh", "-l", "root"}
 		util.ExpectPanic(t, "<assert-no-command <mock>> doesn't accept a command, got: [ssh -l root]", func() { e.Exec(targets, command) })
 	})

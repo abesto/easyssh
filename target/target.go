@@ -24,7 +24,7 @@ func (t Target) withUser(s string) string {
 	return s
 }
 
-func firstNonEmptyString(strs []string) string {
+func firstNonEmptyString(strs ...string) string {
 	for _, s := range strs {
 		if s != "" {
 			return s
@@ -33,9 +33,9 @@ func firstNonEmptyString(strs []string) string {
 	return ""
 }
 
-func (t Target) firstNonEmptyStringWithUser(strs []string) string {
+func (t Target) firstNonEmptyStringWithUser(strs ...string) string {
 	t.verify()
-	return t.withUser(firstNonEmptyString(strs))
+	return t.withUser(firstNonEmptyString(strs...))
 }
 
 /*
@@ -43,7 +43,7 @@ SSHTarget returns the most specific network-level descriptor of the target, alon
 Specifically, the first non-empty value of IP, Host
 */
 func (t Target) SSHTarget() string {
-	return t.firstNonEmptyStringWithUser([]string{t.IP, t.Host})
+	return t.firstNonEmptyStringWithUser(t.IP, t.Host)
 }
 
 /*
@@ -51,7 +51,7 @@ FriendlyName returns the most descriptive name available for the target.
 Specifically, the first non-empty value of Hostname, Host, IP
 */
 func (t Target) FriendlyName() string {
-	return t.firstNonEmptyStringWithUser([]string{t.Hostname, t.Host, t.IP})
+	return t.firstNonEmptyStringWithUser(t.Hostname, t.Host, t.IP)
 }
 
 func (t Target) String() string {
@@ -59,7 +59,7 @@ func (t Target) String() string {
 }
 
 func (t Target) verify() {
-	if firstNonEmptyString([]string{t.IP, t.Host}) == "" {
+	if firstNonEmptyString(t.IP, t.Host) == "" {
 		util.Panicf("At least one of Target.IP and Target.Host must be set")
 	}
 }
@@ -114,4 +114,15 @@ func FromString(str string) Target {
 	target.verify()
 
 	return target
+}
+
+/*
+FromStrings maps FromString over...string
+*/
+func FromStrings(targetStrings ...string) []Target {
+	targets := make([]Target, len(targetStrings))
+	for i := 0; i < len(targetStrings); i++ {
+		targets[i] = FromString(targetStrings[i])
+	}
+	return targets
 }

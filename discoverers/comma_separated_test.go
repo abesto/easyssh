@@ -3,6 +3,7 @@ package discoverers
 import (
 	"testing"
 
+	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 )
 
@@ -27,15 +28,14 @@ func TestCommaSeparatedOperation(t *testing.T) {
 	d := Make("(comma-separated)")
 	cases := []struct {
 		input          string
-		expectedOutput []string
+		expectedOutput []target.Target
 	}{
-		{"", []string{}},
-		{"foo", []string{"foo"}},
-		{"alpha,beta", []string{"alpha", "beta"}},
+		{"", []target.Target{}},
+		{"foo", target.FromStrings("foo")},
+		{"alpha,beta", target.FromStrings("alpha", "beta")},
 	}
 
 	for _, c := range cases {
-		actualOutput := d.Discover(c.input)
-		util.AssertStringListEquals(t, c.expectedOutput, actualOutput)
+		target.AssertTargetListEquals(t, c.expectedOutput, d.Discover(c.input))
 	}
 }

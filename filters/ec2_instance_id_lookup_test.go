@@ -120,7 +120,7 @@ func TestEc2InstanceIdLookupFails(t *testing.T) {
 		// When the aws cli tool fails
 		awsReturns(r, instanceId, f.region, msg, util.DummyError{Msg: "test fails aws"}).Times(2)
 		// Filtering doesn't touch the target list
-		targets := target.GivenTargets(host, host)
+		targets := target.FromStrings(host, host)
 		assertFilterResults(t, f, targets, targets)
 		util.VerifyMocks(t, r)
 		// And no panic happened on JSON parsing, even though the CLI tools output was not valid JSON, because we don't even try to parse the output.

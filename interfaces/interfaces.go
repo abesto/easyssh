@@ -9,7 +9,7 @@ import (
 type Discoverer interface {
 	HasSetArgs
 	fmt.Stringer
-	Discover(input string) []string
+	Discover(input string) []target.Target
 }
 
 type HasSetArgs interface {

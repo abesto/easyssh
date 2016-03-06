@@ -35,8 +35,8 @@ func TestFirstOperation(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		output := f.Filter(target.GivenTargets(c.input...))
-		expectedOutput := target.GivenTargets(c.expectedOutput...)
+		output := f.Filter(target.FromStrings(c.input...))
+		expectedOutput := target.FromStrings(c.expectedOutput...)
 		if len(output) != len(expectedOutput) {
 			t.Error(c, output)
 		}
