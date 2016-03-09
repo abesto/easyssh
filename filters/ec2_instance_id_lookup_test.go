@@ -91,8 +91,8 @@ func givenAnEc2InstanceIdLookupWithMockedParserAndRunner(shouldMatch bool) (*uti
 	return r, f
 }
 
-func awsReturns(r *util.MockCommandRunner, instanceId string, region string, output string, err error) *mock.MockFunction {
-	return r.When("Outputs", "aws", []string{"ec2", "describe-instances", "--instance-id", instanceId, "--region", region}).Return(
+func awsReturns(r *util.MockCommandRunner, instanceIds []string, region string, output string, err error) *mock.MockFunction {
+	return r.When("Outputs", "aws", append([]string{"ec2", "describe-instances", "--region", region, "--instance-ids"}, instanceIds...)).Return(
 		util.CommandRunnerOutputs{Combined: []byte(output), Error: err})
 }
 
@@ -102,8 +102,8 @@ func assertFilterResults(t *testing.T, f *ec2InstanceIdLookup, input []target.Ta
 		t.Fail()
 	}
 	for i := 0; i < len(input); i++ {
-		if expectedOutput[0] != actualOutput[0] {
-			t.Errorf("Target %d was expected to be %s, found %s", i, expectedOutput[0], actualOutput[0])
+		if expectedOutput[0].IP != actualOutput[0].IP {
+			t.Errorf("IP of Target %d was expected to be %s, found %s", i, expectedOutput[0].IP, actualOutput[0].IP)
 		}
 	}
 }
@@ -114,13 +114,13 @@ func TestEc2InstanceIdLookupFails(t *testing.T) {
 		msg := "A client error (InvalidInstanceID.NotFound) occurred when calling the DescribeInstances operation: The instance ID 'i-deadbeef' does not exist"
 		host := "dummy-instance-id"
 		instanceId := host + ".instanceid"
-		l.ExpectInfof("EC2 Instance lookup: %s in %s", instanceId, f.region).Times(2)
-		l.ExpectDebugf("Response from AWS API: %s", msg).Times(2)
-		l.ExpectInfof("EC2 Instance lookup failed for %s (%s) in region %s (aws command failed): %s", host, instanceId, f.region, msg).Times(2)
-		// When the aws cli tool fails
-		awsReturns(r, instanceId, f.region, msg, util.DummyError{Msg: "test fails aws"}).Times(2)
-		// Filtering doesn't touch the target list
 		targets := target.FromStrings(host, host)
+		l.ExpectInfof("EC2 Instance lookup: %s in %s", "[dummy-instance-id.instanceid dummy-instance-id.instanceid]", f.region)
+		l.ExpectDebugf("Response from AWS API: %s", msg)
+		l.ExpectInfof("EC2 Instance lookup failed in region %s (aws command failed): %s", f.region, msg)
+		// When the aws cli tool fails
+		awsReturns(r, []string{instanceId, instanceId}, f.region, msg, util.DummyError{Msg: "test fails aws"})
+		// Filtering doesn't touch the target list
 		assertFilterResults(t, f, targets, targets)
 		util.VerifyMocks(t, r)
 		// And no panic happened on JSON parsing, even though the CLI tools output was not valid JSON, because we don't even try to parse the output.
@@ -134,9 +134,9 @@ func TestEc2InstanceIdLookupInvalidJson(t *testing.T) {
 		instanceId := host + ".instanceid"
 		r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(true)
 		l.ExpectDebugf("Response from AWS API: %s", invalidJson)
-		l.ExpectInfof("EC2 Instance lookup: %s in %s", instanceId, f.region)
+		l.ExpectInfof("EC2 Instance lookup: %s in %s", "[dummy-instance-id.instanceid]", f.region)
 		// When the AWS API returns invalid JSON
-		awsReturns(r, instanceId, f.region, invalidJson, nil).Times(1)
+		awsReturns(r, []string{instanceId}, f.region, invalidJson, nil).Times(1)
 		// I get a fatal error for filtering
 		util.ExpectPanic(t, fmt.Sprintf("Invalid JSON returned by AWS API.\nError: invalid character 'H' looking for beginning of value\nJSON follows this line\n%s", invalidJson),
 			func() { f.Filter([]target.Target{target.FromString(host)}) })
@@ -149,8 +149,8 @@ func jsonWithoutReservations() string {
 	return string(bytes)
 }
 
-func jsonWithIp(ip string, dnsName string) string {
-	bytes, _ := json.Marshal(ec2DescribeInstanceApiResponse{Reservations: []ec2Reservation{{Instances: []ec2Instance{{PublicIpAddress: ip, PublicDnsName: dnsName}}}}})
+func jsonWithIp(ip string, dnsName string, instanceId string) string {
+	bytes, _ := json.Marshal(ec2DescribeInstanceApiResponse{Reservations: []ec2Reservation{{Instances: []ec2Instance{{PublicIpAddress: ip, PublicDnsName: dnsName, InstanceId: instanceId}}}}})
 	return string(bytes)
 }
 
@@ -163,13 +163,14 @@ type lookupCase struct {
 }
 
 func makeLookupCase(inputHost string, publicIp string, publicDns string) lookupCase {
-	c := lookupCase{inputHost: inputHost, instanceId: inputHost + ".instanceid", publicDns: publicDns}
+	instanceId := inputHost + ".instanceid"
+	c := lookupCase{inputHost: inputHost, instanceId: instanceId, publicDns: publicDns}
 	if publicIp == "" {
 		c.publicIp = inputHost
 		c.json = jsonWithoutReservations()
 	} else {
 		c.publicIp = publicIp
-		c.json = jsonWithIp(publicIp, publicDns)
+		c.json = jsonWithIp(publicIp, publicDns, instanceId)
 	}
 	return c
 }
@@ -188,10 +189,23 @@ func makeInputAndOutputTargets(cases []lookupCase, shouldRewrite bool) ([]target
 	return inputTargets, outputTargets
 }
 
-func assertLookupCasesPass(t *testing.T, r *util.MockCommandRunner, f *ec2InstanceIdLookup, shouldRewrite bool, cases []lookupCase) {
+func mergeJsonsOfCases(cases []lookupCase) string {
+	mergedData := ec2DescribeInstanceApiResponse{}
 	for _, c := range cases {
-		awsReturns(r, c.instanceId, f.region, c.json, nil).Times(1)
+		var caseData ec2DescribeInstanceApiResponse
+		json.Unmarshal([]byte(c.json), &caseData)
+		mergedData.Reservations = append(mergedData.Reservations, caseData.Reservations...)
 	}
+	mergedJson, _ := json.Marshal(mergedData)
+	return string(mergedJson)
+}
+
+func assertLookupCasesPass(t *testing.T, r *util.MockCommandRunner, f *ec2InstanceIdLookup, shouldRewrite bool, cases []lookupCase) {
+	ids := make([]string, len(cases))
+	for i, c := range cases {
+		ids[i] = c.instanceId
+	}
+	awsReturns(r, ids, f.region, mergeJsonsOfCases(cases), nil).Times(1)
 	inputTargets, expectedOutputTargets := makeInputAndOutputTargets(cases, shouldRewrite)
 	assertFilterResults(t, f, inputTargets, expectedOutputTargets)
 }
@@ -207,8 +221,8 @@ func TestEc2InstanceIdLookupDoesntLookLikeInstanceId(t *testing.T) {
 		for _, c := range cases {
 			l.ExpectDebugf("Target %s looks like it doesn't have EC2 instance ID, skipping lookup for region %s", c.inputHost, f.region)
 		}
+		l.ExpectDebugf("%s received no targets that look like they have EC2 instance IDs", f.String())
 		assertLookupCasesPass(t, r, f, false, cases)
-
 	})
 }
 
@@ -216,19 +230,14 @@ func TestEc2InstanceIdLookupHappyPath(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(true)
 		cases := []lookupCase{
-			makeLookupCase("no-hits", "", ""),
 			makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1", "public-deadbeef"),
 			makeLookupCase("i-12345678", "2.2.2.2", "public-12345678"),
 		}
 
+		l.ExpectInfof("EC2 Instance lookup: %s in %s", "[foo.i-deadbeef.bar.instanceid i-12345678.instanceid]", f.region)
+		l.ExpectDebugf("Response from AWS API: %s", mergeJsonsOfCases(cases))
 		for _, c := range cases {
-			l.ExpectInfof("EC2 Instance lookup: %s in %s", c.instanceId, f.region)
-			l.ExpectDebugf("Response from AWS API: %s", c.json)
-			if c.json == jsonWithoutReservations() {
-				l.ExpectInfof("EC2 instance lookup failed for %s (%s) in region %s (Reservations is empty in the received JSON)", c.inputHost, c.instanceId, f.region)
-			} else {
-				l.ExpectInfof("AWS API returned PublicIpAddress=%s PublicDnsName=%s for %s (%s)", c.publicIp, c.publicDns, c.inputHost, c.instanceId)
-			}
+			l.ExpectInfof("AWS API returned PublicIpAddress=%s PublicDnsName=%s for %s (%s)", c.publicIp, c.publicDns, c.inputHost, c.instanceId)
 		}
 
 		assertLookupCasesPass(t, r, f, true, cases)
