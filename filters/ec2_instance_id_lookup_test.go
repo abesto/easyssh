@@ -149,8 +149,8 @@ func jsonWithoutReservations() string {
 	return string(bytes)
 }
 
-func jsonWithIp(ip string) string {
-	bytes, _ := json.Marshal(ec2DescribeInstanceApiResponse{Reservations: []ec2Reservation{{Instances: []ec2Instance{{PublicIpAddress: ip}}}}})
+func jsonWithIp(ip string, dnsName string) string {
+	bytes, _ := json.Marshal(ec2DescribeInstanceApiResponse{Reservations: []ec2Reservation{{Instances: []ec2Instance{{PublicIpAddress: ip, PublicDnsName: dnsName}}}}})
 	return string(bytes)
 }
 
@@ -158,17 +158,18 @@ type lookupCase struct {
 	inputHost  string
 	instanceId string
 	publicIp   string
+	publicDns  string
 	json       string
 }
 
-func makeLookupCase(inputHost string, publicIp string) lookupCase {
-	c := lookupCase{inputHost: inputHost, instanceId: inputHost + ".instanceid"}
+func makeLookupCase(inputHost string, publicIp string, publicDns string) lookupCase {
+	c := lookupCase{inputHost: inputHost, instanceId: inputHost + ".instanceid", publicDns: publicDns}
 	if publicIp == "" {
 		c.publicIp = inputHost
 		c.json = jsonWithoutReservations()
 	} else {
 		c.publicIp = publicIp
-		c.json = jsonWithIp(publicIp)
+		c.json = jsonWithIp(publicIp, publicDns)
 	}
 	return c
 }
@@ -198,9 +199,9 @@ func assertLookupCasesPass(t *testing.T, r *util.MockCommandRunner, f *ec2Instan
 func TestEc2InstanceIdLookupDoesntLookLikeInstanceId(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		cases := []lookupCase{
-			makeLookupCase("no-hits", ""),
-			makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1"),
-			makeLookupCase("i-12345678", "2.2.2.2"),
+			makeLookupCase("no-hits", "", ""),
+			makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1", "public-deadbeef"),
+			makeLookupCase("i-12345678", "2.2.2.2", "public-12345678"),
 		}
 		r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(false)
 		for _, c := range cases {
@@ -215,9 +216,9 @@ func TestEc2InstanceIdLookupHappyPath(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(true)
 		cases := []lookupCase{
-			makeLookupCase("no-hits", ""),
-			makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1"),
-			makeLookupCase("i-12345678", "2.2.2.2"),
+			makeLookupCase("no-hits", "", ""),
+			makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1", "public-deadbeef"),
+			makeLookupCase("i-12345678", "2.2.2.2", "public-12345678"),
 		}
 
 		for _, c := range cases {
@@ -226,7 +227,7 @@ func TestEc2InstanceIdLookupHappyPath(t *testing.T) {
 			if c.json == jsonWithoutReservations() {
 				l.ExpectInfof("EC2 instance lookup failed for %s (%s) in region %s (Reservations is empty in the received JSON)", c.inputHost, c.instanceId, f.region)
 			} else {
-				l.ExpectInfof("AWS API returned PublicIpAddress %s for %s (%s)", c.publicIp, c.inputHost, c.instanceId)
+				l.ExpectInfof("AWS API returned PublicIpAddress=%s PublicDnsName=%s for %s (%s)", c.publicIp, c.publicDns, c.inputHost, c.instanceId)
 			}
 		}
 

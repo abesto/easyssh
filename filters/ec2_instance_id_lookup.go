@@ -67,9 +67,10 @@ func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
 				continue
 			}
 
-			ip := data.Reservations[0].Instances[0].PublicIpAddress
-			util.Logger.Infof("AWS API returned PublicIpAddress %s for %s (%s)", ip, targets[idx].Host, instanceId)
-			targets[idx].Host = ip
+			instance := data.Reservations[0].Instances[0]
+			targets[idx].IP = instance.PublicIpAddress
+			targets[idx].Host = instance.PublicDnsName
+			util.Logger.Infof("AWS API returned PublicIpAddress=%s PublicDnsName=%s for %s (%s)", targets[idx].IP, targets[idx].Host, t.Host, instanceId)
 		} else {
 			util.Logger.Debugf("Target %s looks like it doesn't have EC2 instance ID, skipping lookup for region %s", t.FriendlyName(), f.region)
 		}
