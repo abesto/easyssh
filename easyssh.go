@@ -108,6 +108,10 @@ Options:
 		util.Panicf("No targets found")
 	}
 
+	for i := range targets {
+		targets[i].User = user
+	}
+
 	logger.Debugf("Targets before filters: %s", targets)
 	targets = filter.Filter(targets)
 	logger.Infof("Targets: %s", targets)
