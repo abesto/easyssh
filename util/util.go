@@ -220,10 +220,9 @@ func newPrefixedLogWriterProxy(prefix string, file *os.File) prefixedLogWriterPr
 	return prefixedLogWriterProxy{prefix: prefix, logger: golog.New(file, log.Debug)}
 }
 func (w prefixedLogWriterProxy) Write(p []byte) (n int, err error) {
-	var logger = *w.logger
 	var lines = strings.Split(strings.TrimSpace(string(p)), "\n")
 	for _, line := range lines {
-		logger.Notice(w.prefix, line)
+		w.logger.Notice(w.prefix, line)
 	}
 	return len(p), nil
 }

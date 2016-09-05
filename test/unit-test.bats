@@ -24,11 +24,10 @@ load common
         fi
     }
     
-    # Standard go tooling behavior is to ignore dirs with leading underscors
-    for dir in $(find . -maxdepth 10 -not -path './.git*' -not -path '*/_*' -type d);
+    for dir in $(go list -f '{{.Dir}}' ./... | xargs realpath --relative-to=$(pwd) | grep -v '^vendor/')
     do
         if ls $dir/*.go &> /dev/null; then
-            godep go test -covermode=count -coverprofile=profile.out $dir || fail=1
+            go test -covermode=count -coverprofile=profile.out ./$dir || fail=1
             if [ -f profile.out ] && want-coverage-for $dir
             then
                 cat profile.out | grep -v "^mode: " | grep -v "test_helpers.go" >> acc.out
