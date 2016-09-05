@@ -6,7 +6,6 @@ import (
 
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestIfOneTargetStringViaMake(t *testing.T) {
@@ -79,7 +78,8 @@ func TestIfOneTargetGetsOneTarget(t *testing.T) {
 		more := e.more.(*mockExecutor)
 
 		e.Exec(targets, command)
-		mock.AssertExpectationsForObjects(t, one.Mock, more.Mock)
+		one.AssertExpectations(t)
+		more.AssertExpectations(t)
 	})
 }
 
@@ -95,6 +95,7 @@ func TestIfOneTargetGetsMultipleTargets(t *testing.T) {
 		more.On("Exec", targets, command).Times(1)
 
 		e.Exec(targets, command)
-		mock.AssertExpectationsForObjects(t, one.Mock, more.Mock)
+		one.AssertExpectations(t)
+		more.AssertExpectations(t)
 	})
 }

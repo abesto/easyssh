@@ -123,7 +123,7 @@ func TestEc2InstanceIdLookupFails(t *testing.T) {
 		awsReturns(r, []string{instanceId, instanceId}, f.region, msg, util.DummyError{Msg: "test fails aws"})
 		// Filtering doesn't touch the target list
 		assertFilterResults(t, f, targets, targets)
-		mock.AssertExpectationsForObjects(t, r.Mock)
+		r.AssertExpectations(t)
 		// And no panic happened on JSON parsing, even though the CLI tools output was not valid JSON, because we don't even try to parse the output.
 	})
 }
@@ -141,7 +141,7 @@ func TestEc2InstanceIdLookupInvalidJson(t *testing.T) {
 		// I get a fatal error for filtering
 		util.ExpectPanic(t, fmt.Sprintf("Invalid JSON returned by AWS API.\nError: invalid character 'H' looking for beginning of value\nJSON follows this line\n%s", invalidJson),
 			func() { f.Filter([]target.Target{target.FromString(host)}) })
-		mock.AssertExpectationsForObjects(t, r.Mock)
+		r.AssertExpectations(t)
 	})
 }
 
@@ -242,6 +242,6 @@ func TestEc2InstanceIdLookupHappyPath(t *testing.T) {
 		}
 
 		assertLookupCasesPass(t, r, f, true, cases)
-		mock.AssertExpectationsForObjects(t, r.Mock)
+		r.AssertExpectations(t)
 	})
 }

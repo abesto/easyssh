@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/mock"
-
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 )
@@ -138,7 +136,8 @@ func TestExternalExec(t *testing.T) {
 			}
 
 			executor.Exec(targets, command)
-			mock.AssertExpectationsForObjects(t, m.Mock, l.Mock)
+			m.AssertExpectations(t)
+			l.AssertExpectations(t)
 		})
 	}
 }

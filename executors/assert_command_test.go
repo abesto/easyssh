@@ -6,8 +6,6 @@ import (
 
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
-
-	"github.com/stretchr/testify/mock"
 )
 
 var assertCommandNames = []string{nameAssertCommand, nameAssertNoCommand}
@@ -88,7 +86,7 @@ func TestAssertCommandGetsCommand(t *testing.T) {
 		m.On("Exec", targets, command).Times(1)
 
 		e.Exec(targets, command)
-		mock.AssertExpectationsForObjects(t, m.Mock)
+		m.AssertExpectations(t)
 	})
 }
 
@@ -111,7 +109,7 @@ func TestAssertNoCommandGetsNoCommand(t *testing.T) {
 		m.On("Exec", targets, command).Times(1)
 
 		e.Exec(targets, command)
-		mock.AssertExpectationsForObjects(t, m.Mock)
+		m.AssertExpectations(t)
 	})
 }
 

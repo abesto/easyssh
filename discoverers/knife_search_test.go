@@ -91,7 +91,8 @@ func TestKnifeNoColonInSearchString(t *testing.T) {
 			t.Fail()
 		}
 	})
-	mock.AssertExpectationsForObjects(t, e.Mock, r.Mock)
+	e.AssertExpectations(t)
+	r.AssertExpectations(t)
 }
 
 func TestKnifeError(t *testing.T) {
@@ -103,7 +104,8 @@ func TestKnifeError(t *testing.T) {
 		l.ExpectInfof("Looking up nodes with knife matching %s", input)
 		util.ExpectPanic(t, "Knife lookup failed: knife run failed\nOutput:\nFoo\nBar", func() { s.Discover(input) })
 	})
-	mock.AssertExpectationsForObjects(t, e.Mock, r.Mock)
+	e.AssertExpectations(t)
+	r.AssertExpectations(t)
 }
 
 func TestKnifeInvalidJsonFromKnife(t *testing.T) {
@@ -116,7 +118,8 @@ func TestKnifeInvalidJsonFromKnife(t *testing.T) {
 			"Failed to parse knife search result: invalid character 'I' looking for beginning of value",
 			func() { s.Discover(input) })
 	})
-	mock.AssertExpectationsForObjects(t, e.Mock, r.Mock)
+	e.AssertExpectations(t)
+	r.AssertExpectations(t)
 }
 
 func TestKnifeHappyPath(t *testing.T) {
@@ -134,7 +137,8 @@ func TestKnifeHappyPath(t *testing.T) {
 	})
 	expectedTargets := target.FromStrings("alpha.hostname", "beta.hostname", "gamma.hostname")
 	target.AssertTargetListEquals(t, expectedTargets, actualTargets)
-	mock.AssertExpectationsForObjects(t, e.Mock, r.Mock)
+	e.AssertExpectations(t)
+	r.AssertExpectations(t)
 }
 
 func TestKnifeExtractor(t *testing.T) {

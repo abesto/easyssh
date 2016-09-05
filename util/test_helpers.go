@@ -179,7 +179,7 @@ func ExpectLogs(t mock.TestingT, setExpectedCalls func(*MockLogger)) func() {
 	l := Logger.(*MockLogger)
 	setExpectedCalls(l)
 	return func() {
-		mock.AssertExpectationsForObjects(t, l.Mock)
+		l.AssertExpectations(t)
 		Logger = originalLogger
 	}
 }

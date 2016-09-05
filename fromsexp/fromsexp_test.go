@@ -85,7 +85,8 @@ func TestMakeFromStringWithoutTransforms(t *testing.T) {
 		t.Errorf("MakeFromString returned %v, expected: %v", actualFoo, expectedFoo)
 	}
 
-	mock.AssertExpectationsForObjects(t, m.Mock, expectedFoo.Mock)
+	m.AssertExpectations(t)
+	expectedFoo.AssertExpectations(t)
 }
 
 func TestMakeFromStringWithTransforms(t *testing.T) {
@@ -105,7 +106,8 @@ func TestMakeFromStringWithTransforms(t *testing.T) {
 		t.Errorf("MakeFromString returned %v, expected: %v", actualFoo, expectedFoo)
 	}
 
-	mock.AssertExpectationsForObjects(t, m.Mock, expectedFoo.Mock)
+	m.AssertExpectations(t)
+	expectedFoo.AssertExpectations(t)
 }
 
 func TestInvalidInputs(t *testing.T) {

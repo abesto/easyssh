@@ -78,5 +78,6 @@ func TestExternalOperation(t *testing.T) {
 	if len(output) != len(expectedOutput) || output[0] != expectedOutput[0] || output[1] != expectedOutput[1] {
 		t.Error(input, output, expectedOutput)
 	}
-	mock.AssertExpectationsForObjects(t, r.Mock, m.Mock)
+	r.AssertExpectations(t)
+	m.AssertExpectations(t)
 }

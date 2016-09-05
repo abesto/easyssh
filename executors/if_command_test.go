@@ -79,7 +79,8 @@ func TestIfCommandGetsCommand(t *testing.T) {
 		withoutCommand := e.withoutCommand.(*mockExecutor)
 
 		e.Exec(targets, command)
-		mock.AssertExpectationsForObjects(t, withCommand.Mock, withoutCommand.Mock)
+		withCommand.AssertExpectations(t)
+		withoutCommand.AssertExpectations(t)
 	})
 }
 
@@ -95,6 +96,7 @@ func TestIfCommandGetsNoCommand(t *testing.T) {
 		withoutCommand.On("Exec", mock.Anything, mock.Anything).Times(1)
 
 		e.Exec(targets, command)
-		mock.AssertExpectationsForObjects(t, withCommand.Mock, withoutCommand.Mock)
+		withCommand.AssertExpectations(t)
+		withoutCommand.AssertExpectations(t)
 	})
 }
