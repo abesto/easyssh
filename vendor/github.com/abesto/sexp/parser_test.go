@@ -1,7 +1,7 @@
 package sexp
 
 import (
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
