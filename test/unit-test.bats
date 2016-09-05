@@ -24,7 +24,7 @@ load common
         fi
     }
     
-    for dir in $(go list -f '{{.Dir}}' ./... | xargs realpath --relative-to=$(pwd) | grep -v '^vendor/')
+    for dir in $(for dir in $(go list -f '{{.Dir}}' ./...); do echo "${dir#$(pwd)/}"; done | grep -vE "^$(pwd)$|^vendor/")
     do
         if ls $dir/*.go &> /dev/null; then
             go test -covermode=count -coverprofile=profile.out ./$dir || fail=1
