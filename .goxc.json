@@ -4,15 +4,12 @@
         "publish-github"
     ],
     "BuildConstraints": "linux,!arm windows,darwin,freebsd",
-    "PackageVersion": "0.1.2",
+    "PackageVersion": "0.1.3",
     "TaskSettings": {
         "publish-github": {
             "owner": "abesto",
             "repository": "easyssh"
         }
     },
-    "Env": [
-        "GOPATH={{.Env.PWD}}{{.PS}}Godeps{{.PS}}_workspace{{.PLS}}{{.Env.GOPATH}}"
-    ],
     "ConfigVersion": "0.9"
 }
