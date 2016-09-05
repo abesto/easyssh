@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
-	"github.com/maraino/go-mock"
 )
 
 type dummyEc2InstanceIdParser struct {
@@ -91,8 +92,8 @@ func givenAnEc2InstanceIdLookupWithMockedParserAndRunner(shouldMatch bool) (*uti
 	return r, f
 }
 
-func awsReturns(r *util.MockCommandRunner, instanceIds []string, region string, output string, err error) *mock.MockFunction {
-	return r.When("Outputs", "aws", append([]string{"ec2", "describe-instances", "--region", region, "--instance-ids"}, instanceIds...)).Return(
+func awsReturns(r *util.MockCommandRunner, instanceIds []string, region string, output string, err error) *mock.Call {
+	return r.On("Outputs", "aws", append([]string{"ec2", "describe-instances", "--region", region, "--instance-ids"}, instanceIds...)).Return(
 		util.CommandRunnerOutputs{Combined: []byte(output), Error: err})
 }
 
@@ -118,11 +119,11 @@ func TestEc2InstanceIdLookupFails(t *testing.T) {
 		l.ExpectInfof("EC2 Instance lookup: %s in %s", "[dummy-instance-id.instanceid dummy-instance-id.instanceid]", f.region)
 		l.ExpectDebugf("Response from AWS API: %s", msg)
 		l.ExpectInfof("EC2 Instance lookup failed in region %s (aws command failed): %s", f.region, msg)
-		// When the aws cli tool fails
+		// On the aws cli tool fails
 		awsReturns(r, []string{instanceId, instanceId}, f.region, msg, util.DummyError{Msg: "test fails aws"})
 		// Filtering doesn't touch the target list
 		assertFilterResults(t, f, targets, targets)
-		util.VerifyMocks(t, r)
+		mock.AssertExpectationsForObjects(t, r.Mock)
 		// And no panic happened on JSON parsing, even though the CLI tools output was not valid JSON, because we don't even try to parse the output.
 	})
 }
@@ -135,12 +136,12 @@ func TestEc2InstanceIdLookupInvalidJson(t *testing.T) {
 		r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(true)
 		l.ExpectDebugf("Response from AWS API: %s", invalidJson)
 		l.ExpectInfof("EC2 Instance lookup: %s in %s", "[dummy-instance-id.instanceid]", f.region)
-		// When the AWS API returns invalid JSON
+		// On the AWS API returns invalid JSON
 		awsReturns(r, []string{instanceId}, f.region, invalidJson, nil).Times(1)
 		// I get a fatal error for filtering
 		util.ExpectPanic(t, fmt.Sprintf("Invalid JSON returned by AWS API.\nError: invalid character 'H' looking for beginning of value\nJSON follows this line\n%s", invalidJson),
 			func() { f.Filter([]target.Target{target.FromString(host)}) })
-		util.VerifyMocks(t, r)
+		mock.AssertExpectationsForObjects(t, r.Mock)
 	})
 }
 
@@ -241,6 +242,6 @@ func TestEc2InstanceIdLookupHappyPath(t *testing.T) {
 		}
 
 		assertLookupCasesPass(t, r, f, true, cases)
-		util.VerifyMocks(t, r)
+		mock.AssertExpectationsForObjects(t, r.Mock)
 	})
 }

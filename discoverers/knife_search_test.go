@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/maraino/go-mock"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
@@ -42,10 +42,10 @@ type mockKnifeSearchResultRowExtractor struct {
 	mock.Mock
 }
 
-func (e mockKnifeSearchResultRowExtractor) Extract(row knifeSearchResultRow) target.Target {
+func (e *mockKnifeSearchResultRowExtractor) Extract(row knifeSearchResultRow) target.Target {
 	r := e.Called(row)
-	if r.Contains(0) {
-		return r.Result[0].(target.Target)
+	if len(r) > 0 {
+		return r[0].(target.Target)
 	}
 	return target.Target{}
 }
@@ -78,8 +78,8 @@ func knifeReturnsWithCloudV2(r *util.MockCommandRunner, input string, data knife
 	whenKnifeSearch(r, input).Return(outputs)
 }
 
-func whenKnifeSearch(r *util.MockCommandRunner, input string) *mock.MockFunction {
-	return r.When("Outputs", "knife", []string{"search", "node", "-F", "json", input})
+func whenKnifeSearch(r *util.MockCommandRunner, input string) *mock.Call {
+	return r.On("Outputs", "knife", []string{"search", "node", "-F", "json", input})
 }
 
 func TestKnifeNoColonInSearchString(t *testing.T) {
@@ -87,13 +87,11 @@ func TestKnifeNoColonInSearchString(t *testing.T) {
 	input := "no colon at all"
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("Host lookup string doesn't contain ':', it won't match anything in a knife search node query")
-		e.When("Extract", mock.Any).Times(0)
-		r.When("Outputs", mock.Any, mock.Any).Times(0)
 		if len(s.Discover(input)) != 0 {
 			t.Fail()
 		}
 	})
-	util.VerifyMocks(t, e, r)
+	mock.AssertExpectationsForObjects(t, e.Mock, r.Mock)
 }
 
 func TestKnifeError(t *testing.T) {
@@ -103,24 +101,22 @@ func TestKnifeError(t *testing.T) {
 	whenKnifeSearch(r, input).Return(util.CommandRunnerOutputs{Error: errors.New(err), Combined: []byte("Foo\nBar")}).Times(1)
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectInfof("Looking up nodes with knife matching %s", input)
-		e.When("Extract", mock.Any).Times(0)
 		util.ExpectPanic(t, "Knife lookup failed: knife run failed\nOutput:\nFoo\nBar", func() { s.Discover(input) })
 	})
-	util.VerifyMocks(t, e, r)
+	mock.AssertExpectationsForObjects(t, e.Mock, r.Mock)
 }
 
 func TestKnifeInvalidJsonFromKnife(t *testing.T) {
 	s, e, r := givenAMockedKnifeSearch()
 	input := "foo:bar"
 	whenKnifeSearch(r, input).Return(util.CommandRunnerOutputs{Stdout: []byte("Invalid JSON")}).Times(1)
-	e.When("Extract", mock.Any).Times(0)
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectInfof("Looking up nodes with knife matching %s", input)
 		util.ExpectPanic(t,
 			"Failed to parse knife search result: invalid character 'I' looking for beginning of value",
 			func() { s.Discover(input) })
 	})
-	util.VerifyMocks(t, e, r)
+	mock.AssertExpectationsForObjects(t, e.Mock, r.Mock)
 }
 
 func TestKnifeHappyPath(t *testing.T) {
@@ -129,7 +125,7 @@ func TestKnifeHappyPath(t *testing.T) {
 	data := givenKnifeSearchResultWithCloudV2("alpha", "beta", "gamma")
 	knifeReturnsWithCloudV2(r, input, data)
 	for _, row := range data.Rows {
-		e.When("Extract", row).Return(target.Target{Host: row.Automatic.CloudV2.PublicHostname}).Times(1)
+		e.On("Extract", row).Return(target.Target{Host: row.Automatic.CloudV2.PublicHostname}).Times(1)
 	}
 	var actualTargets []target.Target
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
@@ -138,7 +134,7 @@ func TestKnifeHappyPath(t *testing.T) {
 	})
 	expectedTargets := target.FromStrings("alpha.hostname", "beta.hostname", "gamma.hostname")
 	target.AssertTargetListEquals(t, expectedTargets, actualTargets)
-	util.VerifyMocks(t, e, r)
+	mock.AssertExpectationsForObjects(t, e.Mock, r.Mock)
 }
 
 func TestKnifeExtractor(t *testing.T) {

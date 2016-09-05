@@ -1,12 +1,11 @@
-hash: 2a3a30870da62bb2faf2a1571519a497f2e0b6251aef7f6a383270788f4f1a53
-updated: 2016-09-05T20:30:07.972904984+02:00
+hash: 7ace426a680dac86840ee7e022c3b19f294f79cb4e253bbbcaefb3758e4cf0f8
+updated: 2016-09-05T20:47:00.126166529+02:00
 imports:
 - name: github.com/abesto/sexp
   version: 334ba3d4cc272142610c0246b5c31e667ed5009b
 - name: github.com/alexcesaro/log
   version: 61e686294e58a8698a9e1091268bb4ac1116bd5e
   subpackages:
-  - buflog
   - golog
   - stdlog
 - name: github.com/kr/pretty
@@ -15,10 +14,9 @@ imports:
   version: ce7fa45920dc37a92de8377972e52bc55ffa8d57
 - name: github.com/kr/text
   version: bb797dc4fb8320488f47bf11de07a733d7233e1f
-- name: github.com/maraino/go-mock
-  version: c73593ff1dbffda090770a31f88a69f1cf3037b4
 - name: github.com/stretchr/testify
   version: f390dcf405f7b83c997eac1b06768bb9f44dec18
   subpackages:
   - assert
+  - mock
 testImports: []

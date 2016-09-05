@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 )
@@ -125,18 +127,18 @@ func TestExternalExec(t *testing.T) {
 		util.WithLogAssertions(t, func(l *util.MockLogger) {
 			m := executor.commandRunner.(*util.MockInteractiveCommandRunner)
 			if executor.mode == externalModeSingleRun {
-				m.When("Run", executor.makeSingleRunJob(targets, command)).Times(1)
+				m.On("Run", executor.makeSingleRunJob(targets, command)).Times(1)
 			} else if executor.mode == externalModeSequential {
 				for _, job := range executor.makeJobPerTarget(targets, command) {
-					m.When("Run", job).Times(1)
+					m.On("Run", job).Times(1)
 				}
 			} else if executor.mode == externalModeParallel {
 				l.ExpectInfof("Parallelly executing %s on %s", "[ls]", "[foo bar]")
-				m.When("RunParallel", executor.makeJobPerTarget(targets, command))
+				m.On("RunParallel", executor.makeJobPerTarget(targets, command))
 			}
 
 			executor.Exec(targets, command)
-			util.VerifyMocks(t, m, l)
+			mock.AssertExpectationsForObjects(t, m.Mock, l.Mock)
 		})
 	}
 }

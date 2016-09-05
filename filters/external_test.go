@@ -5,9 +5,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
-	"github.com/maraino/go-mock"
 )
 
 func TestExternalStringViaMake(t *testing.T) {
@@ -55,7 +56,7 @@ type mockTmpFileMaker struct {
 
 func (m *mockTmpFileMaker) make(dir, prefix string) (*os.File, error) {
 	ret := m.Called(dir, prefix)
-	return ret.GetType(0, os.Stdin).(*os.File), ret.Error(1)
+	return ret.Get(0).(*os.File), ret.Error(1)
 }
 
 func TestExternalOperation(t *testing.T) {
@@ -63,11 +64,11 @@ func TestExternalOperation(t *testing.T) {
 	f := Make("(external grep -v bar)").(*external)
 	// Will call "grep -v bar", which will return "foo\baz"
 	r := &util.MockCommandRunner{}
-	r.When("CombinedOutputWithStdinOrPanic", os.Stdin, "grep", []string{"-v", "bar", os.Stdin.Name()}).Return([]byte("foo\nbaz")).Times(1)
+	r.On("CombinedOutputWithStdinOrPanic", os.Stdin, "grep", []string{"-v", "bar", os.Stdin.Name()}).Return([]byte("foo\nbaz")).Times(1)
 	f.commandRunner = r
 	// Via this temporary file
 	m := &mockTmpFileMaker{}
-	m.When("make", "", "easyssh").Return(os.Stdin, nil)
+	m.On("make", "", "easyssh").Return(os.Stdin, nil)
 	f.tmpFileMaker = m
 	// When passed these targets
 	input := target.FromStrings("foo", "bar", "foobar", "baz")
@@ -77,5 +78,5 @@ func TestExternalOperation(t *testing.T) {
 	if len(output) != len(expectedOutput) || output[0] != expectedOutput[0] || output[1] != expectedOutput[1] {
 		t.Error(input, output, expectedOutput)
 	}
-	util.VerifyMocks(t, r, m)
+	mock.AssertExpectationsForObjects(t, r.Mock, m.Mock)
 }

@@ -3,10 +3,10 @@ package target
 import (
 	"reflect"
 
-	"github.com/abesto/easyssh/util"
+	"github.com/stretchr/testify/mock"
 )
 
-func AssertTargetListEquals(t util.TestReporter, expected []Target, actual []Target) {
+func AssertTargetListEquals(t mock.TestingT, expected []Target, actual []Target) {
 	if len(expected) != len(actual) {
 		t.Errorf("len expected=%d actual=%d (expected=%s actual=%s)", len(expected), len(actual), expected, actual)
 	}

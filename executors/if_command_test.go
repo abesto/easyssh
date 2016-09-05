@@ -6,7 +6,7 @@ import (
 
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
-	"github.com/maraino/go-mock"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestIfCommandStringViaMake(t *testing.T) {
@@ -74,13 +74,12 @@ func TestIfCommandGetsCommand(t *testing.T) {
 		command := []string{"ssh", "-l", "root"}
 
 		withCommand := e.withCommand.(*mockExecutor)
-		withCommand.When("Exec", targets, command).Times(1)
+		withCommand.On("Exec", targets, command).Times(1)
 
 		withoutCommand := e.withoutCommand.(*mockExecutor)
-		withoutCommand.When("Exec", mock.Any, mock.Any).Times(0)
 
 		e.Exec(targets, command)
-		util.VerifyMocks(t, withCommand, withoutCommand)
+		mock.AssertExpectationsForObjects(t, withCommand.Mock, withoutCommand.Mock)
 	})
 }
 
@@ -91,12 +90,11 @@ func TestIfCommandGetsNoCommand(t *testing.T) {
 		command := []string{}
 
 		withCommand := e.withCommand.(*mockExecutor)
-		withCommand.When("Exec", targets, command).Times(0)
 
 		withoutCommand := e.withoutCommand.(*mockExecutor)
-		withoutCommand.When("Exec", mock.Any, mock.Any).Times(1)
+		withoutCommand.On("Exec", mock.Anything, mock.Anything).Times(1)
 
 		e.Exec(targets, command)
-		util.VerifyMocks(t, withCommand, withoutCommand)
+		mock.AssertExpectationsForObjects(t, withCommand.Mock, withoutCommand.Mock)
 	})
 }

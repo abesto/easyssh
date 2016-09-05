@@ -7,15 +7,10 @@ import (
 	"reflect"
 
 	"github.com/alexcesaro/log"
-	"github.com/maraino/go-mock"
+	"github.com/stretchr/testify/mock"
 )
 
-type TestReporter interface {
-	Error(...interface{})
-	Errorf(string, ...interface{})
-}
-
-func ExpectPanic(t TestReporter, expectedErr interface{}, f func()) {
+func ExpectPanic(t mock.TestingT, expectedErr interface{}, f func()) {
 	defer func() {
 		actualErr := recover()
 		if actualErr == nil {
@@ -34,15 +29,15 @@ type MockCommandRunner struct {
 
 func (r *MockCommandRunner) CombinedOutputWithStdinOrPanic(stdin io.Reader, name string, args []string) []byte {
 	ret := r.Called(stdin, name, args)
-	return ret.Bytes(0)
+	return ret.Get(0).([]byte)
 }
 func (r *MockCommandRunner) CombinedOutputOrPanic(name string, args []string) []byte {
 	ret := r.Called(name, args)
-	return ret.Bytes(0)
+	return ret.Get(0).([]byte)
 }
 func (r *MockCommandRunner) Outputs(name string, args []string) CommandRunnerOutputs {
 	ret := r.Called(name, args)
-	return ret.GetType(0, CommandRunnerOutputs{}).(CommandRunnerOutputs)
+	return ret.Get(0).(CommandRunnerOutputs)
 }
 
 type MockInteractiveCommandRunner struct {
@@ -68,110 +63,106 @@ func toStrings(xs []interface{}) []interface{} {
 	}
 	return ss
 }
-func (m MockLogger) Emergency(args ...interface{}) {
+func (m *MockLogger) Emergency(args ...interface{}) {
 	m.Called(toStrings(args)...)
 }
-func (m MockLogger) Emergencyf(format string, args ...interface{}) {
+func (m *MockLogger) Emergencyf(format string, args ...interface{}) {
 	m.Called(append([]interface{}{format}, toStrings(args)...)...)
 }
-func (m MockLogger) Alert(args ...interface{}) {
+func (m *MockLogger) Alert(args ...interface{}) {
 	m.Called(toStrings(args)...)
 }
-func (m MockLogger) Alertf(format string, args ...interface{}) {
+func (m *MockLogger) Alertf(format string, args ...interface{}) {
 	m.Called(append([]interface{}{format}, toStrings(args)...)...)
 }
-func (m MockLogger) Critical(args ...interface{}) {
+func (m *MockLogger) Critical(args ...interface{}) {
 	m.Called(toStrings(args)...)
 }
-func (m MockLogger) Criticalf(format string, args ...interface{}) {
+func (m *MockLogger) Criticalf(format string, args ...interface{}) {
 	m.Called(append([]interface{}{format}, toStrings(args)...)...)
 }
-func (m MockLogger) Error(args ...interface{}) {
+func (m *MockLogger) Error(args ...interface{}) {
 	m.Called(toStrings(args)...)
 }
-func (m MockLogger) Errorf(format string, args ...interface{}) {
+func (m *MockLogger) Errorf(format string, args ...interface{}) {
 	m.Called(append([]interface{}{format}, toStrings(args)...)...)
 }
-func (m MockLogger) Warning(args ...interface{}) {
+func (m *MockLogger) Warning(args ...interface{}) {
 	m.Called(toStrings(args)...)
 }
-func (m MockLogger) Warningf(format string, args ...interface{}) {
+func (m *MockLogger) Warningf(format string, args ...interface{}) {
 	m.Called(append([]interface{}{format}, toStrings(args)...)...)
 }
-func (m MockLogger) Notice(args ...interface{}) {
+func (m *MockLogger) Notice(args ...interface{}) {
 	m.Called(toStrings(args)...)
 }
-func (m MockLogger) Noticef(format string, args ...interface{}) {
+func (m *MockLogger) Noticef(format string, args ...interface{}) {
 	m.Called(append([]interface{}{format}, toStrings(args)...)...)
 }
-func (m MockLogger) Info(args ...interface{}) {
+func (m *MockLogger) Info(args ...interface{}) {
 	m.Called(toStrings(args)...)
 }
-func (m MockLogger) Infof(format string, args ...interface{}) {
+func (m *MockLogger) Infof(format string, args ...interface{}) {
 	m.Called(append([]interface{}{format}, toStrings(args)...)...)
 }
-func (m MockLogger) Debug(args ...interface{}) {
+func (m *MockLogger) Debug(args ...interface{}) {
 	m.Called(toStrings(args)...)
 }
-func (m MockLogger) Debugf(format string, args ...interface{}) {
+func (m *MockLogger) Debugf(format string, args ...interface{}) {
 	m.Called(append([]interface{}{format}, toStrings(args)...)...)
 }
-func (m MockLogger) Log(level log.Level, args ...interface{}) {
+func (m *MockLogger) Log(level log.Level, args ...interface{}) {
 	m.Called(append([]interface{}{level}, toStrings(args)...)...)
 }
-func (m MockLogger) Logf(level log.Level, format string, args ...interface{}) {
+func (m *MockLogger) Logf(level log.Level, format string, args ...interface{}) {
 	m.Called(append([]interface{}{level, format}, toStrings(args)...)...)
 }
-func (m MockLogger) LogEmergency() bool {
+func (m *MockLogger) LogEmergency() bool {
 	ret := m.Called()
 	return ret.Bool(0)
 }
-func (m MockLogger) LogAlert() bool {
+func (m *MockLogger) LogAlert() bool {
 	ret := m.Called()
 	return ret.Bool(0)
 }
-func (m MockLogger) LogCritical() bool {
+func (m *MockLogger) LogCritical() bool {
 	ret := m.Called()
 	return ret.Bool(0)
 }
-func (m MockLogger) LogError() bool {
+func (m *MockLogger) LogError() bool {
 	ret := m.Called()
 	return ret.Bool(0)
 }
-func (m MockLogger) LogWarning() bool {
+func (m *MockLogger) LogWarning() bool {
 	ret := m.Called()
 	return ret.Bool(0)
 }
-func (m MockLogger) LogNotice() bool {
+func (m *MockLogger) LogNotice() bool {
 	ret := m.Called()
 	return ret.Bool(0)
 }
-func (m MockLogger) LogInfo() bool {
+func (m *MockLogger) LogInfo() bool {
 	ret := m.Called()
 	return ret.Bool(0)
 }
-func (m MockLogger) LogDebug() bool {
+func (m *MockLogger) LogDebug() bool {
 	ret := m.Called()
 	return ret.Bool(0)
 }
-func (m MockLogger) LogLevel(level log.Level) bool {
+func (m *MockLogger) LogLevel(level log.Level) bool {
 	ret := m.Called(level)
 	return ret.Bool(0)
 }
-func (m MockLogger) Close() error {
+func (m *MockLogger) Close() error {
 	ret := m.Called()
 	return ret.Error(0)
 }
 
-func (m *MockLogger) ExpectDebugf(format string, args ...interface{}) *mock.MockFunction {
-	return m.When("Debugf", append([]interface{}{format}, args...)...).Times(1)
+func (m *MockLogger) ExpectDebugf(format string, args ...interface{}) *mock.Call {
+	return m.On("Debugf", append([]interface{}{format}, args...)...).Times(1)
 }
-func (m *MockLogger) ExpectInfof(format string, args ...interface{}) *mock.MockFunction {
-	return m.When("Infof", append([]interface{}{format}, args...)...).Times(1)
-}
-
-type HasVerify interface {
-	Verify() (bool, error)
+func (m *MockLogger) ExpectInfof(format string, args ...interface{}) *mock.Call {
+	return m.On("Infof", append([]interface{}{format}, args...)...).Times(1)
 }
 
 type DummyError struct {
@@ -182,31 +173,22 @@ func (e DummyError) Error() string {
 	return e.Msg
 }
 
-func ExpectLogs(t TestReporter, setExpectedCalls func(*MockLogger)) func() {
+func ExpectLogs(t mock.TestingT, setExpectedCalls func(*MockLogger)) func() {
 	originalLogger := Logger
 	Logger = &MockLogger{}
 	l := Logger.(*MockLogger)
-	l.Reset()
 	setExpectedCalls(l)
 	return func() {
-		VerifyMocks(t, l)
+		mock.AssertExpectationsForObjects(t, l.Mock)
 		Logger = originalLogger
 	}
 }
 
-func WithLogAssertions(t TestReporter, f func(*MockLogger)) {
+func WithLogAssertions(t mock.TestingT, f func(*MockLogger)) {
 	ExpectLogs(t, f)()
 }
 
-func VerifyMocks(t TestReporter, mocks ...HasVerify) {
-	for _, m := range mocks {
-		if ok, msg := m.Verify(); !ok {
-			t.Error(msg)
-		}
-	}
-}
-
-func AssertStringListEquals(t TestReporter, expected []string, actual []string) {
+func AssertStringListEquals(t mock.TestingT, expected []string, actual []string) {
 	expectedInterfaces := make([]interface{}, len(expected))
 	actualInterfaces := make([]interface{}, len(actual))
 	for i := 0; i < len(expected); i++ {
@@ -218,7 +200,7 @@ func AssertStringListEquals(t TestReporter, expected []string, actual []string) 
 	AssertInterfaceListEquals(t, expectedInterfaces, actualInterfaces)
 }
 
-func AssertInterfaceListEquals(t TestReporter, expected []interface{}, actual []interface{}) {
+func AssertInterfaceListEquals(t mock.TestingT, expected []interface{}, actual []interface{}) {
 	if len(expected) != len(actual) {
 		t.Errorf("len expected=%d actual=%d", len(expected), len(actual))
 	}

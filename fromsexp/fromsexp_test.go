@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/abesto/sexp"
-	"github.com/maraino/go-mock"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/abesto/easyssh/util"
 )
@@ -77,15 +77,15 @@ func TestMakeFromStringWithoutTransforms(t *testing.T) {
 	input := "(foo bar baz)"
 	expectedFoo := &MockHasSetArgs{}
 
-	m.When("makeByName", "foo").Times(1).Return(expectedFoo)
-	expectedFoo.When("SetArgs", "[bar baz]").Times(1)
+	m.On("makeByName", "foo").Times(1).Return(expectedFoo)
+	expectedFoo.On("SetArgs", "[bar baz]").Times(1)
 	actualFoo := MakeFromString(input, []SexpTransform{}, m.makeByName)
 
 	if actualFoo != expectedFoo {
 		t.Errorf("MakeFromString returned %v, expected: %v", actualFoo, expectedFoo)
 	}
 
-	mock.AssertVerifyMocks(t, m, expectedFoo)
+	mock.AssertExpectationsForObjects(t, m.Mock, expectedFoo.Mock)
 }
 
 func TestMakeFromStringWithTransforms(t *testing.T) {
@@ -97,15 +97,15 @@ func TestMakeFromStringWithTransforms(t *testing.T) {
 		Replace("(say (xxx (yyy)))", "(say hello world)"),
 	}
 
-	m.When("makeByName", "say").Times(1).Return(expectedFoo)
-	expectedFoo.When("SetArgs", "[hello world]").Times(1)
+	m.On("makeByName", "say").Times(1).Return(expectedFoo)
+	expectedFoo.On("SetArgs", "[hello world]").Times(1)
 	actualFoo := MakeFromString(input, transforms, m.makeByName)
 
 	if actualFoo != expectedFoo {
 		t.Errorf("MakeFromString returned %v, expected: %v", actualFoo, expectedFoo)
 	}
 
-	mock.AssertVerifyMocks(t, m, expectedFoo)
+	mock.AssertExpectationsForObjects(t, m.Mock, expectedFoo.Mock)
 }
 
 func TestInvalidInputs(t *testing.T) {
