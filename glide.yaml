@@ -1,0 +1,15 @@
+package: github.com/abesto/easyssh
+import:
+- package: github.com/abesto/sexp
+  version: dcad0e0a1b527f28cd5b06a1ccfcf12222206831
+- package: github.com/alexcesaro/log
+  version: 61e686294e58a8698a9e1091268bb4ac1116bd5e
+  subpackages:
+  - golog
+  - stdlog
+- package: github.com/kr/pretty
+  version: e6ac2fc51e89a3249e82157fa0bb7a18ef9dd5bb
+- package: github.com/kr/text
+  version: bb797dc4fb8320488f47bf11de07a733d7233e1f
+- package: github.com/maraino/go-mock
+  version: c73593ff1dbffda090770a31f88a69f1cf3037b4

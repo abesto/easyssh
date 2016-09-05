@@ -1,0 +1,18 @@
+hash: 37959927ec9e26747d28031e46ed969724fe9aba0fd0c372d2d027bc33732b95
+updated: 2016-09-05T20:10:29.556177101+02:00
+imports:
+- name: github.com/abesto/sexp
+  version: dcad0e0a1b527f28cd5b06a1ccfcf12222206831
+- name: github.com/alexcesaro/log
+  version: 61e686294e58a8698a9e1091268bb4ac1116bd5e
+  subpackages:
+  - buflog
+  - golog
+  - stdlog
+- name: github.com/kr/pretty
+  version: e6ac2fc51e89a3249e82157fa0bb7a18ef9dd5bb
+- name: github.com/kr/text
+  version: bb797dc4fb8320488f47bf11de07a733d7233e1f
+- name: github.com/maraino/go-mock
+  version: c73593ff1dbffda090770a31f88a69f1cf3037b4
+testImports: []

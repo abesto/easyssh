@@ -8,6 +8,10 @@ extra mile, you can check whether you introduced any new problems according to `
 You can use [http://golang.org/misc/git/pre-commit](http://golang.org/misc/git/pre-commit) as your pre-commit hook
 to make sure you don't forget `gofmt`.
 
+## Dependencies, versions
+
+`easyssh` is currently developed against Go 1.7, using [Glide](https://glide.sh/) to manage dependencies.
+
 ## Where to start
 
 All [issues](https://github.com/abesto/easyssh/issues) are fair game. The milestones provide a rough order in which
