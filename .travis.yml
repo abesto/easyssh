@@ -13,7 +13,7 @@ before_install:
   # Bats (https://github.com/sstephenson/bats), as described in https://blog.engineyard.com/2014/bats-test-command-line-tools
   - sudo add-apt-repository ppa:duggan/bats --yes
   - sudo apt-get update -qq
-  - sudo apt-get install -qq bats
+  - sudo apt-get install -qq bats realpath
 
 script:
     - COVERALLS='-service travis-ci' PATH="./external-tools:$PATH" ./test.sh
