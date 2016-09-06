@@ -12,10 +12,12 @@ func TestFirstMatchingStringViaMake(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		input := "(first-matching (comma-separated) (comma-separated))"
 		structs := "[first-matching [comma-separated] [comma-separated]]"
-		final := "<first-matching [<comma-separated> <comma-separated>]>"
+		final := "<first-matching [<separated-by ,> <separated-by ,>]>"
 		l.ExpectDebugf("MakeFromString %s -> %s", input, structs)
-		l.ExpectDebugf("Make %s -> %s", "[comma-separated]", "<comma-separated>")
-		l.ExpectDebugf("Make %s -> %s", "[comma-separated]", "<comma-separated>")
+		l.ExpectDebugf("Transform: %s -> %s", "[comma-separated]", "[separated-by ,]")
+		l.ExpectDebugf("Transform: %s -> %s", "[comma-separated]", "[separated-by ,]")
+		l.ExpectDebugf("Make %s -> %s", "[separated-by ,]", "<separated-by ,>")
+		l.ExpectDebugf("Make %s -> %s", "[separated-by ,]", "<separated-by ,>")
 		l.ExpectDebugf("Make %s -> %s", structs, final)
 		Make(input)
 	})
@@ -39,11 +41,11 @@ func TestFirstMatchingFilterWithoutSetArgs(t *testing.T) {
 func TestFirstMatchingSetArgs(t *testing.T) {
 	input := "(first-matching (comma-separated) (comma-separated))"
 	f := Make(input).(*firstMatching)
-	if len(f.children) != 2 || f.children[0].String() != "<comma-separated>" || f.children[1].String() != "<comma-separated>" {
+	if len(f.children) != 2 || f.children[0].String() != "<separated-by ,>" || f.children[1].String() != "<separated-by ,>" {
 		t.Error("children", f.children)
 	}
 	if len(f.args) != 2 || fmt.Sprintf("%s", f.args[0]) != "[comma-separated]" || fmt.Sprintf("%s", f.args[1]) != "[comma-separated]" {
-		t.Error("args", len(f.args), f.args)
+		t.Error("args", len(f.args), fmt.Sprintf("%s", f.args))
 	}
 }
 

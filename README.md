@@ -102,7 +102,8 @@ Discoverer, filter and executor definitions are [S-Expressions](https://en.wikip
 
 | Name      | Arguments   | Description |
 |-----------|-------------|-------------|
-| `comma-separated` | - | Takes the discoverer argument, splits it at commas, and uses the resulting strings as the target hostnames. |
+| `separated-by` | Exactly one string | Splits the input at the separator provided as the argument, and uses the resulting strings as the target hostnames. |
+| `comma-separated` | - | `(separated-by ,)` |
 | `knife` | - | Passes the discoverer argument to `knife search node`, and returns the public IP addresses provided by Chef as target hostnames. |
 | `first-matching` | Any number of discoverers | Runs the discoverers in its argument list in the order they were provided, and uses the first resulting non-empty target list. |
 | `fixed` | At least one string | Alias: `const`. Returns its arguments as hostnames, regardless of the target definition. |

@@ -7,20 +7,29 @@ import (
 	"github.com/abesto/easyssh/util"
 )
 
+/* Test separated-by via the alias (comma-separated) */
+
 func TestCommaSeparatedStringViaMake(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		l.ExpectDebugf("MakeFromString %s -> %s", "(comma-separated)", "[comma-separated]")
-		l.ExpectDebugf("Make %s -> %s", "[comma-separated]", "<comma-separated>")
+		l.ExpectDebugf("Transform: %s -> %s", "[comma-separated]", "[separated-by ,]")
+		l.ExpectDebugf("Make %s -> %s", "[separated-by ,]", "<separated-by ,>")
 		d := Make("(comma-separated)")
-		if d.String() != "<comma-separated>" {
+		if d.String() != "<separated-by ,>" {
 			t.Error(d)
 		}
 	})
 }
 
-func TestCommaSeparatedSetArgs(t *testing.T) {
-	util.ExpectPanic(t, "<comma-separated> doesn't take any arguments, got 1: [foobar]", func() {
-		Make("(comma-separated foobar)")
+func TestSeparatedByMakeWithoutArgument(t *testing.T) {
+	util.ExpectPanic(t, "<separated-by > requires exactly 1 argument(s), got 0: []", func() {
+		Make("(separated-by)")
+	})
+}
+
+func TestSeparatedByMakeWithTooManyArguments(t *testing.T) {
+	util.ExpectPanic(t, "<separated-by > requires exactly 1 argument(s), got 2: [foo bar]", func() {
+		Make("(separated-by foo bar)")
 	})
 }
 
