@@ -3,6 +3,8 @@ package filters
 import (
 	"testing"
 
+	"reflect"
+
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 )
@@ -41,7 +43,7 @@ func TestFirstOperation(t *testing.T) {
 			t.Error(c, output)
 		}
 		for i := 0; i < len(output); i++ {
-			if output[i] != expectedOutput[i] {
+			if !reflect.DeepEqual(output[i], expectedOutput[i]) {
 				t.Error(i, c, expectedOutput, output)
 			}
 		}

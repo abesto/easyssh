@@ -1,6 +1,7 @@
 package filters
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/abesto/easyssh/target"
@@ -27,7 +28,7 @@ func TestIdOperation(t *testing.T) {
 
 	before := target.FromStrings("one", "two")
 	after := f.Filter(before)
-	if len(after) != len(before) || before[0] != after[0] || before[1] != after[1] {
+	if !reflect.DeepEqual(before, after) {
 		t.Error(before, after)
 	}
 }

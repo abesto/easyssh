@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
+	"reflect"
+
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 )
@@ -169,7 +171,7 @@ func TestKnifeExtractor(t *testing.T) {
 	}
 	for _, c := range cases {
 		e := realKnifeSearchResultRowExtractor{}
-		if actualOutput := e.Extract(c.input); actualOutput != c.expectedOutput {
+		if actualOutput := e.Extract(c.input); !reflect.DeepEqual(actualOutput, c.expectedOutput) {
 			t.Error("output", c.expectedOutput, actualOutput)
 		}
 	}

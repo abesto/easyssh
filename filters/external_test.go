@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
+	"reflect"
+
 	"github.com/abesto/easyssh/target"
 	"github.com/abesto/easyssh/util"
 )
@@ -75,7 +77,7 @@ func TestExternalOperation(t *testing.T) {
 	// And return these.
 	expectedOutput := []target.Target{input[0], input[3]}
 	output := f.Filter(input)
-	if len(output) != len(expectedOutput) || output[0] != expectedOutput[0] || output[1] != expectedOutput[1] {
+	if !reflect.DeepEqual(output, expectedOutput) {
 		t.Error(input, output, expectedOutput)
 	}
 	r.AssertExpectations(t)
