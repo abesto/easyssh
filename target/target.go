@@ -11,11 +11,11 @@ import (
 Target describes a single machine that easyssh will operate on.
 */
 type Target struct {
-	Host         string // Used to reference the host from the outside, generally an Host
-	Hostname     string // What the host calls itself
-	IP           string
-	User         string
-	ResolveOrder []string
+	Host          string // Used to reference the host from the outside, generally an Host
+	Hostname      string // What the host calls itself
+	IP            string
+	User          string
+	CoalesceOrder []string
 }
 
 func (t Target) withUser(s string) string {
@@ -39,23 +39,23 @@ func (t Target) firstNonEmptyStringWithUser(strs ...string) string {
 	return t.withUser(firstNonEmptyString(strs...))
 }
 
-var Resolvers = map[string](func(Target) string){
+var Coalescers = map[string](func(Target) string){
 	"host":     func(t Target) string { return t.Host },
 	"hostname": func(t Target) string { return t.Hostname },
 	"ip":       func(t Target) string { return t.IP },
 }
 
 /*
-Return the first non-empty field defined in t.ResolveOrder. Default is ["ip", "host"]
+Return the first non-empty field defined in t.CoalesceOrder. Default is ["ip", "host"]
 */
 func (t Target) SSHTarget() string {
-	resolvers := t.ResolveOrder
-	if len(resolvers) == 0 {
-		resolvers = []string{"ip", "host"}
+	coalescers := t.CoalesceOrder
+	if len(coalescers) == 0 {
+		coalescers = []string{"ip", "host"}
 	}
-	candidates := make([]string, len(resolvers))
-	for i, resolverName := range resolvers {
-		candidates[i] = Resolvers[resolverName](t)
+	candidates := make([]string, len(coalescers))
+	for i, coalescerName := range coalescers {
+		candidates[i] = Coalescers[coalescerName](t)
 	}
 	return t.firstNonEmptyStringWithUser(candidates...)
 }

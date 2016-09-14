@@ -8,7 +8,7 @@ import (
 )
 
 func TestSupportedFilterNames(t *testing.T) {
-	expectedNames := []string{"first", "external", "ec2-instance-id", "list", "id"}
+	expectedNames := []string{"coalesce", "first", "external", "ec2-instance-id", "list", "id"}
 	actualNames := SupportedFilterNames()
 
 	sort.Strings(expectedNames)

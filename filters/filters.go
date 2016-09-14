@@ -33,6 +33,7 @@ const (
 	nameId            = "id"
 	nameFirst         = "first"
 	nameExternal      = "external"
+	nameCoalesce      = "coalesce"
 )
 
 var filterMakerMap = map[string]func() interfaces.TargetFilter{
@@ -49,6 +50,7 @@ var filterMakerMap = map[string]func() interfaces.TargetFilter{
 			tmpFileMaker:  &realTmpFileMaker{},
 		}
 	},
+	nameCoalesce: func() interfaces.TargetFilter { return &coalesce{} },
 }
 
 func makeByName(name string) interface{} {

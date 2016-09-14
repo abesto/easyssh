@@ -102,11 +102,11 @@ Discoverer, filter and executor definitions are [S-Expressions](https://en.wikip
 
 | Name      | Arguments   | Description |
 |-----------|-------------|-------------|
-| `separated-by` | Exactly one string | Splits the input at the separator provided as the argument, and uses the resulting strings as the target hostnames. |
+| `separated-by` | Exactly one string | Splits the input at the separator provided as the argument, and uses the resulting strings as the target hosts. |
 | `comma-separated` | - | `(separated-by ,)` |
-| `knife` | - | Passes the discoverer argument to `knife search node`, and returns the public IP addresses provided by Chef as target hostnames. |
+| `knife` | - | Passes the discoverer argument to `knife search node`, and returns the public IP addresses provided by Chef as target hosts. |
 | `first-matching` | Any number of discoverers | Runs the discoverers in its argument list in the order they were provided, and uses the first resulting non-empty target list. |
-| `fixed` | At least one string | Alias: `const`. Returns its arguments as hostnames, regardless of the target definition. |
+| `fixed` | At least one string | Alias: `const`. Returns its arguments as hosts, regardless of the target definition. |
 
 ### Filters
 
@@ -114,7 +114,8 @@ Discoverer, filter and executor definitions are [S-Expressions](https://en.wikip
 |-----------|-------------|-------------|
 | `id` | - | Doesn't touch the the target list. |
 | `first` | - | Drops all targets in the target list, except for the first one. |
-| `ec2-instance-id` | AWS region | For each target in the target list, it looks for an EC2 instance id in the target name. If there is one, it uses `aws` to look up its public IP and replace the target name with that. |
+| `ec2-instance-id` | AWS region | For each target in the target list, it looks for an EC2 instance id in the target name. If there is one, it uses `aws` to look up its public DNS name and IP, and sets the target host and IP to these values. |
+| `coalesce` | At least one string | The argument is a list of values from `host`, `hostname`, and `ip`. When accessing the target, the first non-empty field of the target will be used from the parameter list of `coalesce`. |
 | `list` | Any number of filters | Applies each filter in its arguments to the target list. |
 | `external` | At least one string | Calls the command specified in the arguments with a file containing the targets before filtering. The command must output the new targets on its STDOUT. For example: `(external percol)` |
 
