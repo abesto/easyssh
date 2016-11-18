@@ -12,6 +12,7 @@ import (
 )
 
 var ec2InstanceIdRegex = regexp.MustCompile("i-[0-9a-f]{8}")
+var longEc2InstanceIdRegex = regexp.MustCompile("i-[0-9a-f]{17}")
 
 type ec2InstanceIdParser interface {
 	Parse(input string) string
@@ -19,7 +20,11 @@ type ec2InstanceIdParser interface {
 type realEc2InstanceIdParser struct{}
 
 func (p realEc2InstanceIdParser) Parse(input string) string {
-	return ec2InstanceIdRegex.FindString(input)
+	longID := longEc2InstanceIdRegex.FindString(input)
+	if longID == "" {
+		return ec2InstanceIdRegex.FindString(input)
+	}
+	return longID
 }
 
 type ec2Instance struct {

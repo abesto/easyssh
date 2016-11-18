@@ -72,7 +72,8 @@ func TestEc2InstanceIdSetArgs(t *testing.T) {
 
 func TestEc2InstanceIdParser(t *testing.T) {
 	cases := map[string]string{
-		"foo-i-deadbeef.subnet.private": "i-deadbeef",
+		"foo-i-deadbeef.subnet.private":          "i-deadbeef",
+		"foo-i-deadbeef0deadbeef.subnet.private": "i-deadbeef0deadbeef",
 		"i-foo":      "",
 		"abesto.net": "",
 	}
