@@ -25,8 +25,7 @@ brew install easyssh
 
 ### Binary release
 
-1. Download, extract the [release](https://github.com/abesto/easyssh/releases) for your platform
-2. Add the `easyssh` executable to your `$PATH`
+Download the [release](https://github.com/abesto/easyssh/releases) for your platform. Add the executable to your `$PATH`.
 
 ### Compile from source
 
