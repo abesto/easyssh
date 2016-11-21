@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/abesto/easyssh.svg?branch=master)](https://travis-ci.org/abesto/easyssh)
 [![Coverage Status](https://coveralls.io/repos/abesto/easyssh/badge.svg?branch=master)](https://coveralls.io/r/abesto/easyssh?branch=master)
 
+> Once you go `sr` you never go back. - [@noise64](https://github.com/noise64)
+
 `easyssh` is the culmination of several years of SSH-related aliases. It's a highly configurable wrapper around `ssh`, `tmux-cssh`, `csshx`, `aws`, `knife` and whatever else.
 
 It's for you if having a single alias that does the following makes you excited:
