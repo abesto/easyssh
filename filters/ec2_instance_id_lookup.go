@@ -28,9 +28,11 @@ func (p realEc2InstanceIdParser) Parse(input string) string {
 }
 
 type ec2Instance struct {
-	InstanceId      string
-	PublicDnsName   string
-	PublicIpAddress string
+	InstanceId       string
+	PublicDnsName    string
+	PublicIpAddress  string
+	PrivateDnsName   string
+	PrivateIpAddress string
 }
 
 type ec2Reservation struct {
@@ -99,7 +101,13 @@ func (f *ec2InstanceIdLookup) Filter(targets []target.Target) []target.Target {
 			inputTargetName := targets[idx].Host
 			targets[idx].IP = instance.PublicIpAddress
 			targets[idx].Host = instance.PublicDnsName
-			util.Logger.Infof("AWS API returned PublicIpAddress=%s PublicDnsName=%s for %s (%s)", targets[idx].IP, targets[idx].Host, inputTargetName, id)
+			if targets[idx].IP == "" {
+				targets[idx].IP = instance.PrivateIpAddress
+				targets[idx].Host = instance.PrivateDnsName
+				util.Logger.Infof("AWS API returned PrivateIpAddress=%s PrivateDnsName=%s for %s (%s)", targets[idx].IP, targets[idx].Host, inputTargetName, id)
+			} else {
+				util.Logger.Infof("AWS API returned PublicIpAddress=%s PublicDnsName=%s for %s (%s)", targets[idx].IP, targets[idx].Host, inputTargetName, id)
+			}
 		}
 	}
 

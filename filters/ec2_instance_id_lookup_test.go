@@ -156,23 +156,33 @@ func jsonWithIp(ip string, dnsName string, instanceId string) string {
 	return string(bytes)
 }
 
+func jsonWithPrivateIp(ip string, dnsName string, instanceId string) string {
+	bytes, _ := json.Marshal(ec2DescribeInstanceApiResponse{Reservations: []ec2Reservation{{Instances: []ec2Instance{{PrivateIpAddress: ip, PrivateDnsName: dnsName, InstanceId: instanceId}}}}})
+	return string(bytes)
+}
+
 type lookupCase struct {
 	inputHost  string
 	instanceId string
 	publicIp   string
 	publicDns  string
+	privateIp  string
+	privateDns string
 	json       string
 }
 
-func makeLookupCase(inputHost string, publicIp string, publicDns string) lookupCase {
+func makeLookupCase(inputHost string, publicIp string, publicDns string, privateIp string, privateDns string) lookupCase {
 	instanceId := inputHost + ".instanceid"
-	c := lookupCase{inputHost: inputHost, instanceId: instanceId, publicDns: publicDns}
-	if publicIp == "" {
+	c := lookupCase{inputHost: inputHost, instanceId: instanceId, publicDns: publicDns, privateDns: privateDns}
+	if publicIp == "" && privateIp == "" {
 		c.publicIp = inputHost
 		c.json = jsonWithoutReservations()
-	} else {
+	} else if publicIp != "" {
 		c.publicIp = publicIp
 		c.json = jsonWithIp(publicIp, publicDns, instanceId)
+	} else {
+		c.privateIp = privateIp
+		c.json = jsonWithPrivateIp(privateIp, privateDns, instanceId)
 	}
 	return c
 }
@@ -183,7 +193,13 @@ func makeInputAndOutputTargets(cases []lookupCase, shouldRewrite bool) ([]target
 	for i, c := range cases {
 		inputTargets[i] = target.FromString(c.inputHost)
 		if shouldRewrite {
-			outputTargets[i] = target.FromString(c.publicIp)
+			var ip string
+			if c.publicIp != "" {
+				ip = c.publicIp
+			} else {
+				ip = c.privateIp
+			}
+			outputTargets[i] = target.FromString(ip)
 		} else {
 			outputTargets[i] = target.FromString(c.inputHost)
 		}
@@ -215,9 +231,9 @@ func assertLookupCasesPass(t *testing.T, r *util.MockCommandRunner, f *ec2Instan
 func TestEc2InstanceIdLookupDoesntLookLikeInstanceId(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		cases := []lookupCase{
-			makeLookupCase("no-hits", "", ""),
-			makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1", "public-deadbeef"),
-			makeLookupCase("i-12345678", "2.2.2.2", "public-12345678"),
+			makeLookupCase("no-hits", "", "", "", ""),
+			makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1", "public-deadbeef", "", ""),
+			makeLookupCase("i-12345678", "2.2.2.2", "public-12345678", "", ""),
 		}
 		r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(false)
 		for _, c := range cases {
@@ -228,18 +244,37 @@ func TestEc2InstanceIdLookupDoesntLookLikeInstanceId(t *testing.T) {
 	})
 }
 
-func TestEc2InstanceIdLookupHappyPath(t *testing.T) {
+func TestEc2InstanceIdLookupPublic(t *testing.T) {
 	util.WithLogAssertions(t, func(l *util.MockLogger) {
 		r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(true)
 		cases := []lookupCase{
-			makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1", "public-deadbeef"),
-			makeLookupCase("i-12345678", "2.2.2.2", "public-12345678"),
+			makeLookupCase("foo.i-deadbeef.bar", "1.1.1.1", "public-deadbeef", "", ""),
+			makeLookupCase("i-12345678", "2.2.2.2", "public-12345678", "", ""),
 		}
 
 		l.ExpectInfof("EC2 Instance lookup: %s in %s", "[foo.i-deadbeef.bar.instanceid i-12345678.instanceid]", f.region)
 		l.ExpectDebugf("Response from AWS API: %s", mergeJsonsOfCases(cases))
 		for _, c := range cases {
 			l.ExpectInfof("AWS API returned PublicIpAddress=%s PublicDnsName=%s for %s (%s)", c.publicIp, c.publicDns, c.inputHost, c.instanceId)
+		}
+
+		assertLookupCasesPass(t, r, f, true, cases)
+		r.AssertExpectations(t)
+	})
+}
+
+func TestEc2InstanceIdLookupPrivateFallback(t *testing.T) {
+	util.WithLogAssertions(t, func(l *util.MockLogger) {
+		r, f := givenAnEc2InstanceIdLookupWithMockedParserAndRunner(true)
+		cases := []lookupCase{
+			makeLookupCase("private.i-deadbeef.bar", "", "", "1.0.0.1", "private-deadbeef"),
+			makeLookupCase("i-12345678", "", "", "2.0.0.2", "private-12345678"),
+		}
+
+		l.ExpectInfof("EC2 Instance lookup: %s in %s", "[private.i-deadbeef.bar.instanceid i-12345678.instanceid]", f.region)
+		l.ExpectDebugf("Response from AWS API: %s", mergeJsonsOfCases(cases))
+		for _, c := range cases {
+			l.ExpectInfof("AWS API returned PrivateIpAddress=%s PrivateDnsName=%s for %s (%s)", c.privateIp, c.privateDns, c.inputHost, c.instanceId)
 		}
 
 		assertLookupCasesPass(t, r, f, true, cases)
