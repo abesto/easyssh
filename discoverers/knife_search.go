@@ -33,6 +33,8 @@ type knifeSearchResultRowAutomatic struct {
 type knifeSearchResultCloudV2 struct {
 	PublicHostname string `json:"public_hostname"`
 	PublicIpv4     string `json:"public_ipv4"`
+	LocalHostname  string `json:"local_hostname"`
+	LocalIpv4      string `json:"local_ipv4"`
 }
 
 type knifeSearchResultRowExtractor interface {
@@ -44,9 +46,12 @@ type realKnifeSearchResultRowExtractor struct {
 
 func (e realKnifeSearchResultRowExtractor) Extract(row knifeSearchResultRow) target.Target {
 	var target target.Target
-	if row.Automatic.CloudV2 != nil {
+	if row.Automatic.CloudV2 != nil && row.Automatic.CloudV2.PublicHostname != "" {
 		target.Host = row.Automatic.CloudV2.PublicHostname
 		target.IP = row.Automatic.CloudV2.PublicIpv4
+	} else if row.Automatic.CloudV2 != nil && row.Automatic.CloudV2.LocalHostname != "" {
+		target.Host = row.Automatic.CloudV2.LocalHostname
+		target.IP = row.Automatic.CloudV2.LocalIpv4
 	} else {
 		target.Host = row.Automatic.Fqdn
 		target.IP = row.Automatic.Ipaddress

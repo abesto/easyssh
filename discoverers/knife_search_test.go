@@ -156,6 +156,19 @@ func TestKnifeExtractor(t *testing.T) {
 					CloudV2: &knifeSearchResultCloudV2{
 						PublicIpv4:     "a.ip",
 						PublicHostname: "a.host",
+						LocalIpv4:     "a.localip",
+						LocalHostname: "a.localhost",
+					}},
+			},
+		},
+		{
+			expectedOutput: target.Target{IP: "c.ip", Host: "c.host", Hostname: "c.hostname"},
+			input: knifeSearchResultRow{
+				Automatic: knifeSearchResultRowAutomatic{
+					Hostname: "c.hostname",
+					CloudV2: &knifeSearchResultCloudV2{
+						LocalIpv4:     "c.ip",
+						LocalHostname: "c.host",
 					}},
 			},
 		},
