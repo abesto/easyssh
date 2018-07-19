@@ -9,7 +9,7 @@ setup() {
     cd test/integration-test
     
     docker-compose build
-    docker-compose scale server=2
+    docker-compose up --scale server=2
 }
 
 teardown() {
